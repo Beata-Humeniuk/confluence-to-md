@@ -1,0 +1,115 @@
+{
+  "name": "confluence-to-md",
+  "displayName": "Confluence to Markdown",
+  "description": "Fetch Confluence pages as Markdown and publish Markdown back to Confluence, following links to other pages.",
+  "version": "1.0.0",
+  "publisher": "beatahumeniuk",
+  "license": "MIT",
+  "author": {
+    "name": "Beata Humeniuk"
+  },
+  "icon": "media/icon.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Beata-Humeniuk/confluence-to-md.git"
+  },
+  "homepage": "https://github.com/Beata-Humeniuk/confluence-to-md#readme",
+  "bugs": {
+    "url": "https://github.com/Beata-Humeniuk/confluence-to-md/issues"
+  },
+  "engines": {
+    "vscode": "^1.82.0"
+  },
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    }
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "confluence",
+    "markdown",
+    "atlassian",
+    "wiki",
+    "docs",
+    "converter"
+  ],
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:markdown"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "confluenceToMd.fetchPage",
+        "title": "Download Page",
+        "category": "Confluence"
+      },
+      {
+        "command": "confluenceToMd.publishPage",
+        "title": "Publish Page",
+        "category": "Confluence"
+      }
+    ],
+    "configuration": {
+      "title": "Confluence to Markdown",
+      "properties": {
+        "confluenceToMd.token": {
+          "type": "string",
+          "default": "",
+          "description": "Confluence token (Cloud: API token; Server/DC: Personal Access Token)."
+        },
+        "confluenceToMd.email": {
+          "type": "string",
+          "default": "",
+          "description": "Atlassian account e-mail. Cloud only; Server/DC ignores it."
+        },
+        "confluenceToMd.downloadFolder": {
+          "type": "string",
+          "default": "",
+          "description": "Where to save downloaded pages. Empty = the folder of the active file. Relative paths are resolved from the workspace root."
+        },
+        "confluenceToMd.images": {
+          "type": "string",
+          "default": "skip",
+          "enum": [
+            "skip",
+            "link"
+          ],
+          "enumDescriptions": [
+            "Skip images.",
+            "Insert a link to the Confluence attachment."
+          ],
+          "description": "What to do with images on the page."
+        },
+        "confluenceToMd.followLinks": {
+          "type": "boolean",
+          "default": true,
+          "description": "After downloading a page, offer to download the pages it links to."
+        },
+        "confluenceToMd.appendixHeading": {
+          "type": "string",
+          "default": "Additional materials",
+          "description": "Heading that starts the additional-materials section; every code block below it is extracted to a separate file. Empty = off."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "esbuild src/extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "vscode:prepublish": "npm run build",
+    "test": "node test/html-to-md-test.js && node test/md-to-storage-test.js && node test/client-test.js && node test/md-document-test.js && node test/download-folder-test.js && node test/page-link-test.js && node test/code-samples-test.js && node test/assemble-parts-test.js && node test/page-tree-test.js",
+    "package": "npm run build && vsce package --no-dependencies"
+  },
+  "devDependencies": {
+    "@vscode/vsce": "3.9.2",
+    "esbuild": "^0.21.5"
+  },
+  "dependencies": {
+    "@joplin/turndown-plugin-gfm": "^1.0.67",
+    "markdown-it": "^15.0.0",
+    "turndown": "^7.2.4"
+  }
+}
