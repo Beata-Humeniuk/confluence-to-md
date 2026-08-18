@@ -3,6 +3,15 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-08-18
+
+### Added
+
+- Programmatic API: other VS Code extensions can now invoke
+  `confluenceToMd.publishPage` with a file URI to publish markdown files
+  without requiring user interaction with an active editor. The command returns
+  `{ url, pageId, action }` or rejects with an error.
+
 ## [1.0.0] - 2026-08-18
 
 First public release.

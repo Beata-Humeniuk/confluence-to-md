@@ -61,6 +61,48 @@ documents, conversion details, and round-trip limitations.
 The token is stored in VS Code settings, which may be synced or shared.
 Restricted Mode is supported.
 
+## API for other extensions
+
+Other VS Code extensions can delegate publishing to Confluence by invoking
+`confluenceToMd.publishPage` with a file URI.
+
+**Command:** `confluenceToMd.publishPage`
+
+**Argument:** optional `vscode.Uri` of a markdown file to publish.
+
+**Return value:**
+- **Success:** `{ url: string, pageId: string, action: "created" | "updated" }`
+- **User cancelled:** `undefined`
+- **Failure:** throws an Error with a description suitable for user display
+
+**Behavior:**
+- If a URI is provided, the command publishes that file without requiring an
+  active editor. The file is read from disk and updated with Confluence
+  binding metadata.
+- If no URI is provided, the command publishes the active editor (interactive
+  path), showing error messages to the user.
+- In both paths, interactive prompts (Confluence token, parent page URL)
+  appear when needed—a human is present to respond.
+
+**Example:**
+
+```javascript
+const ext = vscode.extensions.getExtension("beatahumeniuk.confluence-to-md");
+if (ext) {
+  try {
+    const result = await vscode.commands.executeCommand("confluenceToMd.publishPage", mdFileUri);
+    // result = { url: "https://...", pageId: "12345", action: "created" }
+  } catch (e) {
+    // Handle error: e.message is suitable for user display
+  }
+} else {
+  // This extension is not installed; hide Confluence UI in your UI
+}
+```
+
+**Note:** This extension is the only home of Confluence tokens. Callers are
+expected to hide Confluence UI when `getExtension` returns undefined.
+
 ## Installation and support
 
 Install **Confluence to Markdown** from the Visual Studio Code Marketplace, or
