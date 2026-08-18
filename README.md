@@ -63,45 +63,45 @@ Restricted Mode is supported.
 
 ## API for other extensions
 
-Other VS Code extensions can delegate publishing to Confluence by invoking
-`confluenceToMd.publishPage` with a file URI.
+Another extension can hand a Markdown file to this one instead of talking to
+Confluence itself. Write the file to disk, then run the publish command on it:
 
-**Command:** `confluenceToMd.publishPage`
-
-**Argument:** optional `vscode.Uri` of a markdown file to publish.
-
-**Return value:**
-- **Success:** `{ url: string, pageId: string, action: "created" | "updated" }`
-- **User cancelled:** `undefined`
-- **Failure:** throws an Error with a description suitable for user display
-
-**Behavior:**
-- If a URI is provided, the command publishes that file without requiring an
-  active editor. The file is read from disk and updated with Confluence
-  binding metadata.
-- If no URI is provided, the command publishes the active editor (interactive
-  path), showing error messages to the user.
-- In both paths, interactive prompts (Confluence token, parent page URL)
-  appear when needed—a human is present to respond.
-
-**Example:**
-
-```javascript
-const ext = vscode.extensions.getExtension("beatahumeniuk.confluence-to-md");
+```js
+const ext = vscode.extensions.getExtension('beatahumeniuk.confluence-to-md');
 if (ext) {
-  try {
-    const result = await vscode.commands.executeCommand("confluenceToMd.publishPage", mdFileUri);
-    // result = { url: "https://...", pageId: "12345", action: "created" }
-  } catch (e) {
-    // Handle error: e.message is suitable for user display
-  }
-} else {
-  // This extension is not installed; hide Confluence UI in your UI
+  const result = await vscode.commands.executeCommand('confluenceToMd.publishPage', mdFileUri);
 }
 ```
 
-**Note:** This extension is the only home of Confluence tokens. Callers are
-expected to hide Confluence UI when `getExtension` returns undefined.
+`confluenceToMd.publishPage` takes an optional `vscode.Uri` of a Markdown file:
+
+- **with a URI** — that file is published, read from disk. It does not have to
+  be open anywhere, and the active editor is left alone.
+- **without a URI** — the active editor is published, exactly as when the
+  command is run from the Command Palette.
+
+The file is treated the same way either way: a `confluence:` block updates its
+page after the remote-change check, a file without one creates a page under the
+parent you are asked for, split documents are assembled into a single page, and
+the resulting binding is written back to the file. Prompts still appear when
+they are needed — for the token, the parent page, or a page that changed in
+Confluence — so call this only where a person can answer them.
+
+| Outcome | Result |
+|---|---|
+| Published | `{ url: string, pageId: string, action: "created" \| "updated" }` |
+| A prompt was cancelled | `undefined` |
+| Failed | Rejects with an `Error`; `message` is ready to show to the user |
+
+The error popup belongs to the interactive path only. A caller that passes a
+URI gets the rejection and shows its own message.
+
+The command id and this result shape are stable across versions.
+
+`getExtension` returning `undefined` means Confluence publishing is not
+available: this extension is the only one that talks to Confluence, and the
+only home of the Confluence token. Callers are expected to hide their
+Confluence UI in that case rather than offering an action that cannot run.
 
 ## Installation and support
 

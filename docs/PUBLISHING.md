@@ -61,6 +61,13 @@ If a part is missing, the extension asks whether to continue. When you
 continue, its list item remains as a link. You can also publish an individual
 part by opening that file and running the publish command.
 
+## Publishing a file you name
+
+The publish command also accepts a Markdown file to publish, read from disk
+instead of from the active editor. Everything above applies to it unchanged.
+Other extensions use this to delegate publishing; see the API section in the
+[README](../README.md#api-for-other-extensions).
+
 ## Conversion
 
 ### Confluence to Markdown

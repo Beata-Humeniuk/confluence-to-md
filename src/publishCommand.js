@@ -10,6 +10,10 @@ function partsWord(n) {
   return n === 1 ? 'part' : 'parts';
 }
 
+function baseName(path) {
+  return String(path || '').split(/[\\/]/).pop() || '';
+}
+
 function splitTitleAndBody(mdBody, fallbackTitle) {
   const h1 = mdBody.match(/^#[ \t]+(.+)\r?\n?/m);
   if (!h1) return { title: fallbackTitle, content: mdBody };
@@ -28,8 +32,7 @@ async function readPart(uri) {
   return Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8');
 }
 
-async function assemblePackage(doc, body) {
-  const uri = doc && doc.uri;
+async function assemblePackage(uri, body) {
   if (!uri || uri.scheme === 'untitled') return { markdown: body, inlined: [], missing: [] };
   const paths = partPaths(body);
   if (!paths.length) return { markdown: body, inlined: [], missing: [] };
@@ -56,24 +59,42 @@ async function confirmMissingParts(missing) {
   return picked === publish;
 }
 
-async function writeFrontMatterToEditor(editor, meta) {
-  const text = editor.document.getText();
-  const { rawLength, extraLines } = parseFrontMatter(text);
+function editorSource(editor) {
+  return {
+    uri: editor.document.uri,
+    text: editor.document.getText(),
+    fileName: baseName(editor.document.fileName),
+    editor
+  };
+}
+
+async function uriSource(uri) {
+  return {
+    uri,
+    text: Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8'),
+    fileName: baseName(uri.fsPath || uri.path),
+    editor: null
+  };
+}
+
+async function writeBinding(source, meta) {
+  if (!source.editor) {
+    const { rawLength, extraLines } = parseFrontMatter(source.text);
+    const fm = serializeFrontMatter(meta, extraLines) + (rawLength ? '' : '\n');
+    await vscode.workspace.fs.writeFile(
+      source.uri, Buffer.from(fm + source.text.slice(rawLength), 'utf8'));
+    return;
+  }
+  const document = source.editor.document;
+  const { rawLength, extraLines } = parseFrontMatter(document.getText());
   const fm = serializeFrontMatter(meta, extraLines) + (rawLength ? '' : '\n');
-  await editor.edit((edit) => {
+  await source.editor.edit((edit) => {
     edit.replace(new vscode.Range(
-      editor.document.positionAt(0), editor.document.positionAt(rawLength)), fm);
+      document.positionAt(0), document.positionAt(rawLength)), fm);
   });
 }
 
-async function writeFrontMatterToUri(uri, text, meta) {
-  const { rawLength, extraLines } = parseFrontMatter(text);
-  const fm = serializeFrontMatter(meta, extraLines) + (rawLength ? '' : '\n');
-  const newText = fm + text.slice(rawLength);
-  await vscode.workspace.fs.writeFile(uri, Buffer.from(newText, 'utf8'));
-}
-
-async function publishUpdate(meta, title, storage, note, editor) {
+async function publishUpdate(source, meta, title, storage, note) {
   const parsed = parsePageUrl(meta.url);
   if (!parsed || !parsed.pageId) throw new Error('bad-url');
   const creds = await credentialsFor(parsed.site);
@@ -94,18 +115,14 @@ async function publishUpdate(meta, title, storage, note, editor) {
     { location: vscode.ProgressLocation.Notification, title: 'Publishing to Confluence…' },
     () => updatePage(creds, parsed.site, parsed.pageId, { title, storage, version: current.version + 1 }));
 
-  const finalVersion = updated.version || current.version + 1;
-
-  if (editor) {
-    await writeFrontMatterToEditor(editor, { url: meta.url, version: finalVersion });
-    vscode.window.showInformationMessage('Published "' + title + '" (version ' +
-      finalVersion + ').' + (note || ''));
-  }
-
-  return { url: meta.url, pageId: updated.id, version: finalVersion, action: 'updated' };
+  const version = updated.version || current.version + 1;
+  await writeBinding(source, { url: meta.url, version });
+  vscode.window.showInformationMessage('Published "' + title + '" (version ' +
+    version + ').' + (note || ''));
+  return { url: meta.url, pageId: String(updated.id || parsed.pageId), action: 'updated' };
 }
 
-async function publishNew(title, storage, note, editor) {
+async function publishNew(source, title, storage, note) {
   const parentUrl = await vscode.window.showInputBox({
     prompt: 'New page — paste a link to the parent page in Confluence (the new page will be created under it)',
     placeHolder: 'https://…',
@@ -126,67 +143,38 @@ async function publishNew(title, storage, note, editor) {
 
   const spaceKey = created.spaceKey || parent.spaceKey;
   const url = pageWebUrl(parsed.site, spaceKey, created.id);
-  const finalVersion = created.version || 1;
-
-  if (editor) {
-    await writeFrontMatterToEditor(editor, { url, version: finalVersion });
-    vscode.window.showInformationMessage('Created page "' + title + '" in space ' +
-      spaceKey + '.' + (note || ''));
-  }
-
-  return { url, pageId: created.id, version: finalVersion, action: 'created' };
+  await writeBinding(source, { url, version: created.version || 1 });
+  vscode.window.showInformationMessage('Created page "' + title + '" in space ' +
+    spaceKey + '.' + (note || ''));
+  return { url, pageId: String(created.id), action: 'created' };
 }
 
 async function publishPageCommand(fileUri) {
-  let editor, text, fileName, docUri;
-
-  if (fileUri) {
-    text = Buffer.from(await vscode.workspace.fs.readFile(fileUri)).toString('utf8');
-    fileName = (fileUri.fsPath || '').split(/[\\/]/).pop() || '';
-    docUri = fileUri;
-  } else {
-    editor = vscode.window.activeTextEditor;
-    if (!editor) {
-      vscode.window.showErrorMessage('Open the Markdown file you want to publish.');
-      return;
-    }
-    text = editor.document.getText();
-    fileName = (editor.document.fileName || '').split(/[\\/]/).pop() || '';
-    docUri = editor.document.uri;
+  const editor = fileUri ? null : vscode.window.activeTextEditor;
+  if (!fileUri && !editor) {
+    vscode.window.showErrorMessage('Open the Markdown file you want to publish.');
+    return;
   }
 
   try {
-    const { meta, body } = parseFrontMatter(text);
+    const source = fileUri ? await uriSource(fileUri) : editorSource(editor);
+    const { meta, body } = parseFrontMatter(source.text);
 
-    const assembled = await assemblePackage({ uri: docUri }, body);
+    const assembled = await assemblePackage(source.uri, body);
     if (!await confirmMissingParts(assembled.missing)) return;
-
     const { title, content } = splitTitleAndBody(
-      assembled.markdown, fileName.replace(/\.md$/i, '') || 'Untitled');
+      assembled.markdown, source.fileName.replace(/\.md$/i, '') || 'Untitled');
     const storage = mdToStorage(content);
     const note = assembled.inlined.length
       ? ' The page carries the whole design: ' + assembled.inlined.length + ' ' +
         partsWord(assembled.inlined.length) + ' from the package included.'
       : '';
 
-    let result;
-    if (meta) {
-      result = await publishUpdate(meta, title, storage, note, editor);
-    } else {
-      result = await publishNew(title, storage, note, editor);
-    }
-
-    if (fileUri && result) {
-      await writeFrontMatterToUri(docUri, text, { url: result.url, version: result.version });
-    }
-
-    if (result) {
-      return { url: result.url, pageId: result.pageId, action: result.action };
-    }
+    return meta
+      ? await publishUpdate(source, meta, title, storage, note)
+      : await publishNew(source, title, storage, note);
   } catch (e) {
-    if (fileUri) {
-      throw e;
-    }
+    if (fileUri) throw new Error(errorMessage(e));
     vscode.window.showErrorMessage(errorMessage(e));
   }
 }
