@@ -2,7 +2,7 @@
   "name": "confluence-to-md",
   "displayName": "Confluence to Markdown",
   "description": "Fetch Confluence pages as Markdown and publish Markdown back to Confluence, following links to other pages.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "publisher": "beatahumeniuk",
   "license": "MIT",
   "author": {
@@ -100,7 +100,7 @@
   "scripts": {
     "build": "esbuild src/extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
     "vscode:prepublish": "npm run build",
-    "test": "node test/html-to-md-test.js && node test/md-to-storage-test.js && node test/client-test.js && node test/md-document-test.js && node test/download-folder-test.js && node test/page-link-test.js && node test/code-samples-test.js && node test/assemble-parts-test.js && node test/page-tree-test.js",
+    "test": "node test/html-to-md-test.js && node test/md-to-storage-test.js && node test/client-test.js && node test/md-document-test.js && node test/download-folder-test.js && node test/page-link-test.js && node test/code-samples-test.js && node test/assemble-parts-test.js && node test/page-tree-test.js && node test/publish-command-test.js",
     "package": "npm run build && vsce package --no-dependencies"
   },
   "devDependencies": {

@@ -3,6 +3,23 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-08-18
+
+### Added
+
+- Publish a Markdown file given as an argument to the publish command, read
+  from disk, without opening it or disturbing the active editor. Bindings,
+  split documents, and the remote-change check work the same as before.
+- Report the published page back to whoever ran the command, as
+  `{ url, pageId, action }`, so other extensions can delegate publishing
+  through `vscode.commands.executeCommand`. See the API section in the README.
+
+### Changed
+
+- Fail with an error the caller can handle when the publish command is given a
+  file, instead of only showing a popup. The popup stays with the interactive
+  path.
+
 ## [1.0.0] - 2026-08-18
 
 First public release.
