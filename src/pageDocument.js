@@ -1,5 +1,5 @@
 const { convertHtmlToMd } = require('./htmlToMd');
-const { serializeFrontMatter } = require('./frontMatter');
+const { parseFrontMatter, serializeFrontMatter } = require('./frontMatter');
 const { detectDocType } = require('./mdDocument');
 const { pageWebUrl } = require('./confluenceClient');
 const { imagesMode } = require('./config');
@@ -31,9 +31,36 @@ function pageDocument(page, markdown) {
   return fm + '\n# ' + page.title + '\n\n' + markdown;
 }
 
+function topKey(line) {
+  return /^\s/.test(line) ? null : line.split(':')[0].trim();
+}
+
+// Front matter lines of the previous file that the refreshed page does not set
+// itself, with any indented lines that belong to them.
+function keptLines(previousLines, freshLines) {
+  const fresh = new Set(freshLines.map(topKey));
+  const kept = [];
+  let keep = false;
+  for (const line of previousLines) {
+    const key = topKey(line);
+    if (key !== null) keep = !fresh.has(key);
+    if (keep) kept.push(line);
+  }
+  return kept;
+}
+
+function pulledDocument(page, markdown, previousText) {
+  const previous = parseFrontMatter(previousText);
+  const fresh = describeLines(page, markdown);
+  const fm = serializeFrontMatter(
+    { url: previous.meta.url, version: page.version },
+    fresh.concat(keptLines(previous.extraLines, fresh)));
+  return fm + '\n# ' + page.title + '\n\n' + markdown;
+}
+
 function pageToMd(page) {
   const converted = convertHtmlToMd(page.html, { origin: page.site.origin, images: imagesMode() });
   return { md: pageDocument(page, converted.markdown), links: converted.links };
 }
 
-module.exports = { pageDocument, pageToMd };
+module.exports = { pageDocument, pulledDocument, pageToMd };
