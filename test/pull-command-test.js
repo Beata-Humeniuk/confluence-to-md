@@ -96,13 +96,17 @@ Module._resolveFilename = function (request, ...rest) {
 };
 require.cache.vscode = { id: 'vscode', filename: 'vscode', loaded: true, exports: vscodeStub, children: [], paths: [] };
 
-global.fetch = async (url) => {
-  const route = routes.find((r) => url.indexOf(r.match) >= 0);
+const sent = [];
+global.fetch = async (url, options) => {
+  const method = (options && options.method) || 'GET';
+  sent.push({ method, url, body: options && options.body ? JSON.parse(options.body) : null });
+  const route = routes.find((r) => (r.method || 'GET') === method && url.indexOf(r.match) >= 0);
   const status = route ? 200 : 404;
   return { ok: status === 200, status, url, json: async () => (route && route.body) || {} };
 };
 
-const { pullPageCommand, handlePullUri } = require('../src/pullCommand');
+const { pullPageCommand } = require('../src/pullCommand');
+const { handlePreviewUri } = require('../src/previewActions');
 
 function reset() {
   disk.clear();
@@ -110,6 +114,7 @@ function reset() {
   errors.length = 0;
   warnings.length = 0;
   routes = [];
+  sent.length = 0;
   docs = [];
   answers.warning = undefined;
 }
@@ -190,15 +195,40 @@ async function main() {
   routes = [page(5, '<p>New.</p>')];
   answers.warning = 'Pull';
   const link = { path: '/pull', query: 'file=' + encodeURIComponent('file:///w/notes/release-notes.md') };
-  await handlePullUri(link);
+  await handlePreviewUri(link);
   assert(errors.length === 1 && disk.get('/w/notes/release-notes.md') === LOCAL, 'a closed file is not pulled from a link');
   errors.length = 0;
   openDoc('/w/notes/release-notes.md');
-  await handlePullUri(link);
+  await handlePreviewUri(link);
   assert(!errors.length && disk.get('/w/notes/release-notes.md').includes('version: 5'), 'an open file is pulled from the preview link');
 
-  await handlePullUri({ path: '/other', query: '' });
+  await handlePreviewUri({ path: '/other', query: '' });
   assert(!errors.length, 'unknown URI paths are ignored');
+
+  // Push from the preview: asks first, saves unsaved edits, then publishes.
+  reset();
+  disk.set('/w/notes/release-notes.md', LOCAL);
+  const doc = openDoc('/w/notes/release-notes.md', true);
+  const push = { path: '/push', query: 'file=' + encodeURIComponent('file:///w/notes/release-notes.md') };
+  routes = [page(3, ''), { method: 'PUT', match: '/rest/api/content/12345', body: { id: '12345', version: { number: 4 } } }];
+  await handlePreviewUri(push);
+  assert(warnings.length === 1 && warnings[0].includes('unsaved'), 'push asks first and mentions unsaved changes');
+  assert(!sent.some((r) => r.method === 'PUT') && doc.saved === 0, 'declined push neither saves nor publishes');
+  answers.warning = 'Push';
+  await handlePreviewUri(push);
+  assert(doc.saved === 1, 'unsaved edits are saved before publishing');
+  const put = sent.find((r) => r.method === 'PUT');
+  assert(put && put.body.version.number === 4 && put.body.title === 'Release notes', 'the page is published as the next version');
+  assert(disk.get('/w/notes/release-notes.md').includes('version: 4'), 'the binding records the published version');
+  assert(!errors.length, 'no errors on push, got: ' + errors.join(' | '));
+
+  // A failed push is shown, not thrown.
+  reset();
+  disk.set('/w/notes/release-notes.md', LOCAL);
+  openDoc('/w/notes/release-notes.md');
+  answers.warning = 'Push';
+  await handlePreviewUri(push);
+  assert(errors.length === 1 && errors[0].includes('not found'), 'publish errors reach the user, got: ' + errors.join(' | '));
 
   console.log('pull command: OK');
 }

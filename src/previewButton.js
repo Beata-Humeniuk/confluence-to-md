@@ -1,9 +1,9 @@
 const { parseFrontMatter } = require('./frontMatter');
 
-const TOKEN = 'confluence_to_md_pull';
+const TOKEN = 'confluence_to_md_actions';
 
-function pullLink(uriScheme, extensionId, fileUri) {
-  return uriScheme + '://' + extensionId + '/pull?file=' + encodeURIComponent(String(fileUri));
+function actionLink(uriScheme, extensionId, action, fileUri) {
+  return uriScheme + '://' + extensionId + '/' + action + '?file=' + encodeURIComponent(String(fileUri));
 }
 
 function fileUriOf(query) {
@@ -11,9 +11,9 @@ function fileUriOf(query) {
 }
 
 // A markdown-it plugin for the Markdown preview: a file bound to a Confluence
-// page gets a small "Pull" button in the top right corner. The button is a
-// link back into VS Code, handled by the extension's URI handler.
-function previewPullButton(md, options) {
+// page gets small "Pull" and "Push" buttons in the top right corner. They are
+// links back into VS Code, handled by the extension's URI handler.
+function previewButtons(md, options) {
   md.core.ruler.push(TOKEN, (state) => {
     const { meta } = parseFrontMatter(state.src);
     if (!meta) return;
@@ -26,15 +26,18 @@ function previewPullButton(md, options) {
   md.renderer.rules[TOKEN] = (tokens, idx, opts, env) => {
     const doc = env && env.currentDocument;
     if (!doc || doc.scheme === 'untitled') return '';
-    const href = pullLink(options.uriScheme, options.extensionId, doc);
     const version = tokens[idx].meta.version;
-    const title = 'Update this file from Confluence' +
-      (version ? ' (local copy: version ' + version + ')' : '');
-    return '<a class="confluence-to-md-pull" href="' + md.utils.escapeHtml(href) +
-      '" title="' + md.utils.escapeHtml(title) + '">&#x21bb; Pull</a>\n';
+    const known = version ? ' (local copy: version ' + version + ')' : '';
+    const button = (action, label, title) => '<a class="confluence-to-md-' + action + '" href="' +
+      md.utils.escapeHtml(actionLink(options.uriScheme, options.extensionId, action, doc)) +
+      '" title="' + md.utils.escapeHtml(title) + '">' + label + '</a>';
+    return '<div class="confluence-to-md-actions">' +
+      button('pull', '&#x21bb; Pull', 'Update this file from Confluence' + known) +
+      button('push', '&#x2191; Push', 'Publish this file to Confluence' + known) +
+      '</div>\n';
   };
 
   return md;
 }
 
-module.exports = { previewPullButton, pullLink, fileUriOf };
+module.exports = { previewButtons, actionLink, fileUriOf };
