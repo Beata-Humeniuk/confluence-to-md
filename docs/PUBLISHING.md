@@ -34,6 +34,13 @@ its keys and adds a new binding to the same block when needed.
 The first `#` heading becomes the page title and is removed from the published
 body. If there is no level-one heading, the filename is used.
 
+## Push from the preview
+
+The Markdown preview of a bound file shows **↑ Push** next to **↻ Pull** in its
+top right corner. Push asks for confirmation, saves unsaved edits, and then
+publishes the file as described above, including the check for newer changes
+in Confluence. Like Pull, it only acts on a file that is open in VS Code.
+
 ## Split documents
 
 An index can link to files in a `sections/` or `parts/` folder. Publishing the

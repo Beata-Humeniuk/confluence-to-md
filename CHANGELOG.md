@@ -3,6 +3,19 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.0] - 2026-09-25
+
+### Added
+
+- A **↑ Push** button next to **↻ Pull** in the Markdown preview. It asks
+  before publishing, saves unsaved edits, and then publishes the file the same
+  way as **Confluence: Publish Page**.
+
+### Fixed
+
+- The preview's **↻ Pull** button reported that the file was not open on
+  Windows and for paths with spaces or other encoded characters.
+
 ## [1.2.0] - 2026-09-25
 
 ### Added

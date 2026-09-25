@@ -9,7 +9,6 @@ const { credentialsFor } = require('./credentials');
 const { errorMessage } = require('./messages');
 const { readSavedPages } = require('./savedPages');
 const { pulledDocument } = require('./pageDocument');
-const { fileUriOf } = require('./previewButton');
 
 function isInside(dir, root) {
   return !!root && dir.scheme === root.scheme && dir.authority === root.authority &&
@@ -117,19 +116,4 @@ async function pullPageCommand(fileUri) {
   }
 }
 
-// The preview's Pull button opens vscode://<extension>/pull?file=<uri>. Only a
-// file that is already open is pulled, so a link from elsewhere cannot reach
-// files the user is not looking at.
-async function handlePullUri(uri) {
-  if (uri.path !== '/pull') return;
-  const target = fileUriOf(uri.query);
-  const document = target && vscode.workspace.textDocuments.find(
-    (doc) => doc.uri.toString() === target);
-  if (!document) {
-    vscode.window.showErrorMessage('Open the Markdown file you want to update from Confluence, then use Pull again.');
-    return;
-  }
-  await pullPageCommand(document.uri);
-}
-
-module.exports = { pullPageCommand, handlePullUri };
+module.exports = { pullPageCommand };
