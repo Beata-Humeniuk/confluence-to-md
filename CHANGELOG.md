@@ -11,6 +11,11 @@ follows [Semantic Versioning](https://semver.org/).
   before publishing, saves unsaved edits, and then publishes the file the same
   way as **Confluence: Publish Page**.
 
+### Fixed
+
+- The preview's **↻ Pull** button reported that the file was not open on
+  Windows and for paths with spaces or other encoded characters.
+
 ## [1.2.0] - 2026-09-25
 
 ### Added

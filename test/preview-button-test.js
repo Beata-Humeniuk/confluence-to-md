@@ -1,6 +1,6 @@
 const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
 const MarkdownIt = require('markdown-it');
-const { previewButtons, actionLink, fileUriOf } = require('../src/previewButton');
+const { previewButtons, actionLink, fileUriCandidates } = require('../src/previewButton');
 
 const md = previewButtons(new MarkdownIt({ html: true }),
   { uriScheme: 'vscode', extensionId: 'beatahumeniuk.confluence-to-md' });
@@ -26,7 +26,11 @@ assert(!md.render(BOUND, { currentDocument: { scheme: 'untitled', toString: () =
 
 const link = actionLink('vscode-insiders', 'a.b', 'pull', 'file:///x/a&b.md');
 assert(link === 'vscode-insiders://a.b/pull?file=file%3A%2F%2F%2Fx%2Fa%26b.md', 'the link uses the editor URI scheme');
-assert(fileUriOf(link.split('?')[1]) === 'file:///x/a&b.md', 'the file round-trips through the query');
-assert(fileUriOf('') === '', 'an empty query names no file');
+assert(fileUriCandidates(link.split('?')[1]).includes('file:///x/a&b.md'), 'the file round-trips through an encoded query');
+assert(fileUriCandidates('file=file:///x/a&b+c.md').includes('file:///x/a&b+c.md'),
+  'a query VS Code already decoded keeps "&" and "+" in the file name');
+assert(fileUriCandidates('file=file:///c%3A/Users/a.md').includes('file:///c%3A/Users/a.md'),
+  'an encoded Windows drive stays available as is');
+assert(fileUriCandidates('').length === 0, 'an empty query names no file');
 
 console.log('preview button: OK');

@@ -1,7 +1,7 @@
 const vscode = require('vscode');
 const { pullPageCommand } = require('./pullCommand');
 const { publishPageCommand } = require('./publishCommand');
-const { fileUriOf } = require('./previewButton');
+const { fileUriCandidates } = require('./previewButton');
 
 async function pushFromPreview(document) {
   const push = 'Push';
@@ -29,9 +29,14 @@ const ACTIONS = {
 async function handlePreviewUri(uri) {
   const action = ACTIONS[uri.path];
   if (!action) return;
-  const target = fileUriOf(uri.query);
-  const document = target && vscode.workspace.textDocuments.find(
-    (doc) => doc.uri.toString() === target);
+  const targets = new Set();
+  for (const candidate of fileUriCandidates(uri.query)) {
+    try {
+      targets.add(vscode.Uri.parse(candidate).toString());
+    } catch (e) { }
+  }
+  const document = vscode.workspace.textDocuments.find(
+    (doc) => targets.has(doc.uri.toString()));
   if (!document) {
     vscode.window.showErrorMessage('Open the Markdown file in VS Code, then use the button in its preview again.');
     return;

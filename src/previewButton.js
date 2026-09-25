@@ -6,8 +6,18 @@ function actionLink(uriScheme, extensionId, action, fileUri) {
   return uriScheme + '://' + extensionId + '/' + action + '?file=' + encodeURIComponent(String(fileUri));
 }
 
-function fileUriOf(query) {
-  return new URLSearchParams(String(query || '')).get('file') || '';
+// VS Code decodes the query once before the URI handler sees it, so the value
+// may still be encoded or already plain. Take everything after "file=" as is:
+// a decoded file URI can itself contain "&" or "+".
+function fileUriCandidates(query) {
+  const m = /(?:^|&)file=(.*)$/.exec(String(query || ''));
+  if (!m || !m[1]) return [];
+  const out = [m[1]];
+  try {
+    const decoded = decodeURIComponent(m[1]);
+    if (decoded !== m[1]) out.push(decoded);
+  } catch (e) { }
+  return out;
 }
 
 // A markdown-it plugin for the Markdown preview: a file bound to a Confluence
@@ -40,4 +50,4 @@ function previewButtons(md, options) {
   return md;
 }
 
-module.exports = { previewButtons, actionLink, fileUriOf };
+module.exports = { previewButtons, actionLink, fileUriCandidates };

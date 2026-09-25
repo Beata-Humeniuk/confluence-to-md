@@ -10,8 +10,18 @@ const answers = { warning: undefined };
 let routes = [];
 let docs = [];
 
+// Like VS Code, toString() percent-encodes path segments (a Windows drive
+// becomes /c%3A/), and parse() decodes them again.
 function uri(path) {
-  return { scheme: 'file', authority: '', path, fsPath: path, toString: () => 'file://' + path };
+  return {
+    scheme: 'file', authority: '', path, fsPath: path,
+    toString: () => 'file://' + path.split('/').map(encodeURIComponent).join('/')
+  };
+}
+
+function parse(text) {
+  if (!/^file:\/\//.test(text)) throw new Error('not a file URI: ' + text);
+  return uri(text.slice('file://'.length).split('/').map(decodeURIComponent).join('/'));
 }
 
 function joinPath(base, ...parts) {
@@ -41,7 +51,7 @@ function WorkspaceEdit() { this.edits = []; }
 WorkspaceEdit.prototype.replace = function (target, range, text) { this.edits.push({ target, range, text }); };
 
 const vscodeStub = {
-  Uri: { file: uri, joinPath },
+  Uri: { file: uri, joinPath, parse },
   Range: function Range(start, end) { this.start = start; this.end = end; },
   WorkspaceEdit,
   ProgressLocation: { Notification: 15 },
@@ -107,6 +117,7 @@ global.fetch = async (url, options) => {
 
 const { pullPageCommand } = require('../src/pullCommand');
 const { handlePreviewUri } = require('../src/previewActions');
+const { actionLink } = require('../src/previewButton');
 
 function reset() {
   disk.clear();
@@ -201,6 +212,22 @@ async function main() {
   openDoc('/w/notes/release-notes.md');
   await handlePreviewUri(link);
   assert(!errors.length && disk.get('/w/notes/release-notes.md').includes('version: 5'), 'an open file is pulled from the preview link');
+
+  // A Windows path, as the preview button encodes it and as VS Code hands the
+  // link over: the query arrives decoded once.
+  reset();
+  const WIN = '/c:/Users/Ann Lee/docs/release-notes.md';
+  disk.set(WIN, LOCAL);
+  openDoc(WIN);
+  routes = [page(5, '<p>New.</p>')];
+  answers.warning = 'Pull';
+  const button = actionLink('vscode', 'beatahumeniuk.confluence-to-md', 'pull', uri(WIN).toString());
+  await handlePreviewUri({ path: '/pull', query: decodeURIComponent(button.split('?')[1]) });
+  assert(!errors.length, 'a Windows file is found from the preview link, got: ' + errors.join(' | '));
+  assert(disk.get(WIN).includes('version: 5'), 'the Windows file is pulled');
+  disk.set(WIN, LOCAL);
+  await handlePreviewUri({ path: '/pull', query: button.split('?')[1] });
+  assert(!errors.length && disk.get(WIN).includes('version: 5'), 'a still-encoded query works too');
 
   await handlePreviewUri({ path: '/other', query: '' });
   assert(!errors.length, 'unknown URI paths are ignored');
