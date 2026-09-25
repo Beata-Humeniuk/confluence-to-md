@@ -74,6 +74,25 @@ Links that still point to Confluence remain usable in a downloaded file:
 - clicking a relative Confluence link such as `/wiki/spaces/...` opens it in
   the browser on that instance.
 
+## Update a downloaded page
+
+A file with a `confluence:` binding can be updated to the page's current
+version. In the Markdown preview, click **↻ Pull** in the top right corner, or
+run **Confluence: Pull Page** with the file open.
+
+- If the page has the version stored in the file, the extension reports that
+  the file is up to date and changes nothing.
+- Otherwise it asks before replacing the content. Publish local edits you want
+  to keep first: pull replaces the whole file, including unsaved changes.
+- The binding moves to the new version and the `generated` date is refreshed.
+  Other front matter keys you added are kept.
+- Links to pages saved in the download folder become relative links, and long
+  code blocks are extracted, the same as during a download.
+
+The first time you click the button, VS Code asks whether to let the extension
+open the link. Choose **Do not ask me again for this extension** to skip the
+question next time. The button only acts on a file that is open in VS Code.
+
 ## Images
 
 `confluenceToMd.images` controls how downloaded images are handled:

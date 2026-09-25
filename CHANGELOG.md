@@ -3,6 +3,15 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Update a downloaded file from Confluence, like `git pull`: a **↻ Pull**
+  button in the top right corner of the Markdown preview for files bound to a
+  page, and the **Confluence: Pull Page** command. It checks the version first
+  and asks before replacing the file.
+
 ## [1.1.0] - 2026-08-18
 
 ### Added

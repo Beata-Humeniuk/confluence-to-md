@@ -35,6 +35,19 @@ Markdown links.
 See [Downloading pages](docs/DOWNLOADING.md) for save locations, link handling,
 images, and extracted code samples.
 
+## Update a page from Confluence
+
+A downloaded file can be refreshed from Confluence, like `git pull`. Open the
+Markdown preview: a file bound to a page shows a small **↻ Pull** button in its
+top right corner. You can also run **Confluence: Pull Page** in the editor.
+
+The extension compares versions first. If the file is up to date, nothing
+changes. Otherwise it asks before replacing the file content with the current
+page, because edits you have not published are lost.
+
+See [Downloading pages](docs/DOWNLOADING.md#update-a-downloaded-page) for
+details.
+
 ## Publish a page
 
 Open a Markdown file and run **Confluence: Publish Page**.
