@@ -1,0 +1,108 @@
+name: Publish extension (Jira to OpenSpec)
+
+# Run by hand from the Actions tab once the extension is ready for the
+# Marketplace. Each version is published once and tagged jira-to-openspec-v<version>.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-marketplace-jira
+  cancel-in-progress: false
+
+defaults:
+  run:
+    working-directory: jira-to-openspec
+
+jobs:
+  publish:
+    name: Test, package and publish
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out main
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+
+      - name: Read version and check whether it is new
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(node -p "require('./package.json').version")
+          tag="jira-to-openspec-v${version}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "vsix=jira-to-openspec-${version}.vsix" >> "$GITHUB_OUTPUT"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "Version $version already has tag $tag; nothing will be published."
+          else
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up Node.js
+        if: steps.version.outputs.publish == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: jira-to-openspec/package-lock.json
+
+      - name: Install locked dependencies
+        if: steps.version.outputs.publish == 'true'
+        run: npm ci
+
+      - name: Run tests
+        if: steps.version.outputs.publish == 'true'
+        run: npm test
+
+      - name: Build final VSIX
+        if: steps.version.outputs.publish == 'true'
+        run: npm run package -- --out "${{ steps.version.outputs.vsix }}"
+
+      - name: Verify final VSIX
+        if: steps.version.outputs.publish == 'true'
+        env:
+          VSIX: ${{ steps.version.outputs.vsix }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          unexpected=$(unzip -Z1 "$VSIX" | grep -E '(^|/)(\.env($|\.)|\.git/|\.github/|\.claude/|node_modules/|src/|test/|out-test/)|\.(pem|key|p12|pfx)$' || true)
+          if [ -n "$unexpected" ]; then
+            echo "Unexpected sensitive or development files in VSIX:"
+            echo "$unexpected"
+            exit 1
+          fi
+
+      - name: Publish to Visual Studio Marketplace
+        if: steps.version.outputs.publish == 'true'
+        env:
+          VSCE_PAT: ${{ secrets.VSCE_PAT }}
+          VSIX: ${{ steps.version.outputs.vsix }}
+        run: npx --no-install vsce publish --packagePath "$VSIX"
+
+      - name: Create version tag
+        if: steps.version.outputs.publish == 'true'
+        env:
+          TAG: ${{ steps.version.outputs.tag }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$TAG" -m "$TAG"
+          git push origin "$TAG"
+
+      - name: Create GitHub Release with the published VSIX
+        if: steps.version.outputs.publish == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+          VSIX: ${{ steps.version.outputs.vsix }}
+        run: gh release create "$TAG" "$VSIX" --verify-tag --generate-notes --title "Jira to OpenSpec $TAG"

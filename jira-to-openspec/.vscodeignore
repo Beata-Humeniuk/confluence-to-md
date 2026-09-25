@@ -1,15 +1,10 @@
-.git/**
-.github/**
-.claude/**
 .vscode/**
 src/**
 test/**
 docs/**
-jira-to-openspec/**
 node_modules/**
 *.vsix
 **/*.map
 .gitignore
 package-lock.json
-SECURITY.md
 **/.DS_Store

@@ -118,6 +118,12 @@ available: this extension is the only one that talks to Confluence, and the
 only home of the Confluence token. Callers are expected to hide their
 Confluence UI in that case rather than offering an action that cannot run.
 
+## Jira and OpenSpec
+
+The sister extension [Jira to OpenSpec](jira-to-openspec/README.md) does the
+same for Jira: it downloads issues and whole epics as OpenSpec change proposals
+and pushes them back.
+
 ## Installation and support
 
 Install **Confluence to Markdown** from the Visual Studio Code Marketplace, or
