@@ -21,7 +21,7 @@ function fileUriCandidates(query) {
 }
 
 // A markdown-it plugin for the Markdown preview: a file bound to a Confluence
-// page gets small "Pull" and "Push" buttons in the top right corner. They are
+// page gets small "Pull" and "Publish" buttons in the top right corner. They are
 // links back into VS Code, handled by the extension's URI handler.
 function previewButtons(md, options) {
   md.core.ruler.push(TOKEN, (state) => {
@@ -43,7 +43,7 @@ function previewButtons(md, options) {
       '" title="' + md.utils.escapeHtml(title) + '">' + label + '</a>';
     return '<div class="confluence-to-md-actions">' +
       button('pull', '&#x21bb; Pull', 'Update this file from Confluence' + known) +
-      button('push', '&#x2191; Push', 'Publish this file to Confluence' + known) +
+      button('publish', '&#x2191; Publish', 'Publish this file to Confluence' + known) +
       '</div>\n';
   };
 

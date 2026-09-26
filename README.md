@@ -51,7 +51,7 @@ details.
 ## Publish a page
 
 Open a Markdown file and run **Confluence: Publish Page**. For a bound file you
-can also click **↑ Push** in the top right corner of the Markdown preview; it
+can also click **↑ Publish** in the top right corner of the Markdown preview; it
 asks first and saves unsaved edits before publishing.
 
 - A file with a `confluence:` front matter block updates its bound page. The

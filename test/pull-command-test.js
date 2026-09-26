@@ -232,16 +232,16 @@ async function main() {
   await handlePreviewUri({ path: '/other', query: '' });
   assert(!errors.length, 'unknown URI paths are ignored');
 
-  // Push from the preview: asks first, saves unsaved edits, then publishes.
+  // Publish from the preview: asks first, saves unsaved edits, then publishes.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   const doc = openDoc('/w/notes/release-notes.md', true);
-  const push = { path: '/push', query: 'file=' + encodeURIComponent('file:///w/notes/release-notes.md') };
+  const push = { path: '/publish', query: 'file=' + encodeURIComponent('file:///w/notes/release-notes.md') };
   routes = [page(3, ''), { method: 'PUT', match: '/rest/api/content/12345', body: { id: '12345', version: { number: 4 } } }];
   await handlePreviewUri(push);
   assert(warnings.length === 1 && warnings[0].includes('unsaved'), 'push asks first and mentions unsaved changes');
   assert(!sent.some((r) => r.method === 'PUT') && doc.saved === 0, 'declined push neither saves nor publishes');
-  answers.warning = 'Push';
+  answers.warning = 'Publish';
   await handlePreviewUri(push);
   assert(doc.saved === 1, 'unsaved edits are saved before publishing');
   const put = sent.find((r) => r.method === 'PUT');
@@ -249,11 +249,11 @@ async function main() {
   assert(disk.get('/w/notes/release-notes.md').includes('version: 4'), 'the binding records the published version');
   assert(!errors.length, 'no errors on push, got: ' + errors.join(' | '));
 
-  // A failed push is shown, not thrown.
+  // A failed publish is shown, not thrown.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   openDoc('/w/notes/release-notes.md');
-  answers.warning = 'Push';
+  answers.warning = 'Publish';
   await handlePreviewUri(push);
   assert(errors.length === 1 && errors[0].includes('not found'), 'publish errors reach the user, got: ' + errors.join(' | '));
 

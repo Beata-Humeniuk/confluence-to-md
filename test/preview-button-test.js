@@ -11,8 +11,8 @@ let html = md.render(BOUND, { currentDocument: doc });
 assert(html.indexOf('<div class="confluence-to-md-actions">') === 0, 'a bound file starts with the buttons, got: ' + html);
 assert(html.includes('href="vscode://beatahumeniuk.confluence-to-md/pull?file=file%3A%2F%2F%2Fw%2FMy%2520page.md"'),
   'the pull button links back to the extension with the previewed file');
-assert(html.includes('href="vscode://beatahumeniuk.confluence-to-md/push?file=file%3A%2F%2F%2Fw%2FMy%2520page.md"'),
-  'the push button links back to the extension with the previewed file');
+assert(html.includes('href="vscode://beatahumeniuk.confluence-to-md/publish?file=file%3A%2F%2F%2Fw%2FMy%2520page.md"'),
+  'the publish button links back to the extension with the previewed file');
 assert(html.includes('version 7'), 'the tooltip names the local version');
 assert(html.includes('<h1>Title</h1>'), 'the page itself still renders');
 

@@ -3,13 +3,13 @@ const { pullPageCommand } = require('./pullCommand');
 const { publishPageCommand } = require('./publishCommand');
 const { fileUriCandidates } = require('./previewButton');
 
-async function pushFromPreview(document) {
-  const push = 'Push';
+async function publishFromPreview(document) {
+  const publish = 'Publish';
   const picked = await vscode.window.showWarningMessage(
     'Publish "' + vscode.workspace.asRelativePath(document.uri, false) + '" to Confluence?' +
     (document.isDirty ? ' Your unsaved changes are saved first.' : ''),
-    { modal: true }, push);
-  if (picked !== push) return;
+    { modal: true }, publish);
+  if (picked !== publish) return;
   try {
     if (document.isDirty && !await document.save()) return;
     await publishPageCommand(document.uri);
@@ -20,7 +20,7 @@ async function pushFromPreview(document) {
 
 const ACTIONS = {
   '/pull': (document) => pullPageCommand(document.uri),
-  '/push': pushFromPreview
+  '/publish': publishFromPreview
 };
 
 // The preview's buttons open vscode://<extension>/<action>?file=<uri>. Only a

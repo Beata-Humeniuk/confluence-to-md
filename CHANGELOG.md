@@ -3,6 +3,13 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.3.1] - 2026-09-26
+
+### Changed
+
+- The preview button next to **↻ Pull** is now called **↑ Publish**, matching
+  the **Confluence: Publish Page** command.
+
 ## [1.3.0] - 2026-09-25
 
 ### Added
