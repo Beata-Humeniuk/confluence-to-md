@@ -1,53 +1,22 @@
 const vscode = require('vscode');
-const { convertHtmlToMd } = require('./htmlToMd');
-const { rewriteConfluenceLinks } = require('./mdDocument');
-const { extractLongCodeBlocks } = require('./codeSamples');
 const { parseFrontMatter } = require('./frontMatter');
 const { parsePageUrl, fetchPageById } = require('./confluenceClient');
-const { downloadFolderUri, imagesMode, appendixHeading } = require('./config');
 const { credentialsFor } = require('./credentials');
 const { errorMessage } = require('./messages');
-const { readSavedPages } = require('./savedPages');
-const { pulledDocument } = require('./pageDocument');
+const { remoteDocument, samplesFolder } = require('./remoteDocument');
+const { showPageDiff } = require('./pageDiff');
 
-function isInside(dir, root) {
-  return !!root && dir.scheme === root.scheme && dir.authority === root.authority &&
-    (dir.path === root.path || dir.path.startsWith(root.path.replace(/\/+$/, '') + '/'));
-}
+const PULL = 'Pull';
+const COMPARE = 'Compare';
 
-// Links between saved pages are relative to the download folder, so pull
-// within it when the file lives there, and within the file's own folder otherwise.
-function pagesRoot(dir) {
-  const configured = downloadFolderUri();
-  return isInside(dir, configured) ? configured : dir;
-}
-
-function relativeDir(dir, root) {
-  return dir.path.slice(root.path.replace(/\/+$/, '').length).replace(/^\/+/, '');
-}
-
-async function rewriteForFolder(uri, markdown, origin) {
-  const dir = vscode.Uri.joinPath(uri, '..');
-  const root = pagesRoot(dir);
-  const pathById = new Map();
-  const pathByTitle = new Map();
-  for (const s of await readSavedPages(root)) {
-    if (s.pageId) pathById.set(s.pageId, s.relPath);
-    if (s.title) pathByTitle.set(s.title, s.relPath);
-  }
-  return rewriteConfluenceLinks(markdown, pathByTitle,
-    { slugById: pathById, origin, fromDir: relativeDir(dir, root) });
-}
-
-async function confirmPull(document, localVersion, remoteVersion) {
-  const pull = 'Pull';
-  const picked = await vscode.window.showWarningMessage(
+function askToPull(document, localVersion, remoteVersion) {
+  return vscode.window.showWarningMessage(
     'Update "' + vscode.workspace.asRelativePath(document.uri, false) + '" to version ' +
     remoteVersion + ' from Confluence' + (localVersion ? ' (your copy is version ' + localVersion + ')' : '') +
     '? The file content is replaced' +
-    (document.isDirty ? ', including your unsaved changes.' : '; changes you have not published are lost.'),
-    { modal: true }, pull);
-  return picked === pull;
+    (document.isDirty ? ', including your unsaved changes.' : '; changes you have not published are lost.') +
+    ' Compare to review the differences first.',
+    { modal: true }, COMPARE, PULL);
 }
 
 async function writeDocument(document, content) {
@@ -68,10 +37,6 @@ async function writeSamples(uri, samples) {
   }
 }
 
-function samplesFolder(uri) {
-  return uri.path.split('/').pop().replace(/\.md$/i, '') + '.samples';
-}
-
 async function pullDocument(document) {
   const { meta } = parseFrontMatter(document.getText());
   if (!meta) {
@@ -90,14 +55,16 @@ async function pullDocument(document) {
     vscode.window.showInformationMessage('Already up to date — "' + page.title + '" is at version ' + page.version + '.');
     return;
   }
-  if (!await confirmPull(document, meta.version, page.version)) return;
+  const remote = await remoteDocument(document.uri, page, document.getText());
+  const picked = await askToPull(document, meta.version, page.version);
+  if (picked === COMPARE) {
+    await showPageDiff(document.uri, remote.text, page.version);
+    return;
+  }
+  if (picked !== PULL) return;
 
-  const converted = convertHtmlToMd(page.html, { origin: parsed.site.origin, images: imagesMode() });
-  const linked = await rewriteForFolder(document.uri, converted.markdown, parsed.site.origin);
-  const extracted = extractLongCodeBlocks(linked, samplesFolder(document.uri),
-    { appendixHeading: appendixHeading() });
-  await writeDocument(document, pulledDocument(page, extracted.markdown, document.getText()));
-  await writeSamples(document.uri, extracted.samples);
+  await writeDocument(document, remote.text);
+  await writeSamples(document.uri, remote.samples);
 
   vscode.window.showInformationMessage('Pulled "' + page.title + '" — version ' + page.version +
     (meta.version ? ' (was ' + meta.version + ').' : '.'));

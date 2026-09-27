@@ -43,7 +43,8 @@ top right corner. You can also run **Confluence: Pull Page** in the editor.
 
 The extension compares versions first. If the file is up to date, nothing
 changes. Otherwise it asks before replacing the file content with the current
-page, because edits you have not published are lost.
+page, because edits you have not published are lost. **Compare** shows the
+differences first without changing the file.
 
 See [Downloading pages](docs/DOWNLOADING.md#update-a-downloaded-page) for
 details.
@@ -54,8 +55,9 @@ Open a Markdown file and run **Confluence: Publish Page**. For a bound file you
 can also click **↑ Publish** in the top right corner of the Markdown preview; it
 asks first and saves unsaved edits before publishing.
 
-- A file with a `confluence:` front matter block updates its bound page. The
-  extension checks for newer changes before overwriting it.
+- A file with a `confluence:` front matter block updates its bound page. If
+  someone changed the page since your version, the extension asks first and
+  offers **Compare**, which shows their changes next to your file.
 - A file without a binding creates a page under the parent whose link you
   provide. The new binding is added to the file.
 

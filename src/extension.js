@@ -5,6 +5,7 @@ const { pullPageCommand } = require('./pullCommand');
 const { handlePreviewUri } = require('./previewActions');
 const { provideDocumentLinks, openPageLinkCommand } = require('./documentLinks');
 const { previewButtons } = require('./previewButton');
+const { PAGE_DIFF_SCHEME, pageDiffContentProvider } = require('./pageDiff');
 
 function activate(context) {
   context.subscriptions.push(
@@ -13,7 +14,8 @@ function activate(context) {
     vscode.commands.registerCommand('confluenceToMd.pullPage', pullPageCommand),
     vscode.commands.registerCommand('confluenceToMd.openPageLink', openPageLinkCommand),
     vscode.languages.registerDocumentLinkProvider({ language: 'markdown' }, { provideDocumentLinks }),
-    vscode.window.registerUriHandler({ handleUri: handlePreviewUri })
+    vscode.window.registerUriHandler({ handleUri: handlePreviewUri }),
+    vscode.workspace.registerTextDocumentContentProvider(PAGE_DIFF_SCHEME, pageDiffContentProvider)
   );
   return {
     extendMarkdownIt: (md) => previewButtons(md,

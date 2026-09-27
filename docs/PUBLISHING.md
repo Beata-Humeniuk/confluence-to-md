@@ -24,7 +24,8 @@ managed: true
 
 - **A bound file** has a `confluence:` block. Publishing updates that page.
   The extension compares versions first and asks before overwriting a newer
-  page, then stores the published version in the file.
+  page, then stores the published version in the file. See
+  [Changes made by someone else](#changes-made-by-someone-else).
 - **An unbound file** has no `confluence:` block. Publishing creates a page
   under the parent whose link you provide, then adds the binding to the file.
 
@@ -33,6 +34,23 @@ its keys and adds a new binding to the same block when needed.
 
 The first `#` heading becomes the page title and is removed from the published
 body. If there is no level-one heading, the filename is used.
+
+## Changes made by someone else
+
+Before updating a page, the extension compares the page's current version with
+the version stored in the file. If they differ, or the file stores no version,
+the page may hold changes your file does not have, and the extension asks what
+to do:
+
+- **Compare** opens a diff with the page as it is in Confluence on the left and
+  your file on the right. Nothing is published. Bring the changes you want to
+  keep into your file, then publish again and choose **Overwrite**.
+- **Overwrite** publishes your file as the next page version. Changes made in
+  Confluence since your version remain only in the page history.
+- **Cancel** does nothing.
+
+If someone publishes between the check and your update, Confluence rejects
+the update with a version conflict and the page is left unchanged.
 
 ## Publish from the preview
 
