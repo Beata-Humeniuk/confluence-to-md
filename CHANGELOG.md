@@ -13,6 +13,14 @@ follows [Semantic Versioning](https://semver.org/).
   no longer show a syntax error in Confluence. The Markdown file is not
   changed.
 
+### Fixed
+
+- Long Mermaid diagrams are no longer extracted to the `.samples` folder when
+  downloading or pulling a page.
+- Publishing a file with extracted code samples puts their content back on the
+  page. Before, the page received links to the local sample files instead of
+  the code.
+
 ## [1.5.0] - 2026-09-27
 
 ### Added

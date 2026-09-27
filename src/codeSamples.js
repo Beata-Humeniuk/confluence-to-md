@@ -13,6 +13,8 @@ const EXTENSIONS = {
   typescript: 'ts', python: 'py', py: 'py', sh: 'sh', bash: 'sh'
 };
 
+const SAMPLE_LINK = /^\[[^\]]*\]\(([^()\s]+\.samples\/[^()\s]+)\)\s*$/;
+
 function extensionFor(lang) {
   return EXTENSIONS[String(lang).trim().toLowerCase()] || 'txt';
 }
@@ -73,7 +75,7 @@ function extractLongCodeBlocks(markdown, folderName, options) {
     }
     for (let k = i + 1; k < j; k++) body.push(lines[k]);
 
-    if (!inAppendix && body.length <= max) {
+    if (lang.toLowerCase() === 'mermaid' || (!inAppendix && body.length <= max)) {
       for (let k = i; k <= j; k++) out.push(lines[k]);
       i = j;
       continue;
@@ -88,4 +90,40 @@ function extractLongCodeBlocks(markdown, folderName, options) {
   return { markdown: out.join('\n'), samples };
 }
 
-module.exports = { extractLongCodeBlocks, LONG_BLOCK_LINES, APPENDIX_NOTE };
+function samplePathOf(line) {
+  const link = line.match(SAMPLE_LINK);
+  if (!link) return null;
+  try {
+    return decodeURIComponent(link[1]);
+  } catch (e) {
+    return link[1];
+  }
+}
+
+function sampleLinkPaths(markdown) {
+  return String(markdown).split('\n').map(samplePathOf).filter(Boolean);
+}
+
+function fenceFor(content) {
+  const longest = (content.match(/`+/g) || []).reduce((n, run) => Math.max(n, run.length), 0);
+  return '`'.repeat(Math.max(3, longest + 1));
+}
+
+function languageOf(path) {
+  const ext = path.split('.').pop().toLowerCase();
+  return ext === 'txt' ? '' : ext;
+}
+
+function inlineSamples(markdown, contents) {
+  return String(markdown).split('\n').map((line) => {
+    const path = samplePathOf(line);
+    const content = path && contents.get(path);
+    if (typeof content !== 'string') return line;
+    const fence = fenceFor(content);
+    return fence + languageOf(path) + '\n' + content.replace(/\n$/, '') + '\n' + fence;
+  }).join('\n');
+}
+
+module.exports = {
+  extractLongCodeBlocks, sampleLinkPaths, inlineSamples, LONG_BLOCK_LINES, APPENDIX_NOTE
+};

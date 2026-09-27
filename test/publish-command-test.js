@@ -240,6 +240,16 @@ async function main() {
   assert(warnings.length === 1 && /does not record which page version/.test(warnings[0]),
     'the warning explains the missing version, got: ' + warnings[0]);
 
+  reset();
+  disk.set('/w/doc.md', BOUND.replace('Body.', '[export.xml](doc.samples/export.xml)'));
+  disk.set('/w/doc.samples/export.xml', '<a>1</a>\n');
+  routes = [META, UPDATED];
+  await publishPageCommand(uri('/w/doc.md'));
+  const storage = sent.find((r) => r.method === 'PUT').body.body.storage.value;
+  assert(storage.includes('<![CDATA[<a>1</a>]]>') && storage.includes('<ac:parameter ac:name="language">xml</ac:parameter>'),
+    'the sample file is published as a code block, got: ' + storage);
+  assert(!storage.includes('doc.samples'), 'no link to the local sample file reaches Confluence');
+
   // A failure rejects with the message the interactive path would have shown.
   reset();
   disk.set('/w/doc.md', BOUND);

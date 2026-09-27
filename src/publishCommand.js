@@ -2,6 +2,7 @@ const vscode = require('vscode');
 const { mdToStorage } = require('./mdToStorage');
 const { parseFrontMatter, serializeFrontMatter } = require('./frontMatter');
 const { partPaths, assembleParts } = require('./assembleParts');
+const { sampleLinkPaths, inlineSamples } = require('./codeSamples');
 const {
   parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, createPage, updatePage, pageWebUrl
 } = require('./confluenceClient');
@@ -55,6 +56,20 @@ async function assemblePackage(uri, body) {
     }
   }
   return assembleParts(body, texts);
+}
+
+async function withSampleFiles(uri, markdown) {
+  if (!uri || uri.scheme === 'untitled') return markdown;
+  const folder = vscode.Uri.joinPath(uri, '..');
+  const contents = new Map();
+  for (const path of sampleLinkPaths(markdown)) {
+    try {
+      contents.set(path, await readPart(vscode.Uri.joinPath(folder, ...path.split('/'))));
+    } catch (e) {
+      contents.set(path, null);
+    }
+  }
+  return inlineSamples(markdown, contents);
 }
 
 async function confirmMissingParts(missing) {
@@ -193,8 +208,9 @@ async function publishPageCommand(fileUri) {
 
     const assembled = await assemblePackage(source.uri, body);
     if (!await confirmMissingParts(assembled.missing)) return;
+    const markdown = await withSampleFiles(source.uri, assembled.markdown);
     const { title, content } = splitTitleAndBody(
-      assembled.markdown, source.fileName.replace(/\.md$/i, '') || 'Untitled');
+      markdown, source.fileName.replace(/\.md$/i, '') || 'Untitled');
     const storage = mdToStorage(content, { mermaidMacro: mermaidMacro(), mermaidVersion: mermaidVersion() });
     const note = assembled.inlined.length
       ? ' The page carries the whole design: ' + assembled.inlined.length + ' ' +
