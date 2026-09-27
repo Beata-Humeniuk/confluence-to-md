@@ -3,6 +3,13 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.1] - 2026-09-27
+
+### Changed
+
+- The README covers only using the extension. The API for other extensions
+  moved to [docs/API.md](docs/API.md).
+
 ## [1.6.0] - 2026-09-27
 
 ### Added
