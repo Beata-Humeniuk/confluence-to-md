@@ -3,6 +3,22 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.5.0] - 2026-09-27
+
+### Added
+
+- **Compare** when publishing over a page that changed in Confluence. It opens
+  a diff with the current page next to your file, so changes made by others
+  can be brought into the file instead of being overwritten.
+- **Compare** when pulling. It shows the differences without replacing the
+  file, so local edits are not lost by accident.
+
+### Changed
+
+- A bound file that stores no page version is no longer published without
+  asking. The extension treats the page as possibly changed and offers
+  **Compare** or **Overwrite**.
+
 ## [1.4.0] - 2026-09-27
 
 ### Added

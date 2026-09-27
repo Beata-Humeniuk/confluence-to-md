@@ -2,10 +2,17 @@ const vscode = require('vscode');
 const { mdToStorage } = require('./mdToStorage');
 const { parseFrontMatter, serializeFrontMatter } = require('./frontMatter');
 const { partPaths, assembleParts } = require('./assembleParts');
-const { parsePageUrl, fetchPageMeta, fetchPageByTitle, createPage, updatePage, pageWebUrl } = require('./confluenceClient');
+const {
+  parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, createPage, updatePage, pageWebUrl
+} = require('./confluenceClient');
 const { credentialsFor } = require('./credentials');
 const { errorMessage } = require('./messages');
 const { mermaidMacro } = require('./config');
+const { remoteDocument } = require('./remoteDocument');
+const { showPageDiff } = require('./pageDiff');
+
+const COMPARE = 'Compare';
+const OVERWRITE = 'Overwrite';
 
 function partsWord(n) {
   return n === 1 ? 'part' : 'parts';
@@ -95,6 +102,34 @@ async function writeBinding(source, meta) {
   });
 }
 
+function overwriteWarning(localVersion, remoteVersion) {
+  const state = localVersion
+    ? 'The page has changed in Confluence (version ' + remoteVersion +
+      ', your file is based on version ' + localVersion + ').'
+    : 'Your file does not record which page version it is based on (Confluence has version ' +
+      remoteVersion + ').';
+  return state + ' Overwriting replaces any changes made there in the meantime. ' +
+    'Compare to review them and bring the ones to keep into your file.';
+}
+
+async function compareWithPage(source, parsed, creds) {
+  const page = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: 'Downloading the page from Confluence…' },
+    () => fetchPageById(creds, parsed.site, parsed.pageId));
+  const remote = await remoteDocument(source.uri, page, source.text);
+  await showPageDiff(source.uri, remote.text, page.version);
+  vscode.window.showInformationMessage('Bring the changes you want to keep into your file, ' +
+    'then publish again and choose ' + OVERWRITE + '.');
+}
+
+// Asks before replacing a page that may hold changes the file does not have.
+async function confirmOverwrite(source, parsed, creds, localVersion, remoteVersion) {
+  const picked = await vscode.window.showWarningMessage(
+    overwriteWarning(localVersion, remoteVersion), { modal: true }, COMPARE, OVERWRITE);
+  if (picked === COMPARE) await compareWithPage(source, parsed, creds);
+  return picked === OVERWRITE;
+}
+
 async function publishUpdate(source, meta, title, storage, note) {
   const parsed = parsePageUrl(meta.url);
   if (!parsed || !parsed.pageId) throw new Error('bad-url');
@@ -104,13 +139,8 @@ async function publishUpdate(source, meta, title, storage, note) {
   const current = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Checking page version…' },
     () => fetchPageMeta(creds, parsed.site, parsed.pageId));
-  if (meta.version && current.version !== meta.version) {
-    const overwrite = 'Overwrite';
-    const picked = await vscode.window.showWarningMessage(
-      'The page has changed in Confluence (version ' + current.version + ', your local copy knows ' + meta.version + '). Overwrite?',
-      { modal: true }, overwrite);
-    if (picked !== overwrite) return;
-  }
+  if (current.version !== meta.version &&
+    !await confirmOverwrite(source, parsed, creds, meta.version, current.version)) return;
 
   const updated = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Publishing to Confluence…' },

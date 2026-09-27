@@ -7,6 +7,7 @@ const info = [];
 const errors = [];
 const warnings = [];
 const answers = { warning: undefined };
+const commands = [];
 let routes = [];
 let docs = [];
 
@@ -51,7 +52,7 @@ function WorkspaceEdit() { this.edits = []; }
 WorkspaceEdit.prototype.replace = function (target, range, text) { this.edits.push({ target, range, text }); };
 
 const vscodeStub = {
-  Uri: { file: uri, joinPath, parse },
+  Uri: { file: uri, joinPath, parse, from: (parts) => parts },
   Range: function Range(start, end) { this.start = start; this.end = end; },
   WorkspaceEdit,
   ProgressLocation: { Notification: 15 },
@@ -96,7 +97,7 @@ const vscodeStub = {
     getWorkspaceFolder: () => null,
     workspaceFolders: []
   },
-  commands: { executeCommand: async () => {} }
+  commands: { executeCommand: async (...args) => { commands.push(args); } }
 };
 
 const Module = require('module');
@@ -128,6 +129,7 @@ function reset() {
   sent.length = 0;
   docs = [];
   answers.warning = undefined;
+  commands.length = 0;
 }
 
 const SITE = 'https://acme.atlassian.net/wiki';
@@ -174,6 +176,24 @@ async function main() {
   routes = [page(5, '<p>New.</p>')];
   await pullPageCommand(uri('/w/notes/release-notes.md'));
   assert(disk.get('/w/notes/release-notes.md') === LOCAL, 'cancelled pull does not touch the file');
+
+  // Compare opens the page next to the file and leaves the file as it is.
+  reset();
+  disk.set('/w/notes/release-notes.md', LOCAL);
+  routes = [page(5, '<p>Changed in Confluence.</p>')];
+  answers.warning = 'Compare';
+  await pullPageCommand(uri('/w/notes/release-notes.md'));
+  assert(warnings.length === 1 && warnings[0].includes('Compare'), 'the prompt offers a comparison');
+  assert(disk.get('/w/notes/release-notes.md') === LOCAL, 'comparing does not touch the file');
+  assert(commands.length === 1 && commands[0][0] === 'vscode.diff', 'a diff is opened');
+  const [, left, right, label] = commands[0];
+  assert(left.scheme === 'confluence-page' && right.path === '/w/notes/release-notes.md',
+    'the page is on the left and the file on the right');
+  assert(label.includes('version 5'), 'the diff title names the page version');
+  const { pageDiffContentProvider } = require('../src/pageDiff');
+  const shown = pageDiffContentProvider.provideTextDocumentContent(left);
+  assert(shown.includes('Changed in Confluence.') && shown.includes('version: 5'),
+    'the left side is what a pull would write, got: ' + shown);
 
   // Same version: nothing to do, no prompt.
   reset();

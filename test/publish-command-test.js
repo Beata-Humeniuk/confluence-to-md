@@ -8,6 +8,8 @@ const sent = [];
 const info = [];
 const errors = [];
 const answers = { input: undefined, warning: undefined };
+const warnings = [];
+const commands = [];
 let routes = [];
 
 function uri(path) {
@@ -44,14 +46,14 @@ function fakeEditor(path, text) {
 }
 
 const vscodeStub = {
-  Uri: { file: uri, joinPath },
+  Uri: { file: uri, joinPath, from: (parts) => parts },
   Range: function Range(start, end) { this.start = start; this.end = end; },
   ProgressLocation: { Notification: 15 },
   window: {
     activeTextEditor: null,
     showInformationMessage: (message) => { info.push(message); },
     showErrorMessage: (message) => { errors.push(message); },
-    showWarningMessage: async () => answers.warning,
+    showWarningMessage: async (message) => { warnings.push(message); return answers.warning; },
     showInputBox: async () => answers.input,
     withProgress: (options, task) => task()
   },
@@ -68,7 +70,7 @@ const vscodeStub = {
     getWorkspaceFolder: () => null,
     workspaceFolders: []
   },
-  commands: { executeCommand: async () => {} },
+  commands: { executeCommand: async (...args) => { commands.push(args); } },
   languages: { registerDocumentLinkProvider: () => {} }
 };
 
@@ -97,6 +99,8 @@ function reset() {
   routes = [];
   answers.input = undefined;
   answers.warning = undefined;
+  warnings.length = 0;
+  commands.length = 0;
   vscodeStub.window.activeTextEditor = null;
   vscodeStub.workspace.textDocuments = [];
 }
@@ -195,6 +199,46 @@ async function main() {
   assert(result === undefined, 'declining the remote-change warning resolves to undefined');
   assert(!sent.some((r) => r.method === 'PUT'), 'a declined overwrite sends no update');
   assert(disk.get('/w/doc.md') === BOUND, 'a declined overwrite leaves the file as it was');
+
+  // Compare opens the page next to the file instead of publishing.
+  reset();
+  disk.set('/w/doc.md', BOUND);
+  routes = [{ method: 'GET', match: '/rest/api/content/12345', body: {
+    id: '12345', title: 'Release notes', space: { key: 'DOC' }, version: { number: 9 },
+    body: { export_view: { value: '<p>Edited by someone else.</p>' } } } }];
+  answers.warning = 'Compare';
+  result = await publishPageCommand(uri('/w/doc.md'));
+  assert(result === undefined, 'comparing resolves to undefined');
+  assert(warnings.length === 1 && warnings[0].includes('version 9') && warnings[0].includes('version 3'),
+    'the warning names both versions, got: ' + warnings[0]);
+  assert(!sent.some((r) => r.method === 'PUT'), 'comparing sends no update');
+  assert(disk.get('/w/doc.md') === BOUND, 'comparing leaves the file as it was');
+  assert(commands.length === 1 && commands[0][0] === 'vscode.diff' && commands[0][2].path === '/w/doc.md',
+    'a diff with the file is opened');
+  const { pageDiffContentProvider } = require('../src/pageDiff');
+  assert(pageDiffContentProvider.provideTextDocumentContent(commands[0][1]).includes('Edited by someone else.'),
+    'the diff shows the page as it is in Confluence');
+  assert(info.some((m) => /publish again/.test(m)), 'the next step is explained');
+
+  // Overwrite publishes over the newer page.
+  reset();
+  disk.set('/w/doc.md', BOUND);
+  routes = [{ method: 'GET', match: '/rest/api/content/12345', body: { id: '12345', version: { number: 9 } } },
+    { method: 'PUT', match: '/rest/api/content/12345', body: { id: '12345', version: { number: 10 } } }];
+  answers.warning = 'Overwrite';
+  result = await publishPageCommand(uri('/w/doc.md'));
+  assert(result && result.action === 'updated', 'a confirmed overwrite publishes');
+  assert(sent.find((r) => r.method === 'PUT').body.version.number === 10, 'the overwrite is the next page version');
+
+  // A binding without a version is not trusted to be current.
+  reset();
+  disk.set('/w/doc.md', BOUND.replace('  version: 3\n', ''));
+  routes = [META];
+  result = await publishPageCommand(uri('/w/doc.md'));
+  assert(result === undefined && !sent.some((r) => r.method === 'PUT'),
+    'a file without a version is not published without asking');
+  assert(warnings.length === 1 && /does not record which page version/.test(warnings[0]),
+    'the warning explains the missing version, got: ' + warnings[0]);
 
   // A failure rejects with the message the interactive path would have shown.
   reset();

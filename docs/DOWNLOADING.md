@@ -82,8 +82,10 @@ run **Confluence: Pull Page** with the file open.
 
 - If the page has the version stored in the file, the extension reports that
   the file is up to date and changes nothing.
-- Otherwise it asks before replacing the content. Publish local edits you want
-  to keep first: pull replaces the whole file, including unsaved changes.
+- Otherwise it asks before replacing the content. Pull replaces the whole
+  file, including unsaved changes, so publish local edits you want to keep
+  first, or choose **Compare** to open a diff with the page on the left and
+  your file on the right without changing anything.
 - The binding moves to the new version and the `generated` date is refreshed.
   Other front matter keys you added are kept.
 - Links to pages saved in the download folder become relative links, and long
