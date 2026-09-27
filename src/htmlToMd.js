@@ -39,6 +39,10 @@ function storageToHtml(input) {
     return '<pre data-code-language="' + escapeHtml(lang.trim()) + '">' +
       (code ? cdataToHtml(code[1]) : '') + '</pre>';
   });
+  s = s.replace(/<ac:structured-macro[^>]*ac:name="[^"]*mermaid[^"]*"[^>]*>([\s\S]*?)<\/ac:structured-macro>/gi, (m, body) => {
+    const code = body.match(/<ac:plain-text-body>([\s\S]*?)<\/ac:plain-text-body>/);
+    return code ? '<pre data-code-language="mermaid">' + cdataToHtml(code[1]) + '</pre>' : '';
+  });
   s = s.replace(/<ac:structured-macro[^>]*ac:name="(toc|anchor|children|pagetree)"[^>]*(?:\/>|>[\s\S]*?<\/ac:structured-macro>)/g, '');
   s = s.replace(/<ac:structured-macro[^>]*ac:name="(info|note|warning|tip|panel)"[^>]*>([\s\S]*?)<\/ac:structured-macro>/g,
     (m, kind, body) => {

@@ -51,7 +51,12 @@ function appendixHeading() {
   return String(settings().get('appendixHeading') || '').trim();
 }
 
+function mermaidMacro() {
+  const name = settings().get('mermaidMacro');
+  return name === undefined || name === null ? 'mermaid-macro' : String(name).trim();
+}
+
 module.exports = {
   downloadFolderUri, followLinksEnabled, configuredToken, configuredEmail,
-  imagesMode, appendixHeading
+  imagesMode, appendixHeading, mermaidMacro
 };

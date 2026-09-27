@@ -1,4 +1,5 @@
 const MarkdownIt = require('markdown-it');
+const { mermaidMacroXml } = require('./mermaid');
 
 function escapeXml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -55,10 +56,14 @@ function anchorLinks(html) {
   });
 }
 
-function mdToStorage(md) {
+function mdToStorage(md, options) {
+  const mermaidMacro = String((options && options.mermaidMacro) || '').trim();
   const mdit = new MarkdownIt({ html: false, xhtmlOut: true, linkify: true });
   mdit.renderer.rules.fence = (tokens, idx) => {
     const info = (tokens[idx].info || '').trim().split(/\s+/)[0] || '';
+    if (mermaidMacro && info.toLowerCase() === 'mermaid') {
+      return mermaidMacroXml(mermaidMacro, tokens[idx].content, cdata);
+    }
     return codeMacro(info, tokens[idx].content);
   };
   mdit.renderer.rules.code_block = (tokens, idx) => codeMacro('', tokens[idx].content);

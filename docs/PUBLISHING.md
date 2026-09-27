@@ -100,6 +100,25 @@ native Confluence tasks, and `[text](confluence:KEY/Title)` becomes a native
 page link that remains valid after a title change. Other URLs are published as
 plain links.
 
+### Mermaid diagrams
+
+Confluence has no built-in Mermaid support, so diagrams need a Mermaid app from
+the Atlassian Marketplace. A ` ```mermaid ` block is published as the macro
+named in `confluenceToMd.mermaidMacro` (default `mermaid-macro`), with the
+diagram source as its body, so Confluence draws the diagram.
+
+To check the name your app uses, insert a Mermaid macro on a page, open
+**••• → View Storage Format**, and read `ac:name` in
+`<ac:structured-macro ac:name="…">`. Set the setting to an empty value to
+publish diagrams as plain code blocks instead.
+
+Downloading and pulling work the other way round: any macro whose name
+contains `mermaid` becomes a ` ```mermaid ` block again. The rendered page does
+not include the diagram source, so the extension reads it from the storage
+format and asks Confluence to render the rest of the page. If Confluence
+refuses that request, the page is converted as before and the diagrams are
+omitted.
+
 ## Round-trip limitations
 
 Downloading uses rendered HTML, so download → edit → publish cannot preserve
@@ -109,6 +128,7 @@ features that Markdown cannot represent.
 |---|---|
 | Headings and inline formatting | Panels become plain blockquotes |
 | Code blocks with languages | Images are omitted or become attachment links |
+| Mermaid diagrams (with a Mermaid app) | |
 | Tables | TOC and similar macros are removed |
 | Lists, including task lists | Layouts and unknown macros keep only their text |
 | Links | |
