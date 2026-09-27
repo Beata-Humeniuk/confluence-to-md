@@ -124,10 +124,10 @@ block's language.
 
 You can also extract every code block in a final reference section, regardless
 of length. Name that section with `confluenceToMd.appendixHeading` (default:
-`Additional materials`):
+`Additional`):
 
 ```markdown
-## Additional materials
+## Additional
 
 <!-- appendix: full-length reference examples, extracted to separate files;
 open them only when the examples in the main content are not enough -->

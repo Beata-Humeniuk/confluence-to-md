@@ -73,8 +73,8 @@ documents, conversion details, and round-trip limitations.
 | `confluenceToMd.downloadFolder` | *(empty)* | Save location. Empty uses the active file's folder. |
 | `confluenceToMd.followLinks` | `true` | Offer to download linked pages. |
 | `confluenceToMd.images` | `skip` | `skip` omits images; `link` keeps attachment links. |
-| `confluenceToMd.appendixHeading` | `Additional materials` | Extract code below a heading. Empty disables the rule. |
-| `confluenceToMd.mermaidMacro` | `mermaid-macro` | Macro for ` ```mermaid ` blocks. Empty publishes them as code. |
+| `confluenceToMd.appendixHeading` | `Additional` | Extract code below a heading. Empty disables the rule. |
+| `confluenceToMd.mermaidMacro` | `mermaid-macro` | Macro for ` ```mermaid ` blocks. Empty publishes them as code. See [Mermaid diagrams](docs/PUBLISHING.md#mermaid-diagrams). |
 | `confluenceToMd.mermaidVersion` | `9.2.2` | Mermaid version of the Confluence app. Empty publishes diagrams unchanged. |
 
 The token is stored in VS Code settings, which may be synced or shared.

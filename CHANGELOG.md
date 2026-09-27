@@ -13,6 +13,12 @@ follows [Semantic Versioning](https://semver.org/).
   no longer show a syntax error in Confluence. The Markdown file is not
   changed.
 
+### Changed
+
+- The default `confluenceToMd.appendixHeading` is now `Additional`.
+- The Mermaid settings explain where to find the macro name and the Mermaid
+  version.
+
 ### Fixed
 
 - Long Mermaid diagrams are no longer extracted to the `.samples` folder when
