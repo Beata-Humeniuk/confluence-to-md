@@ -124,10 +124,10 @@ block's language.
 
 You can also extract every code block in a final reference section, regardless
 of length. Name that section with `confluenceToMd.appendixHeading` (default:
-`Additional materials`):
+`Additional`):
 
 ```markdown
-## Additional materials
+## Additional
 
 <!-- appendix: full-length reference examples, extracted to separate files;
 open them only when the examples in the main content are not enough -->
@@ -141,6 +141,13 @@ separate samples are worth opening.
 Heading matching is case-insensitive. An empty setting disables this rule but
 keeps the 30-line threshold. Give each sample its own subheading so it gets a
 meaningful filename.
+
+Mermaid diagrams are never extracted; they stay in the page as ` ```mermaid `
+blocks.
+
+Publishing puts each extracted sample back in place of its link, so the page in
+Confluence shows the code rather than a link to a local file. A link whose
+file no longer exists is published as a link.
 
 Downloading again overwrites extracted samples but does not delete files for samples
 removed from Confluence; remove those files manually.

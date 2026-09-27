@@ -3,6 +3,30 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-09-27
+
+### Added
+
+- The `confluenceToMd.mermaidVersion` setting (default `9.2.2`) names the
+  Mermaid version of the app in Confluence. For versions older than 10.3.1,
+  flowchart labels are published in quotes, so diagrams that render in VS Code
+  no longer show a syntax error in Confluence. The Markdown file is not
+  changed.
+
+### Changed
+
+- The default `confluenceToMd.appendixHeading` is now `Additional`.
+- The Mermaid settings explain where to find the macro name and the Mermaid
+  version.
+
+### Fixed
+
+- Long Mermaid diagrams are no longer extracted to the `.samples` folder when
+  downloading or pulling a page.
+- Publishing a file with extracted code samples puts their content back on the
+  page. Before, the page received links to the local sample files instead of
+  the code.
+
 ## [1.5.0] - 2026-09-27
 
 ### Added

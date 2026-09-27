@@ -1,5 +1,6 @@
 const MarkdownIt = require('markdown-it');
 const { mermaidMacroXml } = require('./mermaid');
+const { adaptMermaid } = require('./mermaidSyntax');
 
 function escapeXml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
@@ -62,7 +63,8 @@ function mdToStorage(md, options) {
   mdit.renderer.rules.fence = (tokens, idx) => {
     const info = (tokens[idx].info || '').trim().split(/\s+/)[0] || '';
     if (mermaidMacro && info.toLowerCase() === 'mermaid') {
-      return mermaidMacroXml(mermaidMacro, tokens[idx].content, cdata);
+      return mermaidMacroXml(mermaidMacro,
+        adaptMermaid(tokens[idx].content, options.mermaidVersion), cdata);
     }
     return codeMacro(info, tokens[idx].content);
   };

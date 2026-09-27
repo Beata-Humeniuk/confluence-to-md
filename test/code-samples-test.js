@@ -1,4 +1,4 @@
-const { extractLongCodeBlocks, APPENDIX_NOTE } = require('../src/codeSamples');
+const { extractLongCodeBlocks, sampleLinkPaths, inlineSamples, APPENDIX_NOTE } = require('../src/codeSamples');
 
 const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
 
@@ -111,5 +111,21 @@ const longBeforeAppendix = extractLongCodeBlocks(
   'x.samples', { appendixHeading: 'Additional materials' });
 assert(longBeforeAppendix.samples.length === 1,
   'the length threshold still applies before the appendix section');
+
+const diagram = '## Map\n\n```mermaid\n' + block(80, 'A --> B') + '\n```\n';
+const kept = extractLongCodeBlocks(diagram, 'map.samples');
+assert(kept.samples.length === 0 && kept.markdown === diagram, 'a long mermaid diagram stays in the content');
+const appendixDiagram = '## Additional materials\n\n```mermaid\nflowchart TD\n A --> B\n```\n';
+assert(!extractLongCodeBlocks(appendixDiagram, 'x.samples', { appendixHeading: 'Additional materials' }).samples.length,
+  'a mermaid diagram in the appendix stays in the content');
+
+assert(sampleLinkPaths(r.markdown).join() === 'export.samples/catalogue-export.xml', 'sample links are found');
+const restored = inlineSamples(r.markdown, new Map([['export.samples/catalogue-export.xml', r.samples[0].content]]));
+assert(restored === long, 'inlining the extracted sample restores the original block');
+const ticks = inlineSamples('[a.txt](p.samples/a.txt)', new Map([['p.samples/a.txt', 'x\n```\ny\n']]));
+assert(ticks === '````\nx\n```\ny\n````', 'a sample containing a fence gets a longer fence and no language for .txt, got: ' + ticks);
+const missing = '[gone.xml](p.samples/gone.xml)';
+assert(inlineSamples(missing, new Map([['p.samples/gone.xml', null]])) === missing, 'a missing sample stays a link');
+assert(!sampleLinkPaths('See [a.xml](p.samples/a.xml) here.').length, 'links inside a sentence are not samples');
 
 console.log('PASS: code samples (long block extraction) ok');
