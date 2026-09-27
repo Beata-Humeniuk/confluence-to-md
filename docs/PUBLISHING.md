@@ -130,6 +130,19 @@ To check the name your app uses, insert a Mermaid macro on a page, open
 `<ac:structured-macro ac:name="…">`. Set the setting to an empty value to
 publish diagrams as plain code blocks instead.
 
+Set `confluenceToMd.mermaidVersion` to the Mermaid version of the app in
+Confluence. Versions older than 10.3.1 reject some labels that newer ones
+accept, such as `A[a; b]` or `A -->|x → y| B`. For those versions, publishing
+puts flowchart labels in quotes, which every version accepts:
+
+```text
+A[a; b] -- c --> B{d}      →      A["a; b"] -->|"c"| B{"d"}
+```
+
+Your Markdown file is not changed, but a page downloaded later contains the
+quoted labels. Set a newer version, or leave the setting empty, to publish
+diagrams unchanged.
+
 Downloading and pulling work the other way round: any macro whose name
 contains `mermaid` becomes a ` ```mermaid ` block again. The rendered page does
 not include the diagram source, so the extension reads it from the storage

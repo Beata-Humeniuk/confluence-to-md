@@ -75,6 +75,7 @@ documents, conversion details, and round-trip limitations.
 | `confluenceToMd.images` | `skip` | `skip` omits images; `link` keeps attachment links. |
 | `confluenceToMd.appendixHeading` | `Additional materials` | Extract code below a heading. Empty disables the rule. |
 | `confluenceToMd.mermaidMacro` | `mermaid-macro` | Macro for ` ```mermaid ` blocks. Empty publishes them as code. |
+| `confluenceToMd.mermaidVersion` | `9.2.2` | Mermaid version of the Confluence app. Empty publishes diagrams unchanged. |
 
 The token is stored in VS Code settings, which may be synced or shared.
 Restricted Mode is supported.

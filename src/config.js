@@ -56,7 +56,11 @@ function mermaidMacro() {
   return name === undefined || name === null ? 'mermaid-macro' : String(name).trim();
 }
 
+function mermaidVersion() {
+  return String(settings().get('mermaidVersion') || '').trim();
+}
+
 module.exports = {
   downloadFolderUri, followLinksEnabled, configuredToken, configuredEmail,
-  imagesMode, appendixHeading, mermaidMacro
+  imagesMode, appendixHeading, mermaidMacro, mermaidVersion
 };

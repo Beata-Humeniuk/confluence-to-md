@@ -2,7 +2,7 @@
   "name": "confluence-to-md",
   "displayName": "Confluence to Markdown",
   "description": "Fetch Confluence pages as Markdown and publish Markdown back to Confluence, following links to other pages.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "publisher": "beatahumeniuk",
   "license": "MIT",
   "author": {
@@ -107,6 +107,11 @@
           "type": "string",
           "default": "mermaid-macro",
           "description": "Name of the Confluence macro used to publish ```mermaid code blocks as diagrams (a Mermaid app must be installed). Empty = publish them as code blocks."
+        },
+        "confluenceToMd.mermaidVersion": {
+          "type": "string",
+          "default": "9.2.2",
+          "description": "Mermaid version used by the Mermaid app in Confluence. Diagrams are published in syntax this version accepts. Empty = publish them unchanged."
         }
       }
     }
@@ -114,7 +119,7 @@
   "scripts": {
     "build": "esbuild src/extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
     "vscode:prepublish": "npm run build",
-    "test": "node test/html-to-md-test.js && node test/md-to-storage-test.js && node test/client-test.js && node test/md-document-test.js && node test/download-folder-test.js && node test/page-link-test.js && node test/code-samples-test.js && node test/assemble-parts-test.js && node test/page-tree-test.js && node test/publish-command-test.js && node test/preview-button-test.js && node test/pull-command-test.js && node test/mermaid-test.js",
+    "test": "node test/html-to-md-test.js && node test/md-to-storage-test.js && node test/client-test.js && node test/md-document-test.js && node test/download-folder-test.js && node test/page-link-test.js && node test/code-samples-test.js && node test/assemble-parts-test.js && node test/page-tree-test.js && node test/publish-command-test.js && node test/preview-button-test.js && node test/pull-command-test.js && node test/mermaid-test.js && node test/mermaid-syntax-test.js",
     "package": "npm run build && vsce package --no-dependencies"
   },
   "devDependencies": {

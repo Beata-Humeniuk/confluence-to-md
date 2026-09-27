@@ -3,6 +3,16 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.6.0] - 2026-09-27
+
+### Added
+
+- The `confluenceToMd.mermaidVersion` setting (default `9.2.2`) names the
+  Mermaid version of the app in Confluence. For versions older than 10.3.1,
+  flowchart labels are published in quotes, so diagrams that render in VS Code
+  no longer show a syntax error in Confluence. The Markdown file is not
+  changed.
+
 ## [1.5.0] - 2026-09-27
 
 ### Added
