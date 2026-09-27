@@ -3,6 +3,17 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [1.4.0] - 2026-09-27
+
+### Added
+
+- Mermaid diagrams in both directions. A ` ```mermaid ` block is published as
+  a Mermaid macro, so Confluence draws the diagram instead of showing its
+  source as code, and a Mermaid macro is downloaded back as a ` ```mermaid `
+  block. The new `confluenceToMd.mermaidMacro` setting names the macro
+  (default `mermaid-macro`); an empty value keeps the old code-block
+  behavior. A Mermaid app must be installed in Confluence.
+
 ## [1.3.1] - 2026-09-26
 
 ### Changed

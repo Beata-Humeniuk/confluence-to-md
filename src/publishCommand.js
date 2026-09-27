@@ -5,6 +5,7 @@ const { partPaths, assembleParts } = require('./assembleParts');
 const { parsePageUrl, fetchPageMeta, fetchPageByTitle, createPage, updatePage, pageWebUrl } = require('./confluenceClient');
 const { credentialsFor } = require('./credentials');
 const { errorMessage } = require('./messages');
+const { mermaidMacro } = require('./config');
 
 function partsWord(n) {
   return n === 1 ? 'part' : 'parts';
@@ -164,7 +165,7 @@ async function publishPageCommand(fileUri) {
     if (!await confirmMissingParts(assembled.missing)) return;
     const { title, content } = splitTitleAndBody(
       assembled.markdown, source.fileName.replace(/\.md$/i, '') || 'Untitled');
-    const storage = mdToStorage(content);
+    const storage = mdToStorage(content, { mermaidMacro: mermaidMacro() });
     const note = assembled.inlined.length
       ? ' The page carries the whole design: ' + assembled.inlined.length + ' ' +
         partsWord(assembled.inlined.length) + ' from the package included.'

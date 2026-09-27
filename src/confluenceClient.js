@@ -1,3 +1,5 @@
+const { hasMermaid, mermaidPlaceholders, restoreMermaid } = require('./mermaid');
+
 function hostOf(origin) {
   return String(origin).replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/:\d+$/, '');
 }
@@ -104,8 +106,8 @@ async function fetchPageByUrl(cfg, url) {
 }
 
 async function fetchPageById(cfg, site, pageId) {
-  const j = await apiGet(cfg, site, '/content/' + pageId + '?expand=body.export_view,space,version,ancestors');
-  return pageOf(j, site);
+  const j = await apiGet(cfg, site, '/content/' + pageId + '?expand=body.export_view,body.storage,space,version,ancestors');
+  return withMermaidSources(cfg, site, pageOf(j, site), j);
 }
 
 async function fetchPageMeta(cfg, site, pageId) {
@@ -152,10 +154,31 @@ async function resolveTiny(cfg, parsed) {
 async function fetchPageByTitle(cfg, site, spaceKey, title) {
   const q = '/content?title=' + encodeURIComponent(title) +
     (spaceKey ? '&spaceKey=' + encodeURIComponent(spaceKey) : '') +
-    '&expand=body.export_view,space,version,ancestors&limit=1';
+    '&expand=body.export_view,body.storage,space,version,ancestors&limit=1';
   const j = await apiGet(cfg, site, q);
   if (!j.results || !j.results.length) throw new Error('not-found');
-  return pageOf(j.results[0], site);
+  return withMermaidSources(cfg, site, pageOf(j.results[0], site), j.results[0]);
+}
+
+// export_view renders Mermaid macros as pictures, losing the diagram source.
+// When the page has them, the storage is rendered again with placeholders in
+// their place, and the placeholders become Mermaid code blocks. If Confluence
+// refuses the conversion, the page keeps its normal export_view.
+async function withMermaidSources(cfg, site, page, j) {
+  const storage = j && j.body && j.body.storage && j.body.storage.value;
+  if (!hasMermaid(storage)) return page;
+  const marked = mermaidPlaceholders(storage);
+  if (!marked.sources.length) return page;
+  try {
+    const view = await apiSend(cfg, site, 'POST',
+      '/contentbody/convert/export_view?contentIdContext=' + encodeURIComponent(page.id),
+      { value: marked.storage, representation: 'storage' });
+    if (!view || typeof view.value !== 'string') return page;
+    return Object.assign({}, page, { html: restoreMermaid(view.value, marked.sources) });
+  } catch (e) {
+    if (e && e.message === 'auth') throw e;
+    return page;
+  }
 }
 
 function pageOf(j, site) {
