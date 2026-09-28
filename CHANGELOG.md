@@ -3,6 +3,13 @@
 This file lists user-visible changes to Confluence to Markdown. The project
 follows [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Changed
+
+- Shorter setting descriptions. Details on finding the Mermaid macro name
+  moved to [docs/PUBLISHING.md](docs/PUBLISHING.md#mermaid-diagrams).
+
 ## [1.6.1] - 2026-09-27
 
 ### Changed

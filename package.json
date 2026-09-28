@@ -68,17 +68,17 @@
         "confluenceToMd.token": {
           "type": "string",
           "default": "",
-          "description": "Confluence token (Cloud: API token; Server/DC: Personal Access Token)."
+          "description": "API token (Cloud) or Personal Access Token (Server/DC)."
         },
         "confluenceToMd.email": {
           "type": "string",
           "default": "",
-          "description": "Atlassian account e-mail. Cloud only; Server/DC ignores it."
+          "description": "Atlassian account e-mail. Cloud only."
         },
         "confluenceToMd.downloadFolder": {
           "type": "string",
           "default": "",
-          "description": "Where to save downloaded pages. Empty = the folder of the active file. Relative paths are resolved from the workspace root."
+          "description": "Where to save pages. Empty = the active file's folder."
         },
         "confluenceToMd.images": {
           "type": "string",
@@ -91,27 +91,27 @@
             "Skip images.",
             "Insert a link to the Confluence attachment."
           ],
-          "description": "What to do with images on the page."
+          "description": "How to handle images."
         },
         "confluenceToMd.followLinks": {
           "type": "boolean",
           "default": true,
-          "description": "After downloading a page, offer to download the pages it links to."
+          "description": "Offer to download linked pages too."
         },
         "confluenceToMd.appendixHeading": {
           "type": "string",
           "default": "Additional",
-          "description": "Heading that starts the additional-materials section; every code block below it is extracted to a separate file. Empty = off."
+          "description": "Code blocks below this heading go to separate files. Empty = off."
         },
         "confluenceToMd.mermaidMacro": {
           "type": "string",
           "default": "mermaid-macro",
-          "markdownDescription": "Confluence macro that draws ` ```mermaid ` blocks. It requires a Mermaid app installed in Confluence. To find the name, insert the app's Mermaid macro on a page, open **••• → View Storage Format**, and copy the value of `ac:name` from `<ac:structured-macro ac:name=\"…\">`. Empty = publish diagrams as code blocks."
+          "markdownDescription": "Confluence macro for ` ```mermaid ` blocks. Empty = publish as code. [How to find it](https://github.com/Beata-Humeniuk/confluence-to-md/blob/main/docs/PUBLISHING.md#mermaid-diagrams)"
         },
         "confluenceToMd.mermaidVersion": {
           "type": "string",
           "default": "9.2.2",
-          "markdownDescription": "Mermaid version of the Mermaid app in Confluence. Diagrams are published in syntax this version accepts. The version appears under **Syntax error in graph** when a diagram fails to render, or in the app details in Confluence administration. Empty = publish diagrams unchanged."
+          "markdownDescription": "Mermaid version of the Confluence app. Empty = publish diagrams unchanged."
         }
       }
     }
