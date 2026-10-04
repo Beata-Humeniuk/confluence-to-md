@@ -18,7 +18,6 @@ generator: confluence-to-md@1.0.0
 generated: 2026-08-13
 sourceId: 123456
 space: DOC
-managed: true
 ---
 ```
 
@@ -32,8 +31,9 @@ managed: true
 Existing front matter is metadata, not page content. The extension preserves
 its keys and adds a new binding to the same block when needed.
 
-The first `#` heading becomes the page title and is removed from the published
-body. If there is no level-one heading, the filename is used.
+The first `#` heading outside a code block becomes the page title and is
+removed from the published body. If there is no level-one heading, the
+filename is used.
 
 ## Changes made by someone else
 
@@ -61,15 +61,15 @@ in Confluence. Like Pull, it only acts on a file that is open in VS Code.
 
 ## Split documents
 
-An index can link to files in a `sections/` or `parts/` folder. Publishing the
-index combines declared part files into one Confluence page.
+An index can link to part files in a subfolder next to it. Publishing the
+index combines the declared parts into one Confluence page.
 
 A part is included only when both conditions are met:
 
 1. The index contains a list item made only of a link to the neighboring
    Markdown file, for example `1. [Title](sections/file.md)` or
-   `- [Title](parts/file.md)`.
-2. The linked file declares `type: <artifact>-part` or `parent:` in its front
+   `- [Title](steps/file.md)`.
+2. The linked file declares `type: <anything>-part` or `parent:` in its front
    matter.
 
 This prevents ordinary lists of Markdown links from being expanded.

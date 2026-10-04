@@ -35,7 +35,6 @@ URI gets the rejection and shows its own message.
 
 The command id and this result shape are stable across versions.
 
-`getExtension` returning `undefined` means Confluence publishing is not
-available: this extension is the only one that talks to Confluence, and the
-only home of the Confluence token. Callers are expected to hide their
-Confluence UI in that case rather than offering an action that cannot run.
+`getExtension` returning `undefined` means this extension is not installed and
+Confluence publishing is not available. Hide or disable the action in that case
+rather than offering one that cannot run.

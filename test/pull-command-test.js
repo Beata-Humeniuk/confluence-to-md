@@ -1,7 +1,5 @@
-const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
+const { assert } = require('./assert');
 
-// A VS Code stub, just enough to drive pullCommand end to end: open documents
-// backed by an in-memory disk, recorded popups, and the answer to the prompt.
 const disk = new Map();
 const info = [];
 const errors = [];
@@ -11,8 +9,6 @@ const commands = [];
 let routes = [];
 let docs = [];
 
-// Like VS Code, toString() percent-encodes path segments (a Windows drive
-// becomes /c%3A/), and parse() decodes them again.
 function uri(path) {
   return {
     scheme: 'file', authority: '', path, fsPath: path,
@@ -116,9 +112,9 @@ global.fetch = async (url, options) => {
   return { ok: status === 200, status, url, json: async () => (route && route.body) || {} };
 };
 
-const { pullPageCommand } = require('../src/pullCommand');
-const { handlePreviewUri } = require('../src/previewActions');
-const { actionLink } = require('../src/previewButton');
+const { pullPageCommand } = require('../src/editor/pullCommand');
+const { handlePreviewUri } = require('../src/editor/previewActions');
+const { actionLink } = require('../src/core/previewButton');
 
 function reset() {
   disk.clear();
@@ -135,7 +131,7 @@ function reset() {
 const SITE = 'https://acme.atlassian.net/wiki';
 const PAGE_URL = SITE + '/spaces/DOC/pages/12345';
 const LOCAL = '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\ntype: confluence-page\n' +
-  'generated: 2026-01-01\nsourceId: 12345\nowner: team-docs\ntags:\n  - release\nmanaged: true\n---\n\n# Release notes\n\nOld body.\n';
+  'generated: 2026-01-01\nsourceId: 12345\nowner: team-docs\ntags:\n  - release\nreviewed: true\n---\n\n# Release notes\n\nOld body.\n';
 const OTHER = '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/777\n  version: 1\nsourceId: 777\n---\n\n# Glossary\n\nTerms.\n';
 
 function page(version, html) {
@@ -149,7 +145,6 @@ function page(version, html) {
 }
 
 async function main() {
-  // A newer version in Confluence replaces the file once the user agrees.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   disk.set('/w/glossary.md', OTHER);
@@ -170,14 +165,12 @@ async function main() {
   assert(docs[0].saved === 1, 'the document is saved');
   assert(info.some((m) => m.includes('version 5') && m.includes('was 3')), 'a summary names the versions');
 
-  // Declining the prompt leaves the file alone.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   routes = [page(5, '<p>New.</p>')];
   await pullPageCommand(uri('/w/notes/release-notes.md'));
   assert(disk.get('/w/notes/release-notes.md') === LOCAL, 'cancelled pull does not touch the file');
 
-  // Compare opens the page next to the file and leaves the file as it is.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   routes = [page(5, '<p>Changed in Confluence.</p>')];
@@ -190,12 +183,11 @@ async function main() {
   assert(left.scheme === 'confluence-page' && right.path === '/w/notes/release-notes.md',
     'the page is on the left and the file on the right');
   assert(label.includes('version 5'), 'the diff title names the page version');
-  const { pageDiffContentProvider } = require('../src/pageDiff');
+  const { pageDiffContentProvider } = require('../src/editor/pageDiff');
   const shown = pageDiffContentProvider.provideTextDocumentContent(left);
   assert(shown.includes('Changed in Confluence.') && shown.includes('version: 5'),
     'the left side is what a pull would write, got: ' + shown);
 
-  // Same version: nothing to do, no prompt.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   routes = [page(3, '<p>Same.</p>')];
@@ -204,7 +196,6 @@ async function main() {
   assert(info.some((m) => m.includes('Already up to date')), 'says it is up to date');
   assert(disk.get('/w/notes/release-notes.md') === LOCAL, 'up-to-date file is untouched');
 
-  // Same version but unsaved edits: pulling means discarding them, so ask.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   openDoc('/w/notes/release-notes.md', true);
@@ -214,13 +205,11 @@ async function main() {
   assert(warnings.length === 1 && warnings[0].includes('unsaved'), 'unsaved changes are called out');
   assert(disk.get('/w/notes/release-notes.md').includes('Same.'), 'confirmed pull discards unsaved edits');
 
-  // An unbound file cannot be pulled.
   reset();
   disk.set('/w/plain.md', '# Plain\n');
   await pullPageCommand(uri('/w/plain.md'));
   assert(errors.length === 1 && errors[0].includes('not bound'), 'unbound file is refused');
 
-  // The preview button's URI only pulls a file that is open.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   routes = [page(5, '<p>New.</p>')];
@@ -233,8 +222,6 @@ async function main() {
   await handlePreviewUri(link);
   assert(!errors.length && disk.get('/w/notes/release-notes.md').includes('version: 5'), 'an open file is pulled from the preview link');
 
-  // A Windows path, as the preview button encodes it and as VS Code hands the
-  // link over: the query arrives decoded once.
   reset();
   const WIN = '/c:/Users/Ann Lee/docs/release-notes.md';
   disk.set(WIN, LOCAL);
@@ -252,7 +239,6 @@ async function main() {
   await handlePreviewUri({ path: '/other', query: '' });
   assert(!errors.length, 'unknown URI paths are ignored');
 
-  // Publish from the preview: asks first, saves unsaved edits, then publishes.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   const doc = openDoc('/w/notes/release-notes.md', true);
@@ -269,7 +255,6 @@ async function main() {
   assert(disk.get('/w/notes/release-notes.md').includes('version: 4'), 'the binding records the published version');
   assert(!errors.length, 'no errors on push, got: ' + errors.join(' | '));
 
-  // A failed publish is shown, not thrown.
   reset();
   disk.set('/w/notes/release-notes.md', LOCAL);
   openDoc('/w/notes/release-notes.md');

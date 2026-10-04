@@ -1,6 +1,6 @@
-const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
+const { assert } = require('./assert');
 const MarkdownIt = require('markdown-it');
-const { previewButtons, actionLink, fileUriCandidates } = require('../src/previewButton');
+const { previewButtons, actionLink, fileUriCandidates } = require('../src/core/previewButton');
 
 const md = previewButtons(new MarkdownIt({ html: true }),
   { uriScheme: 'vscode', extensionId: 'beatahumeniuk.confluence-to-md' });

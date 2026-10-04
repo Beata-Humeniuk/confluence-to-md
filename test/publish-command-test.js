@@ -1,8 +1,6 @@
-const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
-const { errorMessage } = require('../src/messages');
+const { assert } = require('./assert');
+const { errorMessage } = require('../src/core/messages');
 
-// A VS Code stub, just enough to drive publishCommand end to end: an in-memory
-// disk, recorded popups, and answers the prompts hand back.
 const disk = new Map();
 const sent = [];
 const info = [];
@@ -89,7 +87,7 @@ global.fetch = async (url, options) => {
   return { ok: status >= 200 && status < 300, status, url, json: async () => (route && route.body) || {} };
 };
 
-const { publishPageCommand } = require('../src/publishCommand');
+const { publishPageCommand } = require('../src/editor/publishCommand');
 
 function reset() {
   disk.clear();
@@ -121,8 +119,6 @@ const META = { method: 'GET', match: '/rest/api/content/12345', body: { id: '123
 const UPDATED = { method: 'PUT', match: '/rest/api/content/12345', body: { id: '12345', space: { key: 'DOC' }, version: { number: 4 } } };
 
 async function main() {
-  // A caller hands us a URI: the file is published straight from disk, with no
-  // editor open on it at all.
   reset();
   disk.set('/w/doc.md', BOUND);
   routes = [META, UPDATED];
@@ -138,7 +134,6 @@ async function main() {
   assert(put.body.version.number === 4, 'the update is sent as the next version');
   assert(put.body.title === 'Release notes', 'the H1 becomes the page title');
 
-  // The active editor belongs to another file and must not be touched.
   reset();
   disk.set('/w/doc.md', BOUND);
   const bystander = fakeEditor('/w/other.md', '# Something else\n');
@@ -148,8 +143,6 @@ async function main() {
   assert(bystander.edits === 0 && bystander.text === '# Something else\n',
     'publishing by URI leaves the active editor alone');
 
-  // No binding yet: the parent page is asked for and the new binding lands in
-  // the file the caller pointed at.
   reset();
   disk.set('/w/new-page.md', '# New page\n\nBody.\n');
   answers.input = SITE + '/spaces/DOC/pages/900';
@@ -169,20 +162,26 @@ async function main() {
   assert(post.body.ancestors[0].id === '900', 'the new page is created under the parent that was pasted');
   assert(post.body.space.key === 'DOC', 'the new page lands in the parent space');
 
-  // A split document is assembled into one page on the URI path too.
   reset();
   disk.set('/w/pkg/api.md', '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\n---\n\n# API\n\n## Steps\n\n- [Validation](parts/step-01.md)\n');
-  disk.set('/w/pkg/parts/step-01.md', '---\ntype: api-part\n---\n\n## Validation\n\nCheck the payload.\n');
+  disk.set('/w/pkg/parts/step-01.md', '---\ntype: guide-part\n---\n\n## Validation\n\nCheck the payload.\n');
   routes = [META, UPDATED];
   result = await publishPageCommand(uri('/w/pkg/api.md'));
   assert(result && result.action === 'updated', 'a split document publishes by URI');
   assert(sent.find((r) => r.method === 'PUT').body.body.storage.value.includes('Check the payload.'),
     'the part is inlined into the page that is sent');
-  assert(info.length === 1 && /1 part from the package/.test(info[0]),
+  assert(info.length === 1 && /1 part file included/.test(info[0]),
     'the assembled page is reported, got: ' + info[0]);
 
-  // Cancelling a prompt is not a failure: the command resolves to undefined and
-  // nothing is published.
+  reset();
+  disk.set('/w/doc.md', '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\n---\n\n```sh\n# install first\nnpm ci\n```\n\n# Real title\n\nBody.\n');
+  routes = [META, UPDATED];
+  await publishPageCommand(uri('/w/doc.md'));
+  const titled = sent.find((r) => r.method === 'PUT').body;
+  assert(titled.title === 'Real title', 'the title comes from the heading outside the code block, got: ' + titled.title);
+  assert(titled.body.storage.value.includes('# install first') && !titled.body.storage.value.includes('Real title'),
+    'the code block keeps its comment and the title leaves the body');
+
   reset();
   disk.set('/w/new-page.md', '# New page\n\nBody.\n');
   answers.input = undefined;
@@ -200,7 +199,6 @@ async function main() {
   assert(!sent.some((r) => r.method === 'PUT'), 'a declined overwrite sends no update');
   assert(disk.get('/w/doc.md') === BOUND, 'a declined overwrite leaves the file as it was');
 
-  // Compare opens the page next to the file instead of publishing.
   reset();
   disk.set('/w/doc.md', BOUND);
   routes = [{ method: 'GET', match: '/rest/api/content/12345', body: {
@@ -215,12 +213,11 @@ async function main() {
   assert(disk.get('/w/doc.md') === BOUND, 'comparing leaves the file as it was');
   assert(commands.length === 1 && commands[0][0] === 'vscode.diff' && commands[0][2].path === '/w/doc.md',
     'a diff with the file is opened');
-  const { pageDiffContentProvider } = require('../src/pageDiff');
+  const { pageDiffContentProvider } = require('../src/editor/pageDiff');
   assert(pageDiffContentProvider.provideTextDocumentContent(commands[0][1]).includes('Edited by someone else.'),
     'the diff shows the page as it is in Confluence');
   assert(info.some((m) => /publish again/.test(m)), 'the next step is explained');
 
-  // Overwrite publishes over the newer page.
   reset();
   disk.set('/w/doc.md', BOUND);
   routes = [{ method: 'GET', match: '/rest/api/content/12345', body: { id: '12345', version: { number: 9 } } },
@@ -230,7 +227,6 @@ async function main() {
   assert(result && result.action === 'updated', 'a confirmed overwrite publishes');
   assert(sent.find((r) => r.method === 'PUT').body.version.number === 10, 'the overwrite is the next page version');
 
-  // A binding without a version is not trusted to be current.
   reset();
   disk.set('/w/doc.md', BOUND.replace('  version: 3\n', ''));
   routes = [META];
@@ -250,7 +246,6 @@ async function main() {
     'the sample file is published as a code block, got: ' + storage);
   assert(!storage.includes('doc.samples'), 'no link to the local sample file reaches Confluence');
 
-  // A failure rejects with the message the interactive path would have shown.
   reset();
   disk.set('/w/doc.md', BOUND);
   routes = [{ method: 'GET', match: '/rest/api/content/12345', status: 401 }];
@@ -265,15 +260,12 @@ async function main() {
   assert(failure instanceof Error && /^Error: EntryNotFound/.test(failure.message),
     'an unreadable URI rejects through the same wrapping, got: ' + (failure && failure.message));
 
-  // Confluence does not always echo the page in the update response.
   reset();
   disk.set('/w/doc.md', BOUND);
   routes = [META, { method: 'PUT', match: '/rest/api/content/12345', body: { version: { number: 4 } } }];
   result = await publishPageCommand(uri('/w/doc.md'));
   assert(result.pageId === '12345', 'the page id falls back to the bound one, got: ' + result.pageId);
 
-  // The interactive path is unchanged: it edits the open document and keeps its
-  // own popups.
   reset();
   const editor = fakeEditor('/w/doc.md', BOUND);
   vscodeStub.window.activeTextEditor = editor;

@@ -1,8 +1,8 @@
-const { mdToStorage } = require('../src/mdToStorage');
-const { convertHtmlToMd } = require('../src/htmlToMd');
-const { parseFrontMatter, serializeFrontMatter } = require('../src/frontMatter');
+const { mdToStorage } = require('../src/core/mdToStorage');
+const { convertHtmlToMd } = require('../src/core/htmlToMd');
+const { parseFrontMatter, serializeFrontMatter } = require('../src/core/frontMatter');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert } = require('./assert');
 
 const md = [
   '## Main section',
@@ -82,19 +82,26 @@ assert(parsed.body.indexOf('# Title') === 1, 'front matter stripped from body');
 assert(doc.slice(0, parsed.rawLength) === fm, 'rawLength covers exactly the front matter block');
 assert(parseFrontMatter('# Plain file\n').meta === null, 'no front matter -> meta null');
 
-const own = '---\ntype: view-analysis\nmanaged: true\n---\n\n# UI: Login\n\nContent.\n';
+const own = '---\ntype: note\nreviewed: true\n---\n\n# Login\n\nContent.\n';
 const foreign = parseFrontMatter(own);
 assert(foreign.meta === null, 'front matter without a confluence block -> no binding');
-assert(foreign.body.indexOf('# UI: Login') === 1, 'its keys do not land in the published body');
-assert(own.slice(0, foreign.rawLength) === '---\ntype: view-analysis\nmanaged: true\n---\n',
+assert(foreign.body.indexOf('# Login') === 1, 'its keys do not land in the published body');
+assert(own.slice(0, foreign.rawLength) === '---\ntype: note\nreviewed: true\n---\n',
   'rawLength covers the whole block, so publishing replaces it instead of stacking on it');
 assert(serializeFrontMatter({ url: 'https://acme.atlassian.net/wiki/spaces/DOC/pages/5', version: 1 },
   foreign.extraLines) === '---\nconfluence:\n  url: https://acme.atlassian.net/wiki/spaces/DOC/pages/5\n' +
-  '  version: 1\ntype: view-analysis\nmanaged: true\n---\n',
+  '  version: 1\ntype: note\nreviewed: true\n---\n',
   'binding is merged into the block the file already had');
 
-const anchored = mdToStorage('[Country](#1.%20Book%20details)\n');
-assert(anchored.includes('<ac:link ac:anchor="1. Book details">' +
+assert(mdToStorage('- [X] shouted\n').includes('<ac:task-status>complete</ac:task-status><ac:task-body>shouted</ac:task-body>'),
+  'an upper-case task marker counts as done');
+
+const quoted = parseFrontMatter('---\nconfluence:\n  url: "https://acme.atlassian.net/wiki/spaces/DOC/pages/5"\n  version: 2\n---\n');
+assert(quoted.meta && quoted.meta.url === 'https://acme.atlassian.net/wiki/spaces/DOC/pages/5',
+  'a quoted url is read without the quotes, got: ' + (quoted.meta && quoted.meta.url));
+
+const anchored = mdToStorage('[Country](#1.%20Chapter%20one)\n');
+assert(anchored.includes('<ac:link ac:anchor="1. Chapter one">' +
   '<ac:link-body>Country</ac:link-body></ac:link>'), 'in-page anchor -> ac:link with ac:anchor');
 assert(!anchored.includes('<a href="#'), 'no raw anchor href left');
 

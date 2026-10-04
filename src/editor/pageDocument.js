@@ -1,0 +1,63 @@
+const { convertHtmlToMd } = require('../core/htmlToMd');
+const { parseFrontMatter, serializeFrontMatter } = require('../core/frontMatter');
+const { pageWebUrl } = require('../core/confluenceClient');
+const { imagesMode } = require('./config');
+
+const EXTENSION_VERSION = require('../../package.json').version;
+const DOC_TYPE = 'confluence-page';
+
+function isoToday() {
+  const d = new Date();
+  const p = (n) => String(n).padStart(2, '0');
+  return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+}
+
+function describeLines(page) {
+  const lines = [
+    'type: ' + DOC_TYPE,
+    'generator: confluence-to-md@' + EXTENSION_VERSION,
+    'generated: ' + isoToday(),
+    'sourceId: ' + page.id
+  ];
+  if (page.spaceKey) lines.push('space: ' + page.spaceKey);
+  return lines;
+}
+
+function pageDocument(page, markdown) {
+  const fm = serializeFrontMatter(
+    { url: pageWebUrl(page.site, page.spaceKey, page.id), version: page.version },
+    describeLines(page));
+  return fm + '\n# ' + page.title + '\n\n' + markdown;
+}
+
+function topKey(line) {
+  return /^\s/.test(line) ? null : line.split(':')[0].trim();
+}
+
+function keptLines(previousLines, freshLines) {
+  const fresh = new Set(freshLines.map(topKey));
+  const kept = [];
+  let keep = false;
+  for (const line of previousLines) {
+    const key = topKey(line);
+    if (key !== null) keep = !fresh.has(key);
+    if (keep) kept.push(line);
+  }
+  return kept;
+}
+
+function pulledDocument(page, markdown, previousText) {
+  const previous = parseFrontMatter(previousText);
+  const fresh = describeLines(page);
+  const fm = serializeFrontMatter(
+    { url: previous.meta.url, version: page.version },
+    fresh.concat(keptLines(previous.extraLines, fresh)));
+  return fm + '\n# ' + page.title + '\n\n' + markdown;
+}
+
+function pageToMd(page) {
+  const converted = convertHtmlToMd(page.html, { origin: page.site.origin, images: imagesMode() });
+  return { md: pageDocument(page, converted.markdown), links: converted.links };
+}
+
+module.exports = { pageDocument, pulledDocument, pageToMd };

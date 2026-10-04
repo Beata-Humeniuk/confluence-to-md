@@ -1,11 +1,11 @@
 const vscode = require('vscode');
-const { fetchPageCommand } = require('./fetchCommand');
-const { publishPageCommand } = require('./publishCommand');
-const { pullPageCommand } = require('./pullCommand');
-const { handlePreviewUri } = require('./previewActions');
-const { provideDocumentLinks, openPageLinkCommand } = require('./documentLinks');
-const { previewButtons } = require('./previewButton');
-const { PAGE_DIFF_SCHEME, pageDiffContentProvider } = require('./pageDiff');
+const { fetchPageCommand } = require('./editor/fetchCommand');
+const { publishPageCommand } = require('./editor/publishCommand');
+const { pullPageCommand } = require('./editor/pullCommand');
+const { handlePreviewUri } = require('./editor/previewActions');
+const { provideDocumentLinks, openPageLinkCommand } = require('./editor/documentLinks');
+const { previewButtons } = require('./core/previewButton');
+const { PAGE_DIFF_SCHEME, pageDiffContentProvider } = require('./editor/pageDiff');
 
 function activate(context) {
   context.subscriptions.push(

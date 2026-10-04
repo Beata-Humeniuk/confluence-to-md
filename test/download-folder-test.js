@@ -1,6 +1,6 @@
 const path = require('path');
-const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
-const { parseDownloadFolder } = require('../src/downloadFolder');
+const { assert } = require('./assert');
+const { parseDownloadFolder } = require('../src/core/downloadFolder');
 
 const HOME = path.sep === '\\' ? 'C:\\Users\\ja' : '/home/ja';
 

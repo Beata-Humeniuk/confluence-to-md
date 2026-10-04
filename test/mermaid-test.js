@@ -1,8 +1,8 @@
-const { mdToStorage } = require('../src/mdToStorage');
-const { convertHtmlToMd } = require('../src/htmlToMd');
-const { hasMermaid, mermaidPlaceholders, restoreMermaid } = require('../src/mermaid');
+const { mdToStorage } = require('../src/core/mdToStorage');
+const { convertHtmlToMd } = require('../src/core/htmlToMd');
+const { hasMermaid, mermaidPlaceholders, restoreMermaid } = require('../src/core/mermaid');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert } = require('./assert');
 
 const diagram = 'flowchart TD\n  A["Start & <go>"] -->|yes| B[End]';
 const md = 'Intro\n\n```mermaid\n' + diagram + '\n```\n\n```js\nlet a = 1;\n```\n';
@@ -36,7 +36,6 @@ assert(out.includes('```mermaid\n' + diagram + '\n```'), 'rendered page converts
 const direct = convertHtmlToMd('<p>x</p>' + published).markdown;
 assert(direct.includes('```mermaid\n' + diagram + '\n```'), 'unrendered mermaid macro converts to a mermaid block:\n' + direct);
 
-// Client: a page with a Mermaid macro is rendered again with placeholders.
 const sent = [];
 global.fetch = async (url, options) => {
   const method = (options && options.method) || 'GET';
@@ -54,7 +53,7 @@ global.fetch = async (url, options) => {
   return { ok: true, status: 200, url, json: async () => json };
 };
 
-const { fetchPageById } = require('../src/confluenceClient');
+const { fetchPageById } = require('../src/core/confluenceClient');
 const site = { origin: 'https://c.example.com', basePath: '', cloud: false };
 
 (async () => {

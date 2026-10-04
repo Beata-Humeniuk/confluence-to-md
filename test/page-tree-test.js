@@ -1,6 +1,6 @@
-const { placeInTree } = require('../src/pageTree');
+const { placeInTree } = require('../src/core/pageTree');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert } = require('./assert');
 
 const flat = placeInTree([{ id: '1', ancestors: ['100', '200'], slug: 'catalogue' }], new Map());
 assert(flat.get('1') === 'catalogue', 'page with no known ancestors goes to the root');
