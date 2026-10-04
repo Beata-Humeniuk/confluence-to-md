@@ -1,4 +1,4 @@
-const { placeInTree } = require('../src/pageTree');
+const { placeInTree } = require('../src/core/pageTree');
 
 const { assert } = require('./assert');
 

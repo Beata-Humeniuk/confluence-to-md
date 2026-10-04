@@ -160,10 +160,6 @@ async function fetchPageByTitle(cfg, site, spaceKey, title) {
   return withMermaidSources(cfg, site, pageOf(j.results[0], site), j.results[0]);
 }
 
-// export_view renders Mermaid macros as pictures, losing the diagram source.
-// When the page has them, the storage is rendered again with placeholders in
-// their place, and the placeholders become Mermaid code blocks. If Confluence
-// refuses the conversion, the page keeps its normal export_view.
 async function withMermaidSources(cfg, site, page, j) {
   const storage = j && j.body && j.body.storage && j.body.storage.value;
   if (!hasMermaid(storage)) return page;

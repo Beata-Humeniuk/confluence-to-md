@@ -1,7 +1,7 @@
 const vscode = require('vscode');
 const { pullPageCommand } = require('./pullCommand');
 const { publishPageCommand } = require('./publishCommand');
-const { fileUriCandidates } = require('./previewButton');
+const { fileUriCandidates } = require('../core/previewButton');
 
 async function publishFromPreview(document) {
   const publish = 'Publish';
@@ -23,9 +23,6 @@ const ACTIONS = {
   '/publish': publishFromPreview
 };
 
-// The preview's buttons open vscode://<extension>/<action>?file=<uri>. Only a
-// file that is already open is acted on, so a link from elsewhere cannot reach
-// files the user is not looking at.
 async function handlePreviewUri(uri) {
   const action = ACTIONS[uri.path];
   if (!action) return;

@@ -1,5 +1,3 @@
-// Text helpers shared by the HTML and storage-format converters.
-
 function escapeXml(s) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
     .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -15,8 +13,6 @@ function decodeEntities(s) {
     .replace(/&amp;/g, '&');
 }
 
-// The text of a plain-text macro body: the content of its CDATA sections, or
-// the decoded text when the body carries none.
 function plainTextOf(body) {
   const text = String(body);
   if (text.indexOf('<![CDATA[') === -1) return decodeEntities(text);
@@ -25,7 +21,6 @@ function plainTextOf(body) {
   return out;
 }
 
-// Wraps text in CDATA, splitting a "]]>" that would end the section early.
 function cdata(s) {
   return '<![CDATA[' + String(s).replace(/\]\]>/g, ']]]]><![CDATA[>') + ']]>';
 }

@@ -1,6 +1,6 @@
 const path = require('path');
 const { assert } = require('./assert');
-const { parseDownloadFolder } = require('../src/downloadFolder');
+const { parseDownloadFolder } = require('../src/core/downloadFolder');
 
 const HOME = path.sep === '\\' ? 'C:\\Users\\ja' : '/home/ja';
 

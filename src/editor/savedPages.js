@@ -1,9 +1,8 @@
 const vscode = require('vscode');
-const { parseFrontMatter } = require('./frontMatter');
-const { parsePageUrl } = require('./confluenceClient');
-const { titleHeading } = require('./mdDocument');
+const { parseFrontMatter } = require('../core/frontMatter');
+const { parsePageUrl } = require('../core/confluenceClient');
+const { titleHeading } = require('../core/mdDocument');
 
-// Folders that never hold downloaded pages and would only slow the walk down.
 const SKIPPED_FOLDERS = new Set(['node_modules', 'out', 'dist']);
 
 async function fileExists(uri) {

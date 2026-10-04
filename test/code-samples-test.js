@@ -1,4 +1,4 @@
-const { extractLongCodeBlocks, sampleLinkPaths, inlineSamples, APPENDIX_NOTE } = require('../src/codeSamples');
+const { extractLongCodeBlocks, sampleLinkPaths, inlineSamples, APPENDIX_NOTE } = require('../src/core/codeSamples');
 
 const { assert } = require('./assert');
 

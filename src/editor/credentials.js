@@ -1,5 +1,5 @@
 const vscode = require('vscode');
-const { hostOf, authFor } = require('./confluenceClient');
+const { hostOf, authFor } = require('../core/confluenceClient');
 const { configuredToken, configuredEmail } = require('./config');
 
 async function showTokenSettingsError(host) {

@@ -1,6 +1,6 @@
 const { assert } = require('./assert');
-const { slugify, rewriteConfluenceLinks, titleHeading } = require('../src/mdDocument');
-const { parseFrontMatter, serializeFrontMatter } = require('../src/frontMatter');
+const { slugify, rewriteConfluenceLinks, titleHeading } = require('../src/core/mdDocument');
+const { parseFrontMatter, serializeFrontMatter } = require('../src/core/frontMatter');
 
 assert(slugify('Contract signing process') === 'contract-signing-process', 'slug from title');
 assert(slugify('Załącznik: żółć — 100%') === 'zalacznik-zolc-100', 'slug strips diacritics and symbols');

@@ -1,4 +1,4 @@
-const { parsePageUrl, isCloud, authFor, authHeader, apiRoot } = require('../src/confluenceClient');
+const { parsePageUrl, isCloud, authFor, authHeader, apiRoot } = require('../src/core/confluenceClient');
 
 const { assert } = require('./assert');
 

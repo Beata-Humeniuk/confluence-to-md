@@ -1,4 +1,4 @@
-const { convertHtmlToMd } = require('../src/htmlToMd');
+const { convertHtmlToMd } = require('../src/core/htmlToMd');
 
 const { assert } = require('./assert');
 

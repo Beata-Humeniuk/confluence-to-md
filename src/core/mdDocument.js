@@ -11,8 +11,6 @@ function slugify(title) {
   return s || 'page';
 }
 
-// The first level-one heading outside fenced code, with the offsets of its
-// line (newline included) so that it can be cut out of the text.
 function titleHeading(markdown) {
   const text = String(markdown);
   let fenced = false;

@@ -1,9 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const { assert } = require('./assert');
-const { partPaths, assembleParts } = require('../src/assembleParts');
-const { mdToStorage } = require('../src/mdToStorage');
-const { parseFrontMatter } = require('../src/frontMatter');
+const { partPaths, assembleParts } = require('../src/core/assembleParts');
+const { mdToStorage } = require('../src/core/mdToStorage');
+const { parseFrontMatter } = require('../src/core/frontMatter');
 
 function assembled(indexPath) {
   const dir = path.dirname(indexPath);

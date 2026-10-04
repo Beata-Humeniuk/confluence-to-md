@@ -1,6 +1,6 @@
-const { mdToStorage } = require('../src/mdToStorage');
-const { convertHtmlToMd } = require('../src/htmlToMd');
-const { parseFrontMatter, serializeFrontMatter } = require('../src/frontMatter');
+const { mdToStorage } = require('../src/core/mdToStorage');
+const { convertHtmlToMd } = require('../src/core/htmlToMd');
+const { parseFrontMatter, serializeFrontMatter } = require('../src/core/frontMatter');
 
 const { assert } = require('./assert');
 

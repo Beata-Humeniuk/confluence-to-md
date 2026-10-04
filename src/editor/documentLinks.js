@@ -1,9 +1,9 @@
 const vscode = require('vscode');
-const { parseFrontMatter } = require('./frontMatter');
-const { parsePageUrl, fetchPageMeta, fetchPageByTitle } = require('./confluenceClient');
-const { confluenceTargetOf } = require('./pageLink');
+const { parseFrontMatter } = require('../core/frontMatter');
+const { parsePageUrl, fetchPageMeta, fetchPageByTitle } = require('../core/confluenceClient');
+const { confluenceTargetOf } = require('../core/pageLink');
 const { credentialsFor } = require('./credentials');
-const { errorMessage } = require('./messages');
+const { errorMessage } = require('../core/messages');
 const { pageToMd } = require('./pageDocument');
 
 function provideDocumentLinks(doc) {

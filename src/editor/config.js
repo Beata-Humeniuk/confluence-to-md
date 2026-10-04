@@ -1,6 +1,6 @@
 const os = require('os');
 const vscode = require('vscode');
-const { parseDownloadFolder } = require('./downloadFolder');
+const { parseDownloadFolder } = require('../core/downloadFolder');
 
 function settings() {
   return vscode.workspace.getConfiguration('confluenceToMd');

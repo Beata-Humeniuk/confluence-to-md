@@ -9,7 +9,6 @@ function decode(s) {
   }
 }
 
-// The space key and title named by a `confluence:[KEY/]Title` link target.
 function confluenceTargetOf(target) {
   const raw = String(target == null ? '' : target).trim();
   const parts = (raw.indexOf(CONFLUENCE_SCHEME) === 0 ? raw.slice(CONFLUENCE_SCHEME.length) : raw).split('/');

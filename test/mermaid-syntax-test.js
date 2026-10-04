@@ -1,5 +1,5 @@
-const { adaptMermaid, needsQuotedLabels } = require('../src/mermaidSyntax');
-const { mdToStorage } = require('../src/mdToStorage');
+const { adaptMermaid, needsQuotedLabels } = require('../src/core/mermaidSyntax');
+const { mdToStorage } = require('../src/core/mdToStorage');
 
 const { assert, same } = require('./assert');
 const adapt = (body, version) => adaptMermaid('flowchart TD\n' + body, version || '9.2.2').split('\n').slice(1).join('\n');

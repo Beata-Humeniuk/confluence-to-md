@@ -1,5 +1,5 @@
 const { assert } = require('./assert');
-const { pageRefOfHref } = require('../src/pageLink');
+const { pageRefOfHref } = require('../src/core/pageLink');
 
 const ORIGIN = 'https://confluence.example.com';
 

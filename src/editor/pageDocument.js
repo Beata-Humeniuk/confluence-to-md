@@ -1,9 +1,9 @@
-const { convertHtmlToMd } = require('./htmlToMd');
-const { parseFrontMatter, serializeFrontMatter } = require('./frontMatter');
-const { pageWebUrl } = require('./confluenceClient');
+const { convertHtmlToMd } = require('../core/htmlToMd');
+const { parseFrontMatter, serializeFrontMatter } = require('../core/frontMatter');
+const { pageWebUrl } = require('../core/confluenceClient');
 const { imagesMode } = require('./config');
 
-const EXTENSION_VERSION = require('../package.json').version;
+const EXTENSION_VERSION = require('../../package.json').version;
 const DOC_TYPE = 'confluence-page';
 
 function isoToday() {
@@ -34,8 +34,6 @@ function topKey(line) {
   return /^\s/.test(line) ? null : line.split(':')[0].trim();
 }
 
-// Front matter lines of the previous file that the refreshed page does not set
-// itself, with any indented lines that belong to them.
 function keptLines(previousLines, freshLines) {
   const fresh = new Set(freshLines.map(topKey));
   const kept = [];

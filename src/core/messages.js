@@ -6,7 +6,6 @@ function errorMessage(e) {
   return 'Error: ' + ((e && e.message) || String(e));
 }
 
-// "1 page", "3 pages".
 function countOf(n, word) {
   return n + ' ' + word + (n === 1 ? '' : 's');
 }

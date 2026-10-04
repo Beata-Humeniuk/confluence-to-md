@@ -1,5 +1,3 @@
-// Runs every *-test.js in this folder in its own process: several tests stub
-// the vscode module or global fetch and must not see each other's stubs.
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');

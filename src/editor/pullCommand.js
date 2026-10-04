@@ -1,8 +1,8 @@
 const vscode = require('vscode');
-const { parseFrontMatter } = require('./frontMatter');
-const { parsePageUrl, fetchPageById } = require('./confluenceClient');
+const { parseFrontMatter } = require('../core/frontMatter');
+const { parsePageUrl, fetchPageById } = require('../core/confluenceClient');
 const { credentialsFor } = require('./credentials');
-const { errorMessage } = require('./messages');
+const { errorMessage } = require('../core/messages');
 const { remoteDocument, samplesFolder } = require('./remoteDocument');
 const { showPageDiff } = require('./pageDiff');
 

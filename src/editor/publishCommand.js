@@ -1,73 +1,24 @@
 const vscode = require('vscode');
-const { mdToStorage } = require('./mdToStorage');
-const { parseFrontMatter, serializeFrontMatter } = require('./frontMatter');
-const { partPaths, assembleParts } = require('./assembleParts');
-const { sampleLinkPaths, inlineSamples } = require('./codeSamples');
+const { mdToStorage } = require('../core/mdToStorage');
+const { parseFrontMatter } = require('../core/frontMatter');
+const {
+  editorSource, uriSource, writeBinding, assembleWithParts, withSampleFiles, splitTitleAndBody
+} = require('./publishSource');
 const {
   parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, createPage, updatePage, pageWebUrl
-} = require('./confluenceClient');
+} = require('../core/confluenceClient');
 const { credentialsFor } = require('./credentials');
-const { errorMessage, countOf } = require('./messages');
+const { errorMessage, countOf } = require('../core/messages');
 const { mermaidMacro, mermaidVersion } = require('./config');
 const { remoteDocument } = require('./remoteDocument');
 const { showPageDiff } = require('./pageDiff');
-const { titleHeading } = require('./mdDocument');
 
 const COMPARE = 'Compare';
 const OVERWRITE = 'Overwrite';
 
-function baseName(path) {
-  return String(path || '').split(/[\\/]/).pop() || '';
-}
-
-// The first H1 outside fenced code is the page title and leaves the body.
-function splitTitleAndBody(mdBody, fallbackTitle) {
-  const h1 = titleHeading(mdBody);
-  if (!h1) return { title: fallbackTitle, content: mdBody };
-  return { title: h1.title, content: mdBody.slice(0, h1.start) + mdBody.slice(h1.end) };
-}
-
 function resolveParentPage(creds, parsed) {
   if (parsed.pageId) return fetchPageMeta(creds, parsed.site, parsed.pageId);
   return fetchPageByTitle(creds, parsed.site, parsed.spaceKey, parsed.title);
-}
-
-async function readPart(uri) {
-  const open = vscode.workspace.textDocuments.find(
-    (doc) => doc.uri.toString() === uri.toString());
-  if (open) return open.getText();
-  return Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8');
-}
-
-async function assembleWithParts(uri, body) {
-  if (!uri || uri.scheme === 'untitled') return { markdown: body, inlined: [], missing: [] };
-  const paths = partPaths(body);
-  if (!paths.length) return { markdown: body, inlined: [], missing: [] };
-  const folder = vscode.Uri.joinPath(uri, '..');
-  const texts = new Map();
-  for (const path of paths) {
-    const partUri = vscode.Uri.joinPath(folder, ...path.split('/'));
-    try {
-      texts.set(path, await readPart(partUri));
-    } catch (e) {
-      texts.set(path, null);
-    }
-  }
-  return assembleParts(body, texts);
-}
-
-async function withSampleFiles(uri, markdown) {
-  if (!uri || uri.scheme === 'untitled') return markdown;
-  const folder = vscode.Uri.joinPath(uri, '..');
-  const contents = new Map();
-  for (const path of sampleLinkPaths(markdown)) {
-    try {
-      contents.set(path, await readPart(vscode.Uri.joinPath(folder, ...path.split('/'))));
-    } catch (e) {
-      contents.set(path, null);
-    }
-  }
-  return inlineSamples(markdown, contents);
 }
 
 async function confirmMissingParts(missing) {
@@ -78,41 +29,6 @@ async function confirmMissingParts(missing) {
     '. They will stay on the page as links to files that do not exist in Confluence.',
     { modal: true }, publish);
   return picked === publish;
-}
-
-function editorSource(editor) {
-  return {
-    uri: editor.document.uri,
-    text: editor.document.getText(),
-    fileName: baseName(editor.document.fileName),
-    editor
-  };
-}
-
-async function uriSource(uri) {
-  return {
-    uri,
-    text: Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8'),
-    fileName: baseName(uri.fsPath || uri.path),
-    editor: null
-  };
-}
-
-async function writeBinding(source, meta) {
-  if (!source.editor) {
-    const { rawLength, extraLines } = parseFrontMatter(source.text);
-    const fm = serializeFrontMatter(meta, extraLines) + (rawLength ? '' : '\n');
-    await vscode.workspace.fs.writeFile(
-      source.uri, Buffer.from(fm + source.text.slice(rawLength), 'utf8'));
-    return;
-  }
-  const document = source.editor.document;
-  const { rawLength, extraLines } = parseFrontMatter(document.getText());
-  const fm = serializeFrontMatter(meta, extraLines) + (rawLength ? '' : '\n');
-  await source.editor.edit((edit) => {
-    edit.replace(new vscode.Range(
-      document.positionAt(0), document.positionAt(rawLength)), fm);
-  });
 }
 
 function overwriteWarning(localVersion, remoteVersion) {
@@ -135,7 +51,6 @@ async function compareWithPage(source, parsed, creds) {
     'then publish again and choose ' + OVERWRITE + '.');
 }
 
-// Asks before replacing a page that may hold changes the file does not have.
 async function confirmOverwrite(source, parsed, creds, localVersion, remoteVersion) {
   const picked = await vscode.window.showWarningMessage(
     overwriteWarning(localVersion, remoteVersion), { modal: true }, COMPARE, OVERWRITE);
