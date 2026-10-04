@@ -110,7 +110,9 @@ function fenceFor(content) {
 }
 
 function languageOf(path) {
-  const ext = path.split('.').pop().toLowerCase();
+  const name = path.split('/').pop();
+  const dot = name.lastIndexOf('.');
+  const ext = dot > 0 ? name.slice(dot + 1).toLowerCase() : '';
   return ext === 'txt' ? '' : ext;
 }
 

@@ -9,6 +9,23 @@ follows [Semantic Versioning](https://semver.org/).
 
 - Shorter setting descriptions. Details on finding the Mermaid macro name
   moved to [docs/PUBLISHING.md](docs/PUBLISHING.md#mermaid-diagrams).
+- Downloaded files always get `type: confluence-page` in their front matter.
+  The guesses at other document types and the `managed: true` line are gone;
+  keys you added yourself are still kept on pull.
+- The extension declares the `onUri` activation event, so a link back into it
+  from a preview button activates it even when no Markdown file is open.
+
+### Fixed
+
+- A `#` comment inside a fenced code block is no longer taken for the page
+  title when publishing. The first level-one heading outside code blocks is
+  used, and the code block keeps its line.
+- A `confluence:` binding whose `url` is written in quotes is read correctly.
+- `- [X]` with an upper-case marker is published as a completed task.
+- A code sample without a file extension is published without a made-up
+  language.
+- Looking for previously downloaded pages skips `node_modules` and build
+  output folders.
 
 ## [1.6.1] - 2026-09-27
 

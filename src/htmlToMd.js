@@ -1,32 +1,15 @@
 const TurndownService = require('turndown');
 const { gfm } = require('@joplin/turndown-plugin-gfm');
 const { pageRefOfHref } = require('./pageLink');
+const { escapeXml, decodeEntities, plainTextOf } = require('./markup');
 
-function escapeHtml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function decodeEntities(s) {
-  return String(s)
-    .replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(parseInt(n, 10)))
-    .replace(/&#x([0-9a-fA-F]+);/g, (m, n) => String.fromCodePoint(parseInt(n, 16)))
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&lt;/g, '<').replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"').replace(/&apos;/g, "'")
-    .replace(/&amp;/g, '&');
-}
-
+// The text of a plain-text macro body as HTML-escaped content.
 function cdataToHtml(s) {
-  const str = String(s);
-  if (str.indexOf('<![CDATA[') === -1) return str;
-  let out = '';
-  str.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, (m, t) => { out += t; return m; });
-  return escapeHtml(out);
+  return escapeXml(plainTextOf(s));
 }
 
 function attr(tag, name) {
-  const m = tag.match(new RegExp(name.replace(/:/g, '\\:') + '\\s*=\\s*"([^"]*)"'));
+  const m = tag.match(new RegExp(name + '\\s*=\\s*"([^"]*)"'));
   return m ? decodeEntities(m[1]) : '';
 }
 
@@ -36,7 +19,7 @@ function storageToHtml(input) {
   s = s.replace(/<ac:structured-macro[^>]*ac:name="code"[^>]*>([\s\S]*?)<\/ac:structured-macro>/g, (m, body) => {
     const lang = (body.match(/<ac:parameter[^>]*ac:name="language"[^>]*>([\s\S]*?)<\/ac:parameter>/) || [])[1] || '';
     const code = body.match(/<ac:plain-text-body>([\s\S]*?)<\/ac:plain-text-body>/);
-    return '<pre data-code-language="' + escapeHtml(lang.trim()) + '">' +
+    return '<pre data-code-language="' + escapeXml(lang.trim()) + '">' +
       (code ? cdataToHtml(code[1]) : '') + '</pre>';
   });
   s = s.replace(/<ac:structured-macro[^>]*ac:name="[^"]*mermaid[^"]*"[^>]*>([\s\S]*?)<\/ac:structured-macro>/gi, (m, body) => {
@@ -78,12 +61,12 @@ function storageToHtml(input) {
       const title = attr(page[0], 'ri:content-title');
       const spaceKey = attr(page[0], 'ri:space-key');
       const target = (spaceKey ? encodeURIComponent(spaceKey) + '/' : '') + encodeURIComponent(title);
-      return '<a href="confluence:' + target + '">' + (labelHtml || escapeHtml(title)) + '</a>';
+      return '<a href="confluence:' + target + '">' + (labelHtml || escapeXml(title)) + '</a>';
     }
     const user = body.match(/<ri:user[^>]*\/?>/);
     if (user) {
       const name = attr(user[0], 'ri:username');
-      return name ? '@' + escapeHtml(name) : labelHtml;
+      return name ? '@' + escapeXml(name) : labelHtml;
     }
     return labelHtml;
   });
@@ -92,10 +75,10 @@ function storageToHtml(input) {
     const att = body.match(/<ri:attachment[^>]*\/?>/);
     const url = body.match(/<ri:url[^>]*\/?>/);
     const name = att ? attr(att[0], 'ri:filename') : (url ? attr(url[0], 'ri:value') : '');
-    return '<img alt="' + escapeHtml(name) + '">';
+    return '<img alt="' + escapeXml(name) + '">';
   });
 
-  s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, (m, t) => escapeHtml(t));
+  s = s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, (m, t) => escapeXml(t));
   s = s.replace(/<\/?(?:ac|ri):[a-zA-Z-]+[^<>]*>/g, '');
   return s;
 }

@@ -1,12 +1,11 @@
 const fs = require('fs');
 const path = require('path');
+const { assert } = require('./assert');
 const { partPaths, assembleParts } = require('../src/assembleParts');
 const { mdToStorage } = require('../src/mdToStorage');
 const { parseFrontMatter } = require('../src/frontMatter');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
-
-function packageOf(indexPath) {
+function assembled(indexPath) {
   const dir = path.dirname(indexPath);
   const body = parseFrontMatter(fs.readFileSync(indexPath, 'utf8')).body;
   const texts = new Map();
@@ -17,44 +16,44 @@ function packageOf(indexPath) {
   return assembleParts(body, texts);
 }
 
-const EXAMPLES = path.join(__dirname, 'fixtures', 'packages');
+const FIXTURES = path.join(__dirname, 'fixtures');
 
-const view = packageOf(path.join(EXAMPLES, 'ui', 'add-book', 'add-book.md'));
+const handbook = assembled(path.join(FIXTURES, 'handbook', 'handbook.md'));
 
-assert(view.inlined.length === 5, 'view: all five sections inlined, got ' + view.inlined.length);
-assert(view.missing.length === 0, 'view: nothing reported missing');
-assert(view.markdown.indexOf('(sections/') < 0, 'view: no link to a section file survives');
-assert(view.markdown.indexOf('## Contents') < 0, 'view: contents heading goes with its list');
-assert(/^# UI: Add book$/m.test(view.markdown), 'view: H1 stays — it is the page title');
-assert(view.markdown.indexOf('## 1. Book details') >= 0 &&
-  view.markdown.indexOf('## 5. Open questions') >= 0, 'view: sections land in reading order');
-assert(view.markdown.indexOf('## 1. Book details') < view.markdown.indexOf('## 2. Loan parameters'),
-  'view: order of the index is the order on the page');
-assert(view.markdown.indexOf('type: view-design-part') < 0, 'view: part front matter is dropped');
-assert(view.markdown.indexOf('| Component | Endpoint | Field |') >= 0, 'view: section content is there');
+assert(handbook.inlined.length === 5, 'handbook: all five sections inlined, got ' + handbook.inlined.length);
+assert(handbook.missing.length === 0, 'handbook: nothing reported missing');
+assert(handbook.markdown.indexOf('(sections/') < 0, 'handbook: no link to a section file survives');
+assert(handbook.markdown.indexOf('## Contents') < 0, 'handbook: contents heading goes with its list');
+assert(/^# Handbook: Getting started$/m.test(handbook.markdown), 'handbook: H1 stays — it is the page title');
+assert(handbook.markdown.indexOf('## 1. Installation') >= 0 &&
+  handbook.markdown.indexOf('## 5. Open questions') >= 0, 'handbook: sections land in reading order');
+assert(handbook.markdown.indexOf('## 1. Installation') < handbook.markdown.indexOf('## 2. Configuration'),
+  'handbook: order of the index is the order on the page');
+assert(handbook.markdown.indexOf('type: handbook-part') < 0, 'handbook: part front matter is dropped');
+assert(handbook.markdown.indexOf('| Step | Command | Expected | Notes |') >= 0, 'handbook: section content is there');
 
-assert(view.markdown.indexOf('](section-01.md)') < 0, 'view: cross-part link is rewritten');
-assert(view.markdown.indexOf('[Genre](#1.%20Book%20details%20(Section))') >= 0,
-  'view: link to a section becomes an anchor to its heading');
+assert(handbook.markdown.indexOf('](section-01.md)') < 0, 'handbook: cross-part link is rewritten');
+assert(handbook.markdown.indexOf('[Sign in](#1.%20Installation%20(Chapter))') >= 0,
+  'handbook: link to a section becomes an anchor to its heading');
 
-const viewStorage = mdToStorage(view.markdown);
-assert(viewStorage.indexOf('<ac:link ac:anchor="1. Book details (Section)">') >= 0,
-  'view: anchor goes out as a native Confluence link');
-assert(viewStorage.indexOf('<a href="#') < 0, 'view: no raw anchor href in storage');
+const handbookStorage = mdToStorage(handbook.markdown);
+assert(handbookStorage.indexOf('<ac:link ac:anchor="1. Installation (Chapter)">') >= 0,
+  'handbook: anchor goes out as a native Confluence link');
+assert(handbookStorage.indexOf('<a href="#') < 0, 'handbook: no raw anchor href in storage');
 
-const flow = packageOf(path.join(EXAMPLES, 'api', 'books', 'api.md'));
+const runbook = assembled(path.join(FIXTURES, 'runbook', 'deploy.md'));
 
-assert(flow.inlined.length === 6, 'flow: every linked part inlined, got ' + flow.inlined.length);
-assert(flow.markdown.indexOf('(parts/') < 0, 'flow: no link to a part file survives');
-assert(/^## Flow$/m.test(flow.markdown), 'flow: Flow heading stays — it carries the diagram');
-assert(flow.markdown.indexOf('```mermaid') >= 0, 'flow: diagram stays');
-assert(flow.markdown.indexOf('## Input data (request)') <
-  flow.markdown.indexOf('## 1. Request validation'), 'flow: request before the steps');
-assert(flow.markdown.indexOf('## Open questions') >
-  flow.markdown.indexOf('## Responses'), 'flow: open questions last');
+assert(runbook.inlined.length === 6, 'runbook: every linked step inlined, got ' + runbook.inlined.length);
+assert(runbook.markdown.indexOf('(steps/') < 0, 'runbook: no link to a step file survives');
+assert(/^## Flow$/m.test(runbook.markdown), 'runbook: Flow heading stays — it carries the diagram');
+assert(runbook.markdown.indexOf('```mermaid') >= 0, 'runbook: diagram stays');
+assert(runbook.markdown.indexOf('## Before you start') <
+  runbook.markdown.indexOf('## 1. Freeze'), 'runbook: preparation before the steps');
+assert(runbook.markdown.indexOf('## Open questions') >
+  runbook.markdown.indexOf('## Rollback'), 'runbook: open questions last');
 
-assert(flow.markdown.match(/```mermaid[\s\S]*?```/)[0].indexOf('## ') < 0,
-  'flow: nothing inlined inside the fenced diagram');
+assert(runbook.markdown.match(/```mermaid[\s\S]*?```/)[0].indexOf('## ') < 0,
+  'runbook: nothing inlined inside the fenced diagram');
 
 const readme = [
   '# Installation',
@@ -69,7 +68,7 @@ const plain = assembleParts(readme, {
 assert(plain.markdown === readme, 'a list of links to plain files is left alone');
 assert(plain.inlined.length === 0, 'nothing inlined without a part front matter');
 
-const part = '---\ntype: view-design-part\nparent: ../index.md\n---\n\n## Section\n\nContent.\n';
+const part = '---\ntype: guide-part\nparent: ../index.md\n---\n\n## Section\n\nContent.\n';
 const declared = assembleParts('# Title\n\n1. [Section](sections/a.md)\n', { 'sections/a.md': part });
 assert(declared.inlined.length === 1, 'a file declaring itself a part is inlined');
 assert(declared.markdown.indexOf('## Section') >= 0, 'part content lands in the page');
@@ -98,11 +97,11 @@ assert(twice.markdown.indexOf('[Same one](#Section)') >= 0, 'second link becomes
 
 const outside = assembleParts('# Title\n\n1. [Above](../other/file.md)\n2. [Web](https://x/y.md)\n',
   { '../other/file.md': part });
-assert(outside.inlined.length === 0, 'a path climbing above the index is not a part of this package');
+assert(outside.inlined.length === 0, 'a path climbing above the index is not a part of this document');
 assert(partPaths('1. [Web](https://example.com/a.md)\n').length === 0, 'absolute links ignored');
 assert(partPaths('A sentence with a [link](sections/a.md) inside.\n').length === 0,
   'a link inside a sentence is not a table of contents row');
 assert(partPaths('- [Section](sections/a.md) — with extra text\n').length === 0,
   'a row carrying its own text is not a table of contents row');
 
-console.log('PASS: split package assembled into one page ok');
+console.log('PASS: split document assembled into one page ok');

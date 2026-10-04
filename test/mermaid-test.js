@@ -2,7 +2,7 @@ const { mdToStorage } = require('../src/mdToStorage');
 const { convertHtmlToMd } = require('../src/htmlToMd');
 const { hasMermaid, mermaidPlaceholders, restoreMermaid } = require('../src/mermaid');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert } = require('./assert');
 
 const diagram = 'flowchart TD\n  A["Start & <go>"] -->|yes| B[End]';
 const md = 'Intro\n\n```mermaid\n' + diagram + '\n```\n\n```js\nlet a = 1;\n```\n';

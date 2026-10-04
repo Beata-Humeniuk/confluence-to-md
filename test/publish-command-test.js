@@ -1,4 +1,4 @@
-const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
+const { assert } = require('./assert');
 const { errorMessage } = require('../src/messages');
 
 // A VS Code stub, just enough to drive publishCommand end to end: an in-memory
@@ -172,14 +172,24 @@ async function main() {
   // A split document is assembled into one page on the URI path too.
   reset();
   disk.set('/w/pkg/api.md', '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\n---\n\n# API\n\n## Steps\n\n- [Validation](parts/step-01.md)\n');
-  disk.set('/w/pkg/parts/step-01.md', '---\ntype: api-part\n---\n\n## Validation\n\nCheck the payload.\n');
+  disk.set('/w/pkg/parts/step-01.md', '---\ntype: guide-part\n---\n\n## Validation\n\nCheck the payload.\n');
   routes = [META, UPDATED];
   result = await publishPageCommand(uri('/w/pkg/api.md'));
   assert(result && result.action === 'updated', 'a split document publishes by URI');
   assert(sent.find((r) => r.method === 'PUT').body.body.storage.value.includes('Check the payload.'),
     'the part is inlined into the page that is sent');
-  assert(info.length === 1 && /1 part from the package/.test(info[0]),
+  assert(info.length === 1 && /1 part file included/.test(info[0]),
     'the assembled page is reported, got: ' + info[0]);
+
+  // A "#" line inside a code block is code, not the page title.
+  reset();
+  disk.set('/w/doc.md', '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\n---\n\n```sh\n# install first\nnpm ci\n```\n\n# Real title\n\nBody.\n');
+  routes = [META, UPDATED];
+  await publishPageCommand(uri('/w/doc.md'));
+  const titled = sent.find((r) => r.method === 'PUT').body;
+  assert(titled.title === 'Real title', 'the title comes from the heading outside the code block, got: ' + titled.title);
+  assert(titled.body.storage.value.includes('# install first') && !titled.body.storage.value.includes('Real title'),
+    'the code block keeps its comment and the title leaves the body');
 
   // Cancelling a prompt is not a failure: the command resolves to undefined and
   // nothing is published.

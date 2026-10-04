@@ -7,26 +7,24 @@ const {
   parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, createPage, updatePage, pageWebUrl
 } = require('./confluenceClient');
 const { credentialsFor } = require('./credentials');
-const { errorMessage } = require('./messages');
+const { errorMessage, countOf } = require('./messages');
 const { mermaidMacro, mermaidVersion } = require('./config');
 const { remoteDocument } = require('./remoteDocument');
 const { showPageDiff } = require('./pageDiff');
+const { titleHeading } = require('./mdDocument');
 
 const COMPARE = 'Compare';
 const OVERWRITE = 'Overwrite';
-
-function partsWord(n) {
-  return n === 1 ? 'part' : 'parts';
-}
 
 function baseName(path) {
   return String(path || '').split(/[\\/]/).pop() || '';
 }
 
+// The first H1 outside fenced code is the page title and leaves the body.
 function splitTitleAndBody(mdBody, fallbackTitle) {
-  const h1 = mdBody.match(/^#[ \t]+(.+)\r?\n?/m);
+  const h1 = titleHeading(mdBody);
   if (!h1) return { title: fallbackTitle, content: mdBody };
-  return { title: h1[1].trim(), content: mdBody.replace(h1[0], '') };
+  return { title: h1.title, content: mdBody.slice(0, h1.start) + mdBody.slice(h1.end) };
 }
 
 function resolveParentPage(creds, parsed) {
@@ -41,7 +39,7 @@ async function readPart(uri) {
   return Buffer.from(await vscode.workspace.fs.readFile(uri)).toString('utf8');
 }
 
-async function assemblePackage(uri, body) {
+async function assembleWithParts(uri, body) {
   if (!uri || uri.scheme === 'untitled') return { markdown: body, inlined: [], missing: [] };
   const paths = partPaths(body);
   if (!paths.length) return { markdown: body, inlined: [], missing: [] };
@@ -206,15 +204,14 @@ async function publishPageCommand(fileUri) {
     const source = fileUri ? await uriSource(fileUri) : editorSource(editor);
     const { meta, body } = parseFrontMatter(source.text);
 
-    const assembled = await assemblePackage(source.uri, body);
+    const assembled = await assembleWithParts(source.uri, body);
     if (!await confirmMissingParts(assembled.missing)) return;
     const markdown = await withSampleFiles(source.uri, assembled.markdown);
     const { title, content } = splitTitleAndBody(
       markdown, source.fileName.replace(/\.md$/i, '') || 'Untitled');
     const storage = mdToStorage(content, { mermaidMacro: mermaidMacro(), mermaidVersion: mermaidVersion() });
     const note = assembled.inlined.length
-      ? ' The page carries the whole design: ' + assembled.inlined.length + ' ' +
-        partsWord(assembled.inlined.length) + ' from the package included.'
+      ? ' ' + countOf(assembled.inlined.length, 'part file') + ' included in the page.'
       : '';
 
     return meta

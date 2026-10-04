@@ -1,6 +1,6 @@
 const { convertHtmlToMd } = require('../src/htmlToMd');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert } = require('./assert');
 
 const storage = [
   '<h1>Tytu&#322; strony</h1>',
@@ -87,17 +87,17 @@ assert(legacy && legacy.title === 'the old page', 'viewpage.action link collecte
 
 const ORIGIN = 'https://confluence.example.com';
 const absolute = [
-  '<p><a href="' + ORIGIN + '/pages/viewpage.action?pageId=247434967">linked-page</a>',
-  ' and <a href="' + ORIGIN + '/spaces/DOC/pages/259990050/notes">notes</a>',
+  '<p><a href="' + ORIGIN + '/pages/viewpage.action?pageId=1001">linked-page</a>',
+  ' and <a href="' + ORIGIN + '/spaces/DOC/pages/1002/notes">notes</a>',
   ' plus <a href="https://other.example.com/pages/viewpage.action?pageId=1">foreign instance</a>.</p>'
 ].join('\n');
 
 const withOrigin = convertHtmlToMd(absolute, { origin: ORIGIN });
 assert(withOrigin.links.length === 2, 'absolute links to the same instance collected for follow-up fetch');
-const first = withOrigin.links.find((l) => l.pageId === '247434967');
+const first = withOrigin.links.find((l) => l.pageId === '1001');
 assert(first && first.title === 'linked-page', 'title taken from link text when the address carries none');
-assert(withOrigin.links.find((l) => l.pageId === '259990050'), 'second absolute link collected');
-assert(withOrigin.markdown.includes('](' + ORIGIN + '/pages/viewpage.action?pageId=247434967)'),
+assert(withOrigin.links.find((l) => l.pageId === '1002'), 'second absolute link collected');
+assert(withOrigin.markdown.includes('](' + ORIGIN + '/pages/viewpage.action?pageId=1001)'),
   'address in md stays original — only saving to a folder rewrites it to files');
 
 const noOrigin = convertHtmlToMd(absolute);
@@ -128,19 +128,19 @@ assert(!convertHtmlToMd('<p><ac:image><ri:attachment ri:filename="diagram.png"/>
 
 const jiraTable = [
   '<table class="wrapped confluenceTable"><colgroup class=""><col class=""><col class=""></colgroup><tbody>',
-  '<tr class=""><th class="confluenceTh"><h5 id="US:xId">Requirement version id</h5></th>',
-  '<th class="confluenceTh"><h5 id="US:xLink">JIRA link</h5></th></tr>',
+  '<tr class=""><th class="confluenceTh"><h5 id="Spec-versionid">Requirement version id</h5></th>',
+  '<th class="confluenceTh"><h5 id="Spec-link">JIRA link</h5></th></tr>',
   '<tr class=""><td class="confluenceTd"><div class="content-wrapper"><p>',
   '<style>.jira-issue { padding: 0 0 2px; } .jira-issue img { padding-right: 5px; }</style>',
-  '<span class="jira-issue" data-jira-key="PROJ-12109">',
-  '<a href="https://jira.example.com/browse/PROJ-12109" class="jira-issue-key">',
-  '<img class="icon" src="https://jira.example.com/icon.png">PROJ-12109</a>',
+  '<span class="jira-issue" data-jira-key="PROJ-42">',
+  '<a href="https://jira.example.com/browse/PROJ-42" class="jira-issue-key">',
+  '<img class="icon" src="https://jira.example.com/icon.png">PROJ-42</a>',
   ' - <span class="summary">Custom fields</span>',
   '<span class="jira-status"><span class="aui-lozenge">Done</span></span></span>',
   '</p></div></td>',
   '<td class="confluenceTd"><div class="content-wrapper">',
   '<style type="text/css">.icon { background-position: left center; }</style>',
-  '<div id="refresh-module-186557" class="refresh-module-id jira-table"><div class="jira-issues">',
+  '<div id="refresh-module-7" class="refresh-module-id jira-table"><div class="jira-issues">',
   '<table class="jira-issues"><tbody><tr><th>Key</th><th>Summary</th></tr>',
   '<tr><td><a href="https://jira.example.com/browse/PROJ-8">PROJ-8</a></td><td>Monthly report export</td></tr>',
   '</tbody></table>',
@@ -156,7 +156,7 @@ assert(!jira.includes('padding-right') && !jira.includes('background-position'),
   'a macro stylesheet does not enter the content as text');
 assert(/\| Requirement version id \| JIRA link \|/.test(jira) && /\|\s*---\s*\|\s*---\s*\|/.test(jira),
   'colgroup no longer breaks the header row');
-assert(jira.includes('[PROJ-12109](https://jira.example.com/browse/PROJ-12109)'),
+assert(jira.includes('[PROJ-42](https://jira.example.com/browse/PROJ-42)'),
   'issue key stays a link');
 assert(jira.includes('Custom fields Done') && !jira.includes('fieldsDone'),
   'status does not glue onto the issue title');

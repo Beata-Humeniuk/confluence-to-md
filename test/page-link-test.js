@@ -1,4 +1,4 @@
-const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
+const { assert } = require('./assert');
 const { pageRefOfHref } = require('../src/pageLink');
 
 const ORIGIN = 'https://confluence.example.com';
@@ -15,9 +15,9 @@ assert(pageRefOfHref('/display/OPS/Production+runbook').title === 'Production ru
   '/display/KEY/Title with pluses as spaces');
 assert(pageRefOfHref('/pages/999/anything').pageId === '999', 'any path with a page number');
 
-const abs = pageRefOfHref(ORIGIN + '/pages/viewpage.action?pageId=247434967', ORIGIN);
-assert(abs && abs.pageId === '247434967', 'absolute link to the same instance recognised');
-assert(pageRefOfHref(ORIGIN + '/spaces/DOC/pages/247434967/page', ORIGIN).pageId === '247434967',
+const abs = pageRefOfHref(ORIGIN + '/pages/viewpage.action?pageId=1001', ORIGIN);
+assert(abs && abs.pageId === '1001', 'absolute link to the same instance recognised');
+assert(pageRefOfHref(ORIGIN + '/spaces/DOC/pages/1001/page', ORIGIN).pageId === '1001',
   'absolute link in the new Server/DC format');
 assert(pageRefOfHref(ORIGIN + '/confluence/display/OPS/Runbook', ORIGIN).title === 'Runbook',
   'absolute link with a context path');

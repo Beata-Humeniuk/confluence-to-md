@@ -6,13 +6,9 @@ const { placeInTree } = require('./pageTree');
 const { parsePageUrl, fetchPageByUrl, fetchPageById, fetchPageByTitle } = require('./confluenceClient');
 const { downloadFolderUri, followLinksEnabled, imagesMode, appendixHeading } = require('./config');
 const { credentialsFor } = require('./credentials');
-const { errorMessage } = require('./messages');
+const { errorMessage, countOf } = require('./messages');
 const { readSavedPages, confirmOverwrite } = require('./savedPages');
 const { pageDocument } = require('./pageDocument');
-
-function pagesWord(n) {
-  return n === 1 ? 'page' : 'pages';
-}
 
 async function fetchLinkedPages(creds, page, links, savedById, convert, fetched, failures) {
   const picks = await vscode.window.showQuickPick(
@@ -144,7 +140,7 @@ async function saveToFolder(folder, fetched, saved, savedById, origin) {
     await vscode.workspace.openTextDocument(files[0].uri), { preview: false });
   const extracted = files.reduce((n, f) => n + f.samples.length, 0);
   vscode.window.showInformationMessage(
-    'Saved ' + fetched.length + ' ' + pagesWord(fetched.length) + ' to ' +
+    'Saved ' + countOf(fetched.length, 'page') + ' to ' +
     vscode.workspace.asRelativePath(folder, false) + '/.' +
     (extracted ? ' Long examples (' + extracted + ') extracted to separate files.' : '') +
     (relinked ? ' Links updated in ' + relinked + ' previously downloaded file(s).' : ''));

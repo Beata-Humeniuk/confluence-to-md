@@ -1,19 +1,10 @@
 const vscode = require('vscode');
 const { parseFrontMatter } = require('./frontMatter');
 const { parsePageUrl, fetchPageMeta, fetchPageByTitle } = require('./confluenceClient');
+const { confluenceTargetOf } = require('./pageLink');
 const { credentialsFor } = require('./credentials');
 const { errorMessage } = require('./messages');
 const { pageToMd } = require('./pageDocument');
-
-function parseConfluenceTarget(target) {
-  const parts = String(target).replace(/^confluence:/, '').split('/');
-  let title = parts[parts.length - 1], spaceKey = parts.length > 1 ? parts[0] : '';
-  try {
-    title = decodeURIComponent(title);
-    spaceKey = decodeURIComponent(spaceKey);
-  } catch (e) { }
-  return { title, spaceKey };
-}
 
 function provideDocumentLinks(doc) {
   const { meta } = parseFrontMatter(doc.getText());
@@ -55,7 +46,7 @@ async function openPageLinkCommand(rawTarget) {
   const creds = await credentialsFor(parsed.site);
   if (!creds) return;
 
-  const t = parseConfluenceTarget(rawTarget);
+  const t = confluenceTargetOf(rawTarget);
   try {
     let spaceKey = t.spaceKey || parsed.spaceKey || '';
     if (!spaceKey && parsed.pageId) {

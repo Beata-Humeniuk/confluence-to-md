@@ -1,4 +1,4 @@
-const assert = (ok, name) => { if (!ok) { console.error('FAIL: ' + name); process.exit(1); } };
+const { assert } = require('./assert');
 
 // A VS Code stub, just enough to drive pullCommand end to end: open documents
 // backed by an in-memory disk, recorded popups, and the answer to the prompt.
@@ -135,7 +135,7 @@ function reset() {
 const SITE = 'https://acme.atlassian.net/wiki';
 const PAGE_URL = SITE + '/spaces/DOC/pages/12345';
 const LOCAL = '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\ntype: confluence-page\n' +
-  'generated: 2026-01-01\nsourceId: 12345\nowner: team-docs\ntags:\n  - release\nmanaged: true\n---\n\n# Release notes\n\nOld body.\n';
+  'generated: 2026-01-01\nsourceId: 12345\nowner: team-docs\ntags:\n  - release\nreviewed: true\n---\n\n# Release notes\n\nOld body.\n';
 const OTHER = '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/777\n  version: 1\nsourceId: 777\n---\n\n# Glossary\n\nTerms.\n';
 
 function page(version, html) {

@@ -1,15 +1,8 @@
 const MarkdownIt = require('markdown-it');
 const { mermaidMacroXml } = require('./mermaid');
 const { adaptMermaid } = require('./mermaidSyntax');
-
-function escapeXml(s) {
-  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function cdata(s) {
-  return '<![CDATA[' + String(s).replace(/\]\]>/g, ']]]]><![CDATA[>') + ']]>';
-}
+const { confluenceTargetOf } = require('./pageLink');
+const { escapeXml, cdata } = require('./markup');
 
 function codeMacro(lang, code) {
   return '<ac:structured-macro ac:name="code" ac:schema-version="1">' +
@@ -19,10 +12,10 @@ function codeMacro(lang, code) {
 }
 
 function taskLists(html) {
-  return html.replace(/<ul>\s*((?:<li>(?:\s*<p>)?\[(?: |x)\][\s\S]*?<\/li>\s*)+)<\/ul>/g, (m, body) => {
+  return html.replace(/<ul>\s*((?:<li>(?:\s*<p>)?\[(?: |[xX])\][\s\S]*?<\/li>\s*)+)<\/ul>/g, (m, body) => {
     const tasks = [];
-    body.replace(/<li>(?:\s*<p>)?\[( |x)\]\s?([\s\S]*?)(?:<\/p>\s*)?<\/li>/g, (mm, mark, text) => {
-      tasks.push('<ac:task><ac:task-status>' + (mark === 'x' ? 'complete' : 'incomplete') +
+    body.replace(/<li>(?:\s*<p>)?\[( |[xX])\]\s?([\s\S]*?)(?:<\/p>\s*)?<\/li>/g, (mm, mark, text) => {
+      tasks.push('<ac:task><ac:task-status>' + (mark === ' ' ? 'incomplete' : 'complete') +
         '</ac:task-status><ac:task-body>' + text.trim() + '</ac:task-body></ac:task>');
       return mm;
     });
@@ -32,12 +25,7 @@ function taskLists(html) {
 
 function confluenceLinks(html) {
   return html.replace(/<a href="confluence:([^"]*)"[^>]*>([\s\S]*?)<\/a>/g, (m, target, label) => {
-    const parts = target.split('/');
-    let title = parts[parts.length - 1], spaceKey = parts.length > 1 ? parts[0] : '';
-    try {
-      title = decodeURIComponent(title);
-      spaceKey = decodeURIComponent(spaceKey);
-    } catch (e) { }
+    const { spaceKey, title } = confluenceTargetOf(target);
     if (!title) return label;
     return '<ac:link><ri:page ri:content-title="' + escapeXml(title) + '"' +
       (spaceKey ? ' ri:space-key="' + escapeXml(spaceKey) + '"' : '') + ' />' +
@@ -58,13 +46,13 @@ function anchorLinks(html) {
 }
 
 function mdToStorage(md, options) {
-  const mermaidMacro = String((options && options.mermaidMacro) || '').trim();
+  const opts = options || {};
+  const mermaidMacro = String(opts.mermaidMacro || '').trim();
   const mdit = new MarkdownIt({ html: false, xhtmlOut: true, linkify: true });
   mdit.renderer.rules.fence = (tokens, idx) => {
     const info = (tokens[idx].info || '').trim().split(/\s+/)[0] || '';
     if (mermaidMacro && info.toLowerCase() === 'mermaid') {
-      return mermaidMacroXml(mermaidMacro,
-        adaptMermaid(tokens[idx].content, options.mermaidVersion), cdata);
+      return mermaidMacroXml(mermaidMacro, adaptMermaid(tokens[idx].content, opts.mermaidVersion));
     }
     return codeMacro(info, tokens[idx].content);
   };

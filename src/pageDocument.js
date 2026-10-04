@@ -1,10 +1,10 @@
 const { convertHtmlToMd } = require('./htmlToMd');
 const { parseFrontMatter, serializeFrontMatter } = require('./frontMatter');
-const { detectDocType } = require('./mdDocument');
 const { pageWebUrl } = require('./confluenceClient');
 const { imagesMode } = require('./config');
 
 const EXTENSION_VERSION = require('../package.json').version;
+const DOC_TYPE = 'confluence-page';
 
 function isoToday() {
   const d = new Date();
@@ -12,22 +12,21 @@ function isoToday() {
   return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
 }
 
-function describeLines(page, markdown) {
+function describeLines(page) {
   const lines = [
-    'type: ' + detectDocType(markdown, page.title),
+    'type: ' + DOC_TYPE,
     'generator: confluence-to-md@' + EXTENSION_VERSION,
     'generated: ' + isoToday(),
     'sourceId: ' + page.id
   ];
   if (page.spaceKey) lines.push('space: ' + page.spaceKey);
-  lines.push('managed: true');
   return lines;
 }
 
 function pageDocument(page, markdown) {
   const fm = serializeFrontMatter(
     { url: pageWebUrl(page.site, page.spaceKey, page.id), version: page.version },
-    describeLines(page, markdown));
+    describeLines(page));
   return fm + '\n# ' + page.title + '\n\n' + markdown;
 }
 
@@ -51,7 +50,7 @@ function keptLines(previousLines, freshLines) {
 
 function pulledDocument(page, markdown, previousText) {
   const previous = parseFrontMatter(previousText);
-  const fresh = describeLines(page, markdown);
+  const fresh = describeLines(page);
   const fm = serializeFrontMatter(
     { url: previous.meta.url, version: page.version },
     fresh.concat(keptLines(previous.extraLines, fresh)));

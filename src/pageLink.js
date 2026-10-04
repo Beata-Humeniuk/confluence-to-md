@@ -1,4 +1,5 @@
 const PLACEHOLDER_BASE = 'https://confluence.invalid';
+const CONFLUENCE_SCHEME = 'confluence:';
 
 function decode(s) {
   try {
@@ -8,14 +9,23 @@ function decode(s) {
   }
 }
 
+// The space key and title named by a `confluence:[KEY/]Title` link target.
+function confluenceTargetOf(target) {
+  const raw = String(target == null ? '' : target).trim();
+  const parts = (raw.indexOf(CONFLUENCE_SCHEME) === 0 ? raw.slice(CONFLUENCE_SCHEME.length) : raw).split('/');
+  return {
+    spaceKey: parts.length > 1 ? decode(parts[0]) : '',
+    title: decode(parts[parts.length - 1])
+  };
+}
+
 function pageRefOfHref(href, origin) {
   const raw = String(href == null ? '' : href).trim();
   if (!raw || raw[0] === '#') return null;
 
-  if (raw.indexOf('confluence:') === 0) {
-    const parts = raw.slice('confluence:'.length).split('/');
-    const title = decode(parts[parts.length - 1]);
-    return title ? { spaceKey: parts.length > 1 ? decode(parts[0]) : '', pageId: '', title } : null;
+  if (raw.indexOf(CONFLUENCE_SCHEME) === 0) {
+    const { spaceKey, title } = confluenceTargetOf(raw);
+    return title ? { spaceKey, pageId: '', title } : null;
   }
 
   const hosted = /^([a-zA-Z][a-zA-Z0-9+.-]*:)?\/\//.test(raw);
@@ -45,4 +55,4 @@ function pageRefOfHref(href, origin) {
   return null;
 }
 
-module.exports = { pageRefOfHref };
+module.exports = { pageRefOfHref, confluenceTargetOf, CONFLUENCE_SCHEME };

@@ -1,5 +1,8 @@
 const { pageRefOfHref } = require('./pageLink');
 
+const FENCE_LINE = /^[ \t]*(?:```|~~~)/;
+const H1_LINE = /^#[ \t]+(.+?)[ \t]*$/;
+
 function slugify(title) {
   const s = String(title)
     .replace(/ł/g, 'l').replace(/Ł/g, 'L')
@@ -8,21 +11,25 @@ function slugify(title) {
   return s || 'page';
 }
 
-function detectDocType(markdown, title) {
-  const md = String(markdown);
-  const t = String(title || '');
-  if (/^- \*\*.+\*\* \(`[^`]+`\)/m.test(md) &&
-    (/^# UI: /m.test(md) || /^UI: /.test(t) || /^## (\d+\. )?View structure$/m.test(md))) {
-    return 'view-design';
+// The first level-one heading outside fenced code, with the offsets of its
+// line (newline included) so that it can be cut out of the text.
+function titleHeading(markdown) {
+  const text = String(markdown);
+  let fenced = false;
+  let start = 0;
+  while (start < text.length) {
+    const newline = text.indexOf('\n', start);
+    const end = newline < 0 ? text.length : newline + 1;
+    const line = text.slice(start, end).replace(/\r?\n$/, '');
+    if (FENCE_LINE.test(line)) {
+      fenced = !fenced;
+    } else if (!fenced) {
+      const m = line.match(H1_LINE);
+      if (m) return { title: m[1], start, end };
+    }
+    start = end;
   }
-  if (/^## Field mappings$/m.test(md) || /^# Mapping: /m.test(md) || /^Mapping: /.test(t)) {
-    return 'field-mapping';
-  }
-  if (/^## Data model$/m.test(md) &&
-    (/^## (Endpoints|Operations|Main elements)$/m.test(md) || /\| Format \|/.test(md))) {
-    return 'contract';
-  }
-  return 'confluence-page';
+  return null;
 }
 
 function relativeMdLink(fromDir, toPath) {
@@ -49,4 +56,4 @@ function rewriteConfluenceLinks(markdown, slugByTitle, options) {
   });
 }
 
-module.exports = { slugify, rewriteConfluenceLinks, detectDocType };
+module.exports = { slugify, titleHeading, rewriteConfluenceLinks };

@@ -1,6 +1,10 @@
 const vscode = require('vscode');
 const { parseFrontMatter } = require('./frontMatter');
 const { parsePageUrl } = require('./confluenceClient');
+const { titleHeading } = require('./mdDocument');
+
+// Folders that never hold downloaded pages and would only slow the walk down.
+const SKIPPED_FOLDERS = new Set(['node_modules', 'out', 'dist']);
 
 async function fileExists(uri) {
   try {
@@ -41,7 +45,7 @@ async function walkSavedPages(folder, dir, out) {
   }
   for (const [name, kind] of entries) {
     if (kind === vscode.FileType.Directory) {
-      if (/\.samples$/i.test(name) || name[0] === '.') continue;
+      if (/\.samples$/i.test(name) || name[0] === '.' || SKIPPED_FOLDERS.has(name)) continue;
       await walkSavedPages(vscode.Uri.joinPath(folder, name),
         dir ? dir + '/' + name : name, out);
       continue;
@@ -59,6 +63,7 @@ async function walkSavedPages(folder, dir, out) {
     const parsed = parsePageUrl(meta.url);
     const sourceId = (extraLines.join('\n').match(/^sourceId:\s*(\d+)\s*$/m) || [])[1] || '';
     const slug = name.replace(/\.md$/i, '');
+    const heading = titleHeading(body);
     out.push({
       name,
       uri,
@@ -67,7 +72,7 @@ async function walkSavedPages(folder, dir, out) {
       dir,
       relPath: dir ? dir + '/' + slug : slug,
       pageId: sourceId || (parsed && parsed.pageId) || '',
-      title: ((body.match(/^#[ \t]+(.+)$/m) || [])[1] || '').trim()
+      title: heading ? heading.title : ''
     });
   }
 }

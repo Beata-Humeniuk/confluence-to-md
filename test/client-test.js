@@ -1,6 +1,6 @@
 const { parsePageUrl, isCloud, authFor, authHeader, apiRoot } = require('../src/confluenceClient');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert } = require('./assert');
 
 const cloud = parsePageUrl('https://acme.atlassian.net/wiki/spaces/DOC/pages/123456/My+Page?focused=true');
 assert(cloud && cloud.pageId === '123456' && cloud.spaceKey === 'DOC', 'cloud link parsed');

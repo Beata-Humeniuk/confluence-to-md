@@ -1,9 +1,8 @@
 const { adaptMermaid, needsQuotedLabels } = require('../src/mermaidSyntax');
 const { mdToStorage } = require('../src/mdToStorage');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert, same } = require('./assert');
 const adapt = (body, version) => adaptMermaid('flowchart TD\n' + body, version || '9.2.2').split('\n').slice(1).join('\n');
-const same = (actual, expected, msg) => assert(actual === expected, msg + '\n  got:      ' + actual + '\n  expected: ' + expected);
 
 assert(needsQuotedLabels('9.2.2') && needsQuotedLabels('10.3.0') && needsQuotedLabels('8'), 'older versions need quoted labels');
 assert(!needsQuotedLabels('10.3.1') && !needsQuotedLabels('11.4.0') && !needsQuotedLabels('12'), 'newer versions do not');

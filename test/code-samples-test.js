@@ -1,6 +1,6 @@
 const { extractLongCodeBlocks, sampleLinkPaths, inlineSamples, APPENDIX_NOTE } = require('../src/codeSamples');
 
-const assert = (cond, msg) => { if (!cond) { console.error('FAIL: ' + msg); process.exit(1); } };
+const { assert } = require('./assert');
 
 const block = (n, line) => Array.from({ length: n }, (_, i) => line + i).join('\n');
 
@@ -90,7 +90,7 @@ assert(ap.samples.length === 1 && ap.samples[0].name === 'full-response.json',
 assert(ap.markdown.includes('short0'),
   'a short block before the appendix section stays in the content');
 assert(ap.markdown.includes('## Additional materials\n\n' + APPENDIX_NOTE),
-  'the agent marker lands under the section heading');
+  'the appendix note lands under the section heading');
 
 const cased = extractLongCodeBlocks('## MATERIAŁY DODATKOWE\n\n```\n' + block(3, 'a') + '\n```\n',
   'x.samples', { appendixHeading: 'Materiały dodatkowe' });
@@ -124,6 +124,8 @@ const restored = inlineSamples(r.markdown, new Map([['export.samples/catalogue-e
 assert(restored === long, 'inlining the extracted sample restores the original block');
 const ticks = inlineSamples('[a.txt](p.samples/a.txt)', new Map([['p.samples/a.txt', 'x\n```\ny\n']]));
 assert(ticks === '````\nx\n```\ny\n````', 'a sample containing a fence gets a longer fence and no language for .txt, got: ' + ticks);
+const bare = inlineSamples('[notes](p.samples/notes)', new Map([['p.samples/notes', 'a\n']]));
+assert(bare === '```\na\n```', 'a sample without an extension gets no language, got: ' + bare);
 const missing = '[gone.xml](p.samples/gone.xml)';
 assert(inlineSamples(missing, new Map([['p.samples/gone.xml', null]])) === missing, 'a missing sample stays a link');
 assert(!sampleLinkPaths('See [a.xml](p.samples/a.xml) here.').length, 'links inside a sentence are not samples');
