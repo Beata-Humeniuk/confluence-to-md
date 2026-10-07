@@ -1,6 +1,6 @@
 const path = require('path');
 const { assert } = require('./assert');
-const { parseDownloadFolder } = require('../src/core/downloadFolder');
+const { parseDownloadFolder, parseSubfolder } = require('../src/core/downloadFolder');
 
 const HOME = path.sep === '\\' ? 'C:\\Users\\ja' : '/home/ja';
 
@@ -33,5 +33,12 @@ assert(underHome.kind === 'absolute' && underHome.path === path.join(HOME, 'wiki
 const noHome = parseDownloadFolder('~/wiki', '');
 assert(noHome.kind === 'relative' && noHome.segments.join('/') === '~/wiki',
   'without a home directory ~ is left alone rather than guessed');
+
+assert(parseSubfolder('').length === 0 && parseSubfolder(undefined).length === 0, 'an empty subfolder saves to the folder itself');
+assert(parseSubfolder('/uslugi/konto').join('/') === 'uslugi/konto', 'a leading slash is ignored');
+assert(parseSubfolder(' uslugi\\konto/ ').join('/') === 'uslugi/konto', 'backslashes and a trailing slash are accepted');
+assert(parseSubfolder('./uslugi//konto').join('/') === 'uslugi/konto', '"." and doubled separators are dropped');
+assert(parseSubfolder('../outside') === null && parseSubfolder('a/../../b') === null,
+  'a subfolder cannot leave the download folder');
 
 console.log('download-folder-test: OK');

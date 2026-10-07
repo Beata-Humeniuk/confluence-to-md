@@ -81,6 +81,11 @@
           "default": "",
           "description": "Where to save pages. Empty = the active file's folder."
         },
+        "confluenceToMd.askSubfolder": {
+          "type": "boolean",
+          "default": true,
+          "description": "Ask for an optional subfolder of the download folder, e.g. services/account."
+        },
         "confluenceToMd.images": {
           "type": "string",
           "default": "skip",

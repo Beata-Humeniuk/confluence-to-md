@@ -41,4 +41,15 @@ assert(stay.get('2') === 'books', 'an already saved file is not moved');
 const none = placeInTree([{ id: '1', slug: 'catalogue' }], new Map());
 assert(none.get('1') === 'catalogue', 'missing ancestors does not break placement');
 
+const sub = placeInTree([
+  { id: '2', ancestors: ['100', '1'], slug: 'books' },
+  { id: '1', ancestors: ['100'], slug: 'catalogue' }
+], new Map(), 'uslugi/konto');
+assert(sub.get('1') === 'uslugi/konto/catalogue' && sub.get('2') === 'uslugi/konto/catalogue/books',
+  'new pages go into the chosen subfolder, got: ' + sub.get('1') + ', ' + sub.get('2'));
+assert(placeInTree([{ id: '2', ancestors: ['1'], slug: 'books' }], known, 'uslugi').get('2') === 'docs/catalogue/books',
+  'a child of a saved page still goes under its parent');
+assert(placeInTree([{ id: '1', slug: 'catalogue' }], new Map([['1', 'old/catalogue']]), 'uslugi').get('1') === 'old/catalogue',
+  'an already saved page stays where it is');
+
 console.log('PASS: page tree placement ok');

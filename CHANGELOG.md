@@ -7,6 +7,9 @@ follows [Semantic Versioning](https://semver.org/).
 
 ### Added
 
+- Downloading asks for an optional subfolder inside the download folder, such
+  as `services/account`. Missing folders are created. Turn the question off
+  with `confluenceToMd.askSubfolder`.
 - The Markdown preview of a file without a `confluence:` binding shows a
   **↑ Publish to Confluence** button. It asks for a link to the parent page
   and creates the page there, then binds the file to it.

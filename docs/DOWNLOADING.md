@@ -32,6 +32,25 @@ location:
 You can set this value per workspace in `.vscode/settings.json`. The folder is
 created only when a page is saved.
 
+### Subfolder
+
+After you paste the link, the extension asks for an optional subfolder inside
+the download folder, for example `services/account` (a leading `/` is
+ignored). Missing folders are created, and the page goes into the last one:
+
+```text
+docs/wiki/                  ← confluenceToMd.downloadFolder
+└── services/
+    └── account/
+        └── login-flow.md
+```
+
+Leave the field empty to save in the download folder itself, or press Escape
+to cancel the download. The subfolder cannot leave the download folder, so
+`..` is not accepted. Pages downloaded before keep their place, and child pages
+still go under their parent page. Set `confluenceToMd.askSubfolder` to `false`
+to skip the question.
+
 ## Page tree
 
 Downloaded child pages mirror the Confluence page tree when their parent is

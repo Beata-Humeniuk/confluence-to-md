@@ -26,7 +26,10 @@ settings.
 1. Run **Confluence: Download Page**.
 2. Paste the full page link. Cloud, Server/Data Center, short `/x/...` links,
    context paths, and non-standard ports are supported.
-3. Choose which linked pages to download too.
+3. Optionally type a subfolder, for example `services/account`. It is created
+   inside the download folder if it does not exist. Leave it empty to save in
+   the download folder itself.
+4. Choose which linked pages to download too.
 
 Each page is saved as a separate file with its Confluence binding. Child pages
 follow the Confluence page tree, and links between saved pages become relative
@@ -72,6 +75,7 @@ documents, conversion details, and round-trip limitations.
 | `confluenceToMd.token` | — | Confluence token for all instances. |
 | `confluenceToMd.email` | — | Atlassian account e-mail. Cloud only. |
 | `confluenceToMd.downloadFolder` | *(empty)* | Save location. Empty uses the active file's folder. |
+| `confluenceToMd.askSubfolder` | `true` | Ask for an optional subfolder when downloading. |
 | `confluenceToMd.followLinks` | `true` | Offer to download linked pages. |
 | `confluenceToMd.images` | `skip` | `skip` omits images; `link` keeps attachment links. |
 | `confluenceToMd.appendixHeading` | `Additional` | Extract code below a heading. Empty disables the rule. |
