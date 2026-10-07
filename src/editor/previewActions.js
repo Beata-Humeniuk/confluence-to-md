@@ -2,20 +2,26 @@ const vscode = require('vscode');
 const { pullPageCommand } = require('./pullCommand');
 const { publishPageCommand } = require('./publishCommand');
 const { fileUriCandidates } = require('../core/previewButton');
+const { parseFrontMatter } = require('../core/frontMatter');
 
-async function publishFromPreview(document) {
-  const publish = 'Publish';
-  const picked = await vscode.window.showWarningMessage(
-    'Publish "' + vscode.workspace.asRelativePath(document.uri, false) + '" to Confluence?' +
-    (document.isDirty ? ' Your unsaved changes are saved first.' : ''),
-    { modal: true }, publish);
-  if (picked !== publish) return;
+async function saveAndPublish(document) {
   try {
     if (document.isDirty && !await document.save()) return;
     await publishPageCommand(document.uri);
   } catch (e) {
     vscode.window.showErrorMessage(e.message);
   }
+}
+
+async function publishFromPreview(document) {
+  if (!parseFrontMatter(document.getText()).meta) return saveAndPublish(document);
+  const publish = 'Publish';
+  const picked = await vscode.window.showWarningMessage(
+    'Publish "' + vscode.workspace.asRelativePath(document.uri, false) + '" to Confluence?' +
+    (document.isDirty ? ' Your unsaved changes are saved first.' : ''),
+    { modal: true }, publish);
+  if (picked !== publish) return;
+  await saveAndPublish(document);
 }
 
 const ACTIONS = {

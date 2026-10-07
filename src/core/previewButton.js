@@ -20,25 +20,25 @@ function fileUriCandidates(query) {
 function previewButtons(md, options) {
   md.core.ruler.push(TOKEN, (state) => {
     const { meta } = parseFrontMatter(state.src);
-    if (!meta) return;
     const token = new state.Token(TOKEN, '', 0);
     token.block = true;
-    token.meta = { version: meta.version };
+    token.meta = { bound: !!meta, version: meta ? meta.version : 0 };
     state.tokens.unshift(token);
   });
 
   md.renderer.rules[TOKEN] = (tokens, idx, opts, env) => {
     const doc = env && env.currentDocument;
     if (!doc || doc.scheme === 'untitled') return '';
-    const version = tokens[idx].meta.version;
-    const known = version ? ' (local copy: version ' + version + ')' : '';
+    const { bound, version } = tokens[idx].meta;
     const button = (action, label, title) => '<a class="confluence-to-md-' + action + '" href="' +
       md.utils.escapeHtml(actionLink(options.uriScheme, options.extensionId, action, doc)) +
       '" title="' + md.utils.escapeHtml(title) + '">' + label + '</a>';
-    return '<div class="confluence-to-md-actions">' +
-      button('pull', '&#x21bb; Pull', 'Update this file from Confluence' + known) +
-      button('publish', '&#x2191; Publish', 'Publish this file to Confluence' + known) +
-      '</div>\n';
+    const known = version ? ' (local copy: version ' + version + ')' : '';
+    const buttons = bound
+      ? button('pull', '&#x21bb; Pull', 'Update this file from Confluence' + known) +
+        button('publish', '&#x2191; Publish', 'Publish this file to Confluence' + known)
+      : button('publish', '&#x2191; Publish to Confluence', 'Create a new Confluence page from this file');
+    return '<div class="confluence-to-md-actions">' + buttons + '</div>\n';
   };
 
   return md;
