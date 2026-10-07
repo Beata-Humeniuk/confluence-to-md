@@ -59,6 +59,11 @@ top right corner. Publish asks for confirmation, saves unsaved edits, and then
 publishes the file as described above, including the check for newer changes
 in Confluence. Like Pull, it only acts on a file that is open in VS Code.
 
+An unbound file shows a single **↑ Publish to Confluence** button instead.
+It saves unsaved edits, asks for a link to the parent page, and creates the
+new page under it. The file then gets its `confluence:` binding, so the
+preview switches to **↻ Pull** and **↑ Publish**.
+
 ## Split documents
 
 An index can link to part files in a subfolder next to it. Publishing the

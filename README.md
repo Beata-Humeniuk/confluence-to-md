@@ -53,7 +53,8 @@ details.
 
 Open a Markdown file and run **Confluence: Publish Page**. For a bound file you
 can also click **↑ Publish** in the top right corner of the Markdown preview; it
-asks first and saves unsaved edits before publishing.
+asks first and saves unsaved edits before publishing. A file without a binding
+shows **↑ Publish to Confluence** there instead, which asks for the parent page.
 
 - A file with a `confluence:` front matter block updates its bound page. If
   someone changed the page since your version, the extension asks first and
