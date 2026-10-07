@@ -16,10 +16,16 @@ assert(html.includes('href="vscode://beatahumeniuk.confluence-to-md/publish?file
 assert(html.includes('version 7'), 'the tooltip names the local version');
 assert(html.includes('<h1>Title</h1>'), 'the page itself still renders');
 
-assert(!md.render('# Title\n\nBody.\n', { currentDocument: doc }).includes('confluence-to-md-actions'),
-  'a file without front matter gets no button');
-assert(!md.render('---\ntype: note\n---\n\n# Title\n', { currentDocument: doc }).includes('confluence-to-md-actions'),
-  'front matter without a confluence binding gets no button');
+for (const [text, label] of [['# Title\n\nBody.\n', 'a file without front matter'],
+  ['---\ntype: note\n---\n\n# Title\n', 'front matter without a confluence binding']]) {
+  html = md.render(text, { currentDocument: doc });
+  assert(html.indexOf('<div class="confluence-to-md-actions">') === 0, label + ' gets a button, got: ' + html);
+  assert(html.includes('href="vscode://beatahumeniuk.confluence-to-md/publish?file=file%3A%2F%2F%2Fw%2FMy%2520page.md"') &&
+    html.includes('Publish to Confluence'), label + ' offers to publish it as a new page');
+  assert(!html.includes('/pull?'), label + ' has nothing to pull');
+}
+assert(!md.render('# Title\n', { currentDocument: { scheme: 'untitled', toString: () => 'untitled:Untitled-1' } }).includes('confluence-to-md-actions'),
+  'no publish button for an unsaved unbound document');
 assert(!md.render(BOUND, {}).includes('confluence-to-md-actions'), 'no button when the preview does not say which file it shows');
 assert(!md.render(BOUND, { currentDocument: { scheme: 'untitled', toString: () => 'untitled:Untitled-1' } }).includes('confluence-to-md-actions'),
   'no button for an unsaved document');

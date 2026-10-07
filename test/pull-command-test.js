@@ -4,7 +4,7 @@ const disk = new Map();
 const info = [];
 const errors = [];
 const warnings = [];
-const answers = { warning: undefined };
+const answers = { warning: undefined, input: undefined };
 const commands = [];
 let routes = [];
 let docs = [];
@@ -58,6 +58,7 @@ const vscodeStub = {
     showInformationMessage: (message) => { info.push(message); },
     showErrorMessage: (message) => { errors.push(message); },
     showWarningMessage: async (message) => { warnings.push(message); return answers.warning; },
+    showInputBox: async () => answers.input,
     withProgress: (options, task) => task()
   },
   workspace: {
@@ -125,6 +126,7 @@ function reset() {
   sent.length = 0;
   docs = [];
   answers.warning = undefined;
+  answers.input = undefined;
   commands.length = 0;
 }
 
@@ -261,6 +263,25 @@ async function main() {
   answers.warning = 'Publish';
   await handlePreviewUri(push);
   assert(errors.length === 1 && errors[0].includes('not found'), 'publish errors reach the user, got: ' + errors.join(' | '));
+
+  reset();
+  disk.set('/w/notes/draft.md', '# Draft\n\nBody.\n');
+  const draft = openDoc('/w/notes/draft.md', true);
+  const publishNew = { path: '/publish', query: 'file=' + encodeURIComponent('file:///w/notes/draft.md') };
+  routes = [
+    { match: '/rest/api/content/900', body: { id: '900', space: { key: 'DOC' }, version: { number: 2 } } },
+    { method: 'POST', match: '/rest/api/content', body: { id: '777', space: { key: 'DOC' }, version: { number: 1 } } }
+  ];
+  await handlePreviewUri(publishNew);
+  assert(!warnings.length, 'publishing an unbound file asks for the parent page, not for confirmation');
+  assert(!sent.some((r) => r.method === 'POST'), 'no page is created without a parent link');
+  answers.input = 'https://acme.atlassian.net/wiki/spaces/DOC/pages/900';
+  await handlePreviewUri(publishNew);
+  assert(draft.saved >= 1, 'unsaved edits are saved before publishing a new page');
+  const post = sent.find((r) => r.method === 'POST');
+  assert(post && post.body.title === 'Draft' && post.body.ancestors[0].id === '900', 'the page is created under the pasted parent');
+  assert(disk.get('/w/notes/draft.md').includes('pages/777'), 'the file is bound to the created page');
+  assert(!errors.length, 'no errors on publishing a new page, got: ' + errors.join(' | '));
 
   console.log('pull command: OK');
 }

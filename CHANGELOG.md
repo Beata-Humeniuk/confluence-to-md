@@ -5,6 +5,12 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- The Markdown preview of a file without a `confluence:` binding shows a
+  **↑ Publish to Confluence** button. It asks for a link to the parent page
+  and creates the page there, then binds the file to it.
+
 ### Changed
 
 - Shorter setting descriptions. Details on finding the Mermaid macro name
