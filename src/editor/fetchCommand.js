@@ -1,7 +1,8 @@
 const vscode = require('vscode');
 const { convertHtmlToMd } = require('../core/htmlToMd');
 const { parsePageUrl, fetchPageByUrl, fetchPageById, fetchPageByTitle } = require('../core/confluenceClient');
-const { downloadFolderUri, followLinksEnabled, imagesMode } = require('./config');
+const { downloadFolderUri, askForSubfolder, followLinksEnabled, imagesMode } = require('./config');
+const { parseSubfolder } = require('../core/downloadFolder');
 const { credentialsFor } = require('./credentials');
 const { errorMessage } = require('../core/messages');
 const { readSavedPages } = require('./savedPages');
@@ -45,6 +46,16 @@ async function openAsOneDocument(fetched) {
   await vscode.window.showTextDocument(doc, { preview: false });
 }
 
+function askSubfolder(folder) {
+  return vscode.window.showInputBox({
+    prompt: 'Subfolder inside ' + vscode.workspace.asRelativePath(folder, false) +
+      ' (optional, e.g. services/account). Missing folders are created. Leave empty to save there directly.',
+    placeHolder: 'services/account',
+    ignoreFocusOut: true,
+    validateInput: (value) => parseSubfolder(value) ? null : 'The subfolder cannot go up with "..".'
+  });
+}
+
 async function fetchPageCommand() {
   const folder = downloadFolderUri();
   const url = await vscode.window.showInputBox({
@@ -61,6 +72,13 @@ async function fetchPageCommand() {
   }
   const creds = await credentialsFor(parsed.site);
   if (!creds) return;
+
+  let subfolder = [];
+  if (folder && askForSubfolder()) {
+    const answer = await askSubfolder(folder);
+    if (answer === undefined) return;
+    subfolder = parseSubfolder(answer);
+  }
 
   let page;
   try {
@@ -85,7 +103,7 @@ async function fetchPageCommand() {
   }
 
   if (folder) {
-    await saveToFolder(folder, fetched, saved, savedById, page.site.origin);
+    await saveToFolder(folder, fetched, saved, savedById, page.site.origin, subfolder);
   } else {
     await openAsOneDocument(fetched);
   }

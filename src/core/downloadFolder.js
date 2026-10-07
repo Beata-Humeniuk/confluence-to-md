@@ -20,4 +20,10 @@ function expandHome(value, homeDir) {
   return value;
 }
 
-module.exports = { parseDownloadFolder };
+function parseSubfolder(value) {
+  const segments = String(value == null ? '' : value).trim()
+    .split(/[\\/]+/).filter((s) => s && s !== '.');
+  return segments.includes('..') ? null : segments;
+}
+
+module.exports = { parseDownloadFolder, parseSubfolder };

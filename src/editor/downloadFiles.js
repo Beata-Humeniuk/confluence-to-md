@@ -24,7 +24,7 @@ function assignSlugs(fetched, saved) {
   return slugById;
 }
 
-function assignPaths(fetched, saved) {
+function assignPaths(fetched, saved, baseDir) {
   const slugById = assignSlugs(fetched, saved);
   const knownPaths = new Map();
   for (const s of saved) {
@@ -34,7 +34,7 @@ function assignPaths(fetched, saved) {
     id: entry.page.id,
     ancestors: entry.page.ancestors,
     slug: slugById.get(entry.page.id)
-  })), knownPaths);
+  })), knownPaths, baseDir);
 
   const pathById = new Map(knownPaths);
   const pathByTitle = new Map();
@@ -92,8 +92,9 @@ async function relinkSavedPages(saved, written, rewrite) {
   return relinked;
 }
 
-async function saveToFolder(folder, fetched, saved, savedById, origin) {
-  const { pathById, pathByTitle } = assignPaths(fetched, saved);
+async function saveToFolder(folder, fetched, saved, savedById, origin, subfolder) {
+  const baseDir = (subfolder || []).join('/');
+  const { pathById, pathByTitle } = assignPaths(fetched, saved, baseDir);
   const rewrite = (md, fromDir) => rewriteConfluenceLinks(md, pathByTitle,
     { slugById: pathById, origin, fromDir });
   const files = fetched.map((entry) => fileFor(folder, entry, pathById.get(entry.page.id), rewrite));
@@ -110,7 +111,7 @@ async function saveToFolder(folder, fetched, saved, savedById, origin) {
   const extracted = files.reduce((n, f) => n + f.samples.length, 0);
   vscode.window.showInformationMessage(
     'Saved ' + countOf(fetched.length, 'page') + ' to ' +
-    vscode.workspace.asRelativePath(folder, false) + '/.' +
+    vscode.workspace.asRelativePath(folder, false) + '/' + (baseDir ? baseDir + '/' : '') + '.' +
     (extracted ? ' Long examples (' + extracted + ') extracted to separate files.' : '') +
     (relinked ? ' Links updated in ' + relinked + ' previously downloaded file(s).' : ''));
 }

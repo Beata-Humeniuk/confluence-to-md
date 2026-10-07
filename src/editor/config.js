@@ -30,6 +30,10 @@ function downloadFolderUri() {
   return activeFileFolderUri() || workspaceFolderUri();
 }
 
+function askForSubfolder() {
+  return settings().get('askSubfolder') !== false;
+}
+
 function followLinksEnabled() {
   return settings().get('followLinks') !== false;
 }
@@ -61,6 +65,6 @@ function mermaidVersion() {
 }
 
 module.exports = {
-  downloadFolderUri, followLinksEnabled, configuredToken, configuredEmail,
+  downloadFolderUri, askForSubfolder, followLinksEnabled, configuredToken, configuredEmail,
   imagesMode, appendixHeading, mermaidMacro, mermaidVersion
 };

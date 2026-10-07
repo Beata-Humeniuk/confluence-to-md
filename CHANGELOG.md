@@ -5,6 +5,12 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Downloading asks for an optional subfolder inside the download folder, such
+  as `services/account`. Missing folders are created. Turn the question off
+  with `confluenceToMd.askSubfolder`.
+
 ### Changed
 
 - Shorter setting descriptions. Details on finding the Mermaid macro name
