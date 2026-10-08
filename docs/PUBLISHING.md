@@ -123,6 +123,12 @@ native Confluence tasks, and `[text](confluence:KEY/Title)` becomes a native
 page link that remains valid after a title change. Other URLs are published as
 plain links.
 
+A link to another Markdown file, such as `[Account](services/account.md)`,
+points at that file's Confluence page when the file has a `confluence:`
+binding. A link to a file without a binding, or to a file that does not exist,
+keeps only its text, because Confluence has no page to open. Links inside code
+blocks are left as they are.
+
 ### Mermaid diagrams
 
 Confluence has no built-in Mermaid support, so diagrams need a Mermaid app from

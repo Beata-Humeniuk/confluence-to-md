@@ -183,6 +183,26 @@ async function main() {
     'the code block keeps its comment and the title leaves the body');
 
   reset();
+  disk.set('/w/docs/index.md', BOUND + '\nSee [Account](uslugi/konto.md), [Up](../top.md) and [Draft](draft.md).\n');
+  disk.set('/w/docs/uslugi/konto.md', '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/501\n  version: 2\n---\n\n# Konto\n');
+  disk.set('/w/top.md', '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/502\n  version: 1\n---\n\n# Top\n');
+  disk.set('/w/docs/draft.md', '# Not published yet\n');
+  routes = [META, UPDATED];
+  await publishPageCommand(uri('/w/docs/index.md'));
+  const linked = sent.find((r) => r.method === 'PUT').body.body.storage.value;
+  assert(linked.includes('<a href="' + SITE + '/spaces/DOC/pages/501">Account</a>') &&
+    linked.includes('<a href="' + SITE + '/spaces/DOC/pages/502">Up</a>'),
+    'links to other published Markdown files point at their Confluence pages, got: ' + linked);
+  assert(!linked.includes('.md') && linked.includes('and Draft.'), 'a link to an unpublished file keeps only its text');
+
+  reset();
+  disk.set('/w/doc.md', BOUND);
+  routes = [META, { method: 'PUT', match: '/rest/api/content/12345', status: 400, body: { message: 'Error parsing xhtml' } }];
+  const rejected = await rejection(() => publishPageCommand(uri('/w/doc.md')));
+  assert(rejected && rejected.message === 'Confluence rejected the request (400): Error parsing xhtml',
+    'the reason Confluence gives is shown, got: ' + (rejected && rejected.message));
+
+  reset();
   disk.set('/w/new-page.md', '# New page\n\nBody.\n');
   answers.input = undefined;
   result = await publishPageCommand(uri('/w/new-page.md'));

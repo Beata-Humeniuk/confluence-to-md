@@ -2,7 +2,7 @@ const vscode = require('vscode');
 const { mdToStorage } = require('../core/mdToStorage');
 const { parseFrontMatter } = require('../core/frontMatter');
 const {
-  editorSource, uriSource, writeBinding, assembleWithParts, withSampleFiles, splitTitleAndBody
+  editorSource, uriSource, writeBinding, assembleWithParts, withSampleFiles, withPageLinks, splitTitleAndBody
 } = require('./publishSource');
 const {
   parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, createPage, updatePage, pageWebUrl
@@ -121,7 +121,7 @@ async function publishPageCommand(fileUri) {
 
     const assembled = await assembleWithParts(source.uri, body);
     if (!await confirmMissingParts(assembled.missing)) return;
-    const markdown = await withSampleFiles(source.uri, assembled.markdown);
+    const markdown = await withPageLinks(source.uri, await withSampleFiles(source.uri, assembled.markdown));
     const { title, content } = splitTitleAndBody(
       markdown, source.fileName.replace(/\.md$/i, '') || 'Untitled');
     const storage = mdToStorage(content, { mermaidMacro: mermaidMacro(), mermaidVersion: mermaidVersion() });

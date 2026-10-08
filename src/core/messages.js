@@ -3,6 +3,8 @@ function errorMessage(e) {
   if (e && e.message === 'not-found') return 'Page not found (404) — check the link and your permissions.';
   if (e && e.message === 'bad-url') return 'This link does not point at a Confluence page — paste the full page address (with /pages/ID, /display/KEY/Title, ?pageId=ID, or a short /x/… link).';
   if (e && e.message === 'conflict') return 'Version conflict (409) — the page has been changed in Confluence in the meantime.';
+  const http = e && /^http-(\d+)(?::\s*([\s\S]*))?$/.exec(e.message);
+  if (http) return 'Confluence rejected the request (' + http[1] + ')' + (http[2] ? ': ' + http[2] : '.');
   return 'Error: ' + ((e && e.message) || String(e));
 }
 

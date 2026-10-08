@@ -81,6 +81,15 @@ async function apiSend(cfg, site, method, path, body) {
   return res.json();
 }
 
+async function errorDetail(res) {
+  try {
+    const j = await res.json();
+    return String((j && j.message) || '').trim();
+  } catch (e) {
+    return '';
+  }
+}
+
 async function request(cfg, url, opts) {
   opts = opts || {};
   const headers = { Authorization: authHeader(cfg), Accept: 'application/json' };
@@ -93,7 +102,10 @@ async function request(cfg, url, opts) {
   if (res.status === 401 || res.status === 403) throw new Error('auth');
   if (res.status === 404) throw new Error('not-found');
   if (res.status === 409) throw new Error('conflict');
-  if (!res.ok) throw new Error('http-' + res.status);
+  if (!res.ok) {
+    const detail = await errorDetail(res);
+    throw new Error('http-' + res.status + (detail ? ': ' + detail : ''));
+  }
   return res;
 }
 

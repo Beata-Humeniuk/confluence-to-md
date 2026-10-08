@@ -5,6 +5,16 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.7.1] - 2026-10-08
+
+### Fixed
+
+- A link to another Markdown file is published as a link to that file's
+  Confluence page when the file is bound to one. A link to an unpublished file
+  keeps only its text instead of a dead `.md` link.
+- When Confluence rejects a request, the message shows its reason instead of
+  just `http-400`.
+
 ## [1.7.0] - 2026-10-08
 
 ### Added
