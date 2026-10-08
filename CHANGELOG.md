@@ -5,7 +5,13 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
-## [1.7.1] - 2026-10-08
+## [1.8.0] - 2026-10-08
+
+### Added
+
+- Publishing a file that links to other Markdown files not yet in Confluence
+  offers to publish them too, as pages under the page that links to them. Each
+  file gets its `confluence:` binding and the pages link to each other.
 
 ### Fixed
 

@@ -64,6 +64,9 @@ shows **↑ Publish to Confluence** there instead, which asks for the parent pag
   offers **Compare**, which shows their changes next to your file.
 - A file without a binding creates a page under the parent whose link you
   provide. The new binding is added to the file.
+- Links to other Markdown files point at their Confluence pages. Linked files
+  that are not in Confluence yet can be published in the same step, as pages
+  under the page that links to them.
 
 See [Publishing pages](docs/PUBLISHING.md) for the binding format, split
 documents, conversion details, and round-trip limitations.
