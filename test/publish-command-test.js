@@ -184,13 +184,13 @@ async function main() {
     'the code block keeps its comment and the title leaves the body');
 
   reset();
-  disk.set('/w/docs/index.md', BOUND + '\nSee [Account](uslugi/konto.md), [Up](../top.md) and [Draft](draft.md).\n');
-  disk.set('/w/docs/uslugi/konto.md', '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/501\n  version: 2\n---\n\n# Konto\n');
+  disk.set('/w/docs/index.md', BOUND + '\nSee [Account](services/account.md), [Up](../top.md) and [Draft](draft.md).\n');
+  disk.set('/w/docs/services/account.md', '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/501\n  version: 2\n---\n\n# Account\n');
   disk.set('/w/top.md', '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/502\n  version: 1\n---\n\n# Top\n');
   disk.set('/w/docs/draft.md', '# Not published yet\n');
   routes = [META, UPDATED];
   await publishPageCommand(uri('/w/docs/index.md'));
-  assert(warnings.length === 1 && warnings[0].includes('docs/draft.md') && !warnings[0].includes('konto'),
+  assert(warnings.length === 1 && warnings[0].includes('docs/draft.md') && !warnings[0].includes('account'),
     'publishing asks about linked files that are not in Confluence yet, got: ' + warnings.join(' | '));
   assert(!sent.some((r) => r.method === 'PUT' || r.method === 'POST'), 'cancelling that question publishes nothing');
   answers.warning = 'Only this page';
@@ -203,10 +203,10 @@ async function main() {
   assert(!linked.includes('.md') && linked.includes('and Draft.'), 'a link to an unpublished file keeps only its text');
 
   reset();
-  disk.set('/w/docs/index.md', BOUND + '\nSee [Account](uslugi/konto.md) and [Draft](draft.md).\n');
-  disk.set('/w/docs/uslugi/konto.md', '# Konto\n\nBack to [index](../index.md), on to [Details](details.md).\n');
-  disk.set('/w/docs/uslugi/details.md', '# Details\n\nSee [Konto](konto.md).\n');
-  disk.set('/w/docs/draft.md', '# Draft\n\nSee [Konto](uslugi/konto.md).\n');
+  disk.set('/w/docs/index.md', BOUND + '\nSee [Account](services/account.md) and [Draft](draft.md).\n');
+  disk.set('/w/docs/services/account.md', '# Account\n\nBack to [index](../index.md), on to [Details](details.md).\n');
+  disk.set('/w/docs/services/details.md', '# Details\n\nSee [Account](account.md).\n');
+  disk.set('/w/docs/draft.md', '# Draft\n\nSee [Account](services/account.md).\n');
   let nextId = 600;
   routes = [
     META, UPDATED,
@@ -217,17 +217,17 @@ async function main() {
   result = await publishPageCommand(uri('/w/docs/index.md'));
   assert(warnings.length === 1 && warnings[0].includes('3 files'), 'the question lists linked files found further down, got: ' + warnings[0]);
   const posts = sent.filter((r) => r.method === 'POST').map((r) => r.body);
-  assert(posts.map((p) => p.title).join('|') === 'Konto|Details|Draft',
+  assert(posts.map((p) => p.title).join('|') === 'Account|Details|Draft',
     'every unpublished linked file is created once, got: ' + posts.map((p) => p.title).join('|'));
   assert(posts[0].ancestors[0].id === '12345' && posts[1].ancestors[0].id === '600' && posts[2].ancestors[0].id === '12345',
     'linked pages go under the page that links to them');
   assert(posts[0].body.storage.value.includes('href="' + PAGE_URL + '"'), 'a link back to the published page points at it');
-  assert(disk.get('/w/docs/uslugi/konto.md').startsWith('---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/600\n  version: 2\n'),
-    'a linked page is bound and updated once its own links exist, got: ' + disk.get('/w/docs/uslugi/konto.md'));
-  assert(disk.get('/w/docs/uslugi/details.md').includes('pages/601') && disk.get('/w/docs/draft.md').includes('pages/602'),
+  assert(disk.get('/w/docs/services/account.md').startsWith('---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/600\n  version: 2\n'),
+    'a linked page is bound and updated once its own links exist, got: ' + disk.get('/w/docs/services/account.md'));
+  assert(disk.get('/w/docs/services/details.md').includes('pages/601') && disk.get('/w/docs/draft.md').includes('pages/602'),
     'every created page is recorded in its file');
-  const konto = sent.filter((r) => r.method === 'PUT' && r.url.includes('/content/600')).pop().body.body.storage.value;
-  assert(konto.includes('href="' + SITE + '/spaces/DOC/pages/601"'), 'the second pass links the page created below it');
+  const account = sent.filter((r) => r.method === 'PUT' && r.url.includes('/content/600')).pop().body.body.storage.value;
+  assert(account.includes('href="' + SITE + '/spaces/DOC/pages/601"'), 'the second pass links the page created below it');
   const index = sent.filter((r) => r.method === 'PUT' && r.url.includes('/content/12345')).pop().body.body.storage.value;
   assert(index.includes('pages/600">Account</a>') && index.includes('pages/602">Draft</a>'),
     'the published page links to the new pages, got: ' + index);

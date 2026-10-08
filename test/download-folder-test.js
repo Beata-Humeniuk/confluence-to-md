@@ -35,9 +35,9 @@ assert(noHome.kind === 'relative' && noHome.segments.join('/') === '~/wiki',
   'without a home directory ~ is left alone rather than guessed');
 
 assert(parseSubfolder('').length === 0 && parseSubfolder(undefined).length === 0, 'an empty subfolder saves to the folder itself');
-assert(parseSubfolder('/uslugi/konto').join('/') === 'uslugi/konto', 'a leading slash is ignored');
-assert(parseSubfolder(' uslugi\\konto/ ').join('/') === 'uslugi/konto', 'backslashes and a trailing slash are accepted');
-assert(parseSubfolder('./uslugi//konto').join('/') === 'uslugi/konto', '"." and doubled separators are dropped');
+assert(parseSubfolder('/services/account').join('/') === 'services/account', 'a leading slash is ignored');
+assert(parseSubfolder(' services\\account/ ').join('/') === 'services/account', 'backslashes and a trailing slash are accepted');
+assert(parseSubfolder('./services//account').join('/') === 'services/account', '"." and doubled separators are dropped');
 assert(parseSubfolder('../outside') === null && parseSubfolder('a/../../b') === null,
   'a subfolder cannot leave the download folder');
 
