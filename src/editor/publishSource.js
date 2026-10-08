@@ -3,6 +3,7 @@ const { parseFrontMatter, serializeFrontMatter } = require('../core/frontMatter'
 const { partPaths, assembleParts } = require('../core/assembleParts');
 const { sampleLinkPaths, inlineSamples } = require('../core/codeSamples');
 const { titleHeading } = require('../core/mdDocument');
+const { mdLinkTargets } = require('../core/localLinks');
 
 function baseName(path) {
   return String(path || '').split(/[\\/]/).pop() || '';
@@ -52,6 +53,22 @@ async function withSampleFiles(uri, markdown) {
   return inlineSamples(markdown, contents);
 }
 
+async function readLinkedFiles(uri, markdown) {
+  const files = new Map();
+  if (!uri || uri.scheme === 'untitled') return files;
+  const folder = vscode.Uri.joinPath(uri, '..');
+  for (const target of mdLinkTargets(markdown)) {
+    const fileUri = vscode.Uri.joinPath(folder, ...target.split('/'));
+    try {
+      const text = await readPart(fileUri);
+      files.set(target, { uri: fileUri, meta: parseFrontMatter(text).meta });
+    } catch (e) {
+      files.set(target, null);
+    }
+  }
+  return files;
+}
+
 function editorSource(editor) {
   return {
     uri: editor.document.uri,
@@ -87,4 +104,6 @@ async function writeBinding(source, meta) {
     edit.replace(new vscode.Range(document.positionAt(0), document.positionAt(rawLength)), fm));
 }
 
-module.exports = { editorSource, uriSource, writeBinding, assembleWithParts, withSampleFiles, splitTitleAndBody };
+module.exports = {
+  editorSource, uriSource, writeBinding, assembleWithParts, withSampleFiles, readLinkedFiles, splitTitleAndBody
+};

@@ -1,17 +1,14 @@
 const vscode = require('vscode');
-const { mdToStorage } = require('../core/mdToStorage');
-const { parseFrontMatter } = require('../core/frontMatter');
-const {
-  editorSource, uriSource, writeBinding, assembleWithParts, withSampleFiles, splitTitleAndBody
-} = require('./publishSource');
+const { editorSource, uriSource, writeBinding } = require('./publishSource');
 const {
   parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, createPage, updatePage, pageWebUrl
 } = require('../core/confluenceClient');
 const { credentialsFor } = require('./credentials');
 const { errorMessage, countOf } = require('../core/messages');
-const { mermaidMacro, mermaidVersion } = require('./config');
 const { remoteDocument } = require('./remoteDocument');
 const { showPageDiff } = require('./pageDiff');
+const { prepareDocument, storageOf } = require('./publishDocument');
+const { askToPublishLinked, publishLinked, linkedNote } = require('./linkedPages');
 
 const COMPARE = 'Compare';
 const OVERWRITE = 'Overwrite';
@@ -19,16 +16,6 @@ const OVERWRITE = 'Overwrite';
 function resolveParentPage(creds, parsed) {
   if (parsed.pageId) return fetchPageMeta(creds, parsed.site, parsed.pageId);
   return fetchPageByTitle(creds, parsed.site, parsed.spaceKey, parsed.title);
-}
-
-async function confirmMissingParts(missing) {
-  if (!missing.length) return true;
-  const publish = 'Publish without them';
-  const picked = await vscode.window.showWarningMessage(
-    'Part files not found: ' + missing.map((m) => m.path).join(', ') +
-    '. They will stay on the page as links to files that do not exist in Confluence.',
-    { modal: true }, publish);
-  return picked === publish;
 }
 
 function overwriteWarning(localVersion, remoteVersion) {
@@ -58,7 +45,17 @@ async function confirmOverwrite(source, parsed, creds, localVersion, remoteVersi
   return picked === OVERWRITE;
 }
 
-async function publishUpdate(source, meta, title, storage, note) {
+function linkContext(site, creds, spaceKey, doc) {
+  return {
+    site, creds, spaceKey,
+    published: new Map(),
+    seen: new Set([doc.source.uri.toString()]),
+    created: []
+  };
+}
+
+async function publishUpdate(doc, withLinked, note) {
+  const { source, meta, title } = doc;
   const parsed = parsePageUrl(meta.url);
   if (!parsed || !parsed.pageId) throw new Error('bad-url');
   const creds = await credentialsFor(parsed.site);
@@ -70,18 +67,23 @@ async function publishUpdate(source, meta, title, storage, note) {
   if (current.version !== meta.version &&
     !await confirmOverwrite(source, parsed, creds, meta.version, current.version)) return;
 
+  const ctx = linkContext(parsed.site, creds, current.spaceKey, doc);
+  if (withLinked) await publishLinked(doc, parsed.pageId, ctx);
+
   const updated = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Publishing to Confluence…' },
-    () => updatePage(creds, parsed.site, parsed.pageId, { title, storage, version: current.version + 1 }));
+    () => updatePage(creds, parsed.site, parsed.pageId,
+      { title, storage: storageOf(doc, ctx.published), version: current.version + 1 }));
 
   const version = updated.version || current.version + 1;
   await writeBinding(source, { url: meta.url, version });
   vscode.window.showInformationMessage('Published "' + title + '" (version ' +
-    version + ').' + (note || ''));
+    version + ').' + note + linkedNote(ctx));
   return { url: meta.url, pageId: String(updated.id || parsed.pageId), action: 'updated' };
 }
 
-async function publishNew(source, title, storage, note) {
+async function publishNew(doc, withLinked, note) {
+  const { source, title } = doc;
   const parentUrl = await vscode.window.showInputBox({
     prompt: 'New page — paste a link to the parent page in Confluence (the new page will be created under it)',
     placeHolder: 'https://…',
@@ -96,15 +98,28 @@ async function publishNew(source, title, storage, note) {
   const parent = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Checking parent page…' },
     () => resolveParentPage(creds, parsed));
+  const ctx = linkContext(parsed.site, creds, parent.spaceKey, doc);
   const created = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Creating page in Confluence…' },
-    () => createPage(creds, parsed.site, { title, storage, spaceKey: parent.spaceKey, parentId: parent.id }));
+    () => createPage(creds, parsed.site,
+      { title, storage: storageOf(doc, ctx.published), spaceKey: parent.spaceKey, parentId: parent.id }));
 
   const spaceKey = created.spaceKey || parent.spaceKey;
   const url = pageWebUrl(parsed.site, spaceKey, created.id);
-  await writeBinding(source, { url, version: created.version || 1 });
+  let version = created.version || 1;
+  ctx.published.set(source.uri.toString(), url);
+  await writeBinding(source, { url, version });
+
+  if (withLinked && await publishLinked(doc, created.id, ctx)) {
+    const updated = await vscode.window.withProgress(
+      { location: vscode.ProgressLocation.Notification, title: 'Linking the published pages…' },
+      () => updatePage(creds, parsed.site, created.id,
+        { title, storage: storageOf(doc, ctx.published), version: version + 1 }));
+    version = updated.version || version + 1;
+    await writeBinding(source, { url, version });
+  }
   vscode.window.showInformationMessage('Created page "' + title + '" in space ' +
-    spaceKey + '.' + (note || ''));
+    spaceKey + '.' + note + linkedNote(ctx));
   return { url, pageId: String(created.id), action: 'created' };
 }
 
@@ -117,21 +132,17 @@ async function publishPageCommand(fileUri) {
 
   try {
     const source = fileUri ? await uriSource(fileUri) : editorSource(editor);
-    const { meta, body } = parseFrontMatter(source.text);
-
-    const assembled = await assembleWithParts(source.uri, body);
-    if (!await confirmMissingParts(assembled.missing)) return;
-    const markdown = await withSampleFiles(source.uri, assembled.markdown);
-    const { title, content } = splitTitleAndBody(
-      markdown, source.fileName.replace(/\.md$/i, '') || 'Untitled');
-    const storage = mdToStorage(content, { mermaidMacro: mermaidMacro(), mermaidVersion: mermaidVersion() });
-    const note = assembled.inlined.length
-      ? ' ' + countOf(assembled.inlined.length, 'part file') + ' included in the page.'
+    const doc = await prepareDocument(source);
+    if (!doc) return;
+    const withLinked = await askToPublishLinked(doc);
+    if (withLinked === null) return;
+    const note = doc.inlined
+      ? ' ' + countOf(doc.inlined, 'part file') + ' included in the page.'
       : '';
 
-    return meta
-      ? await publishUpdate(source, meta, title, storage, note)
-      : await publishNew(source, title, storage, note);
+    return doc.meta
+      ? await publishUpdate(doc, withLinked, note)
+      : await publishNew(doc, withLinked, note);
   } catch (e) {
     if (fileUri) throw new Error(errorMessage(e));
     vscode.window.showErrorMessage(errorMessage(e));

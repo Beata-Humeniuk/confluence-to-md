@@ -57,6 +57,7 @@ const vscodeStub = {
   },
   workspace: {
     textDocuments: [],
+    asRelativePath: (target) => target.path.replace(/^\/w\//, ''),
     getConfiguration: () => ({ get: (key) => ({ token: 'T', email: 'a@b.com' })[key] }),
     fs: {
       readFile: async (target) => {
@@ -84,7 +85,7 @@ global.fetch = async (url, options) => {
   sent.push({ method, url, body: options && options.body ? JSON.parse(options.body) : null });
   const route = routes.find((r) => r.method === method && url.indexOf(r.match) >= 0);
   const status = route ? (route.status || 200) : 404;
-  return { ok: status >= 200 && status < 300, status, url, json: async () => (route && route.body) || {} };
+  return { ok: status >= 200 && status < 300, status, url, json: async () => (route && (typeof route.body === 'function' ? route.body() : route.body)) || {} };
 };
 
 const { publishPageCommand } = require('../src/editor/publishCommand');
@@ -181,6 +182,63 @@ async function main() {
   assert(titled.title === 'Real title', 'the title comes from the heading outside the code block, got: ' + titled.title);
   assert(titled.body.storage.value.includes('# install first') && !titled.body.storage.value.includes('Real title'),
     'the code block keeps its comment and the title leaves the body');
+
+  reset();
+  disk.set('/w/docs/index.md', BOUND + '\nSee [Account](uslugi/konto.md), [Up](../top.md) and [Draft](draft.md).\n');
+  disk.set('/w/docs/uslugi/konto.md', '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/501\n  version: 2\n---\n\n# Konto\n');
+  disk.set('/w/top.md', '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/502\n  version: 1\n---\n\n# Top\n');
+  disk.set('/w/docs/draft.md', '# Not published yet\n');
+  routes = [META, UPDATED];
+  await publishPageCommand(uri('/w/docs/index.md'));
+  assert(warnings.length === 1 && warnings[0].includes('docs/draft.md') && !warnings[0].includes('konto'),
+    'publishing asks about linked files that are not in Confluence yet, got: ' + warnings.join(' | '));
+  assert(!sent.some((r) => r.method === 'PUT' || r.method === 'POST'), 'cancelling that question publishes nothing');
+  answers.warning = 'Only this page';
+  await publishPageCommand(uri('/w/docs/index.md'));
+  assert(!sent.some((r) => r.method === 'POST'), '"Only this page" creates no linked pages');
+  const linked = sent.find((r) => r.method === 'PUT').body.body.storage.value;
+  assert(linked.includes('<a href="' + SITE + '/spaces/DOC/pages/501">Account</a>') &&
+    linked.includes('<a href="' + SITE + '/spaces/DOC/pages/502">Up</a>'),
+    'links to other published Markdown files point at their Confluence pages, got: ' + linked);
+  assert(!linked.includes('.md') && linked.includes('and Draft.'), 'a link to an unpublished file keeps only its text');
+
+  reset();
+  disk.set('/w/docs/index.md', BOUND + '\nSee [Account](uslugi/konto.md) and [Draft](draft.md).\n');
+  disk.set('/w/docs/uslugi/konto.md', '# Konto\n\nBack to [index](../index.md), on to [Details](details.md).\n');
+  disk.set('/w/docs/uslugi/details.md', '# Details\n\nSee [Konto](konto.md).\n');
+  disk.set('/w/docs/draft.md', '# Draft\n\nSee [Konto](uslugi/konto.md).\n');
+  let nextId = 600;
+  routes = [
+    META, UPDATED,
+    { method: 'POST', match: '/rest/api/content', body: () => ({ id: String(nextId++), space: { key: 'DOC' }, version: { number: 1 } }) },
+    { method: 'PUT', match: '/rest/api/content/6', body: { version: { number: 2 } } }
+  ];
+  answers.warning = 'Publish all';
+  result = await publishPageCommand(uri('/w/docs/index.md'));
+  assert(warnings.length === 1 && warnings[0].includes('3 files'), 'the question lists linked files found further down, got: ' + warnings[0]);
+  const posts = sent.filter((r) => r.method === 'POST').map((r) => r.body);
+  assert(posts.map((p) => p.title).join('|') === 'Konto|Details|Draft',
+    'every unpublished linked file is created once, got: ' + posts.map((p) => p.title).join('|'));
+  assert(posts[0].ancestors[0].id === '12345' && posts[1].ancestors[0].id === '600' && posts[2].ancestors[0].id === '12345',
+    'linked pages go under the page that links to them');
+  assert(posts[0].body.storage.value.includes('href="' + PAGE_URL + '"'), 'a link back to the published page points at it');
+  assert(disk.get('/w/docs/uslugi/konto.md').startsWith('---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/600\n  version: 2\n'),
+    'a linked page is bound and updated once its own links exist, got: ' + disk.get('/w/docs/uslugi/konto.md'));
+  assert(disk.get('/w/docs/uslugi/details.md').includes('pages/601') && disk.get('/w/docs/draft.md').includes('pages/602'),
+    'every created page is recorded in its file');
+  const konto = sent.filter((r) => r.method === 'PUT' && r.url.includes('/content/600')).pop().body.body.storage.value;
+  assert(konto.includes('href="' + SITE + '/spaces/DOC/pages/601"'), 'the second pass links the page created below it');
+  const index = sent.filter((r) => r.method === 'PUT' && r.url.includes('/content/12345')).pop().body.body.storage.value;
+  assert(index.includes('pages/600">Account</a>') && index.includes('pages/602">Draft</a>'),
+    'the published page links to the new pages, got: ' + index);
+  assert(info.length === 1 && info[0].includes('Also published 3 linked pages'), 'the summary names the linked pages, got: ' + info[0]);
+
+  reset();
+  disk.set('/w/doc.md', BOUND);
+  routes = [META, { method: 'PUT', match: '/rest/api/content/12345', status: 400, body: { message: 'Error parsing xhtml' } }];
+  const rejected = await rejection(() => publishPageCommand(uri('/w/doc.md')));
+  assert(rejected && rejected.message === 'Confluence rejected the request (400): Error parsing xhtml',
+    'the reason Confluence gives is shown, got: ' + (rejected && rejected.message));
 
   reset();
   disk.set('/w/new-page.md', '# New page\n\nBody.\n');

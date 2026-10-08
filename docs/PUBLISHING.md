@@ -123,6 +123,25 @@ native Confluence tasks, and `[text](confluence:KEY/Title)` becomes a native
 page link that remains valid after a title change. Other URLs are published as
 plain links.
 
+### Links to other Markdown files
+
+A link to another Markdown file, such as `[Account](services/account.md)`,
+points at that file's Confluence page when the file has a `confluence:`
+binding.
+
+When linked files have no binding yet, publishing lists them, including files
+they link to in turn, and asks what to do:
+
+- **Publish all** creates each of them as a page under the page that links to
+  it, adds the `confluence:` binding to each file, and links the pages to each
+  other. Every file is published once, even when several pages link to it.
+- **Only this page** publishes just the current file. Links to unpublished
+  files keep only their text, because Confluence has no page to open.
+- **Cancel** publishes nothing.
+
+A link to a file that does not exist keeps only its text. Links inside code
+blocks are left as they are.
+
 ### Mermaid diagrams
 
 Confluence has no built-in Mermaid support, so diagrams need a Mermaid app from
