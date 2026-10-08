@@ -2,8 +2,8 @@ const { assert } = require('./assert');
 const { mdLinkTargets, linkLocalPages } = require('../src/core/localLinks');
 
 const MD = [
-  'See [Account](uslugi/konto.md), [Data](./dane%20osobowe.md#sekcja) and [Old](<../Moja strona.md>).',
-  'Also [site](https://example.com/readme.md), [root](/abs.md), ![pic](img.md) and [Account again](uslugi/konto.md).',
+  'See [Account](services/account.md), [Data](./personal%20data.md#section) and [Old](<../My page.md>).',
+  'Also [site](https://example.com/readme.md), [root](/abs.md), ![pic](img.md) and [Account again](services/account.md).',
   '```',
   '[in code](code.md)',
   '```',
@@ -11,13 +11,13 @@ const MD = [
 ].join('\n');
 
 const targets = mdLinkTargets(MD);
-assert(targets.join('|') === 'uslugi/konto.md|./dane osobowe.md|../Moja strona.md|missing.md',
+assert(targets.join('|') === 'services/account.md|./personal data.md|../My page.md|missing.md',
   'local Markdown links are collected once, decoded, outside code, got: ' + targets.join('|'));
 
 const urls = new Map([
-  ['uslugi/konto.md', 'https://acme.atlassian.net/wiki/spaces/DOC/pages/1'],
-  ['./dane osobowe.md', 'https://acme.atlassian.net/wiki/spaces/DOC/pages/2'],
-  ['../Moja strona.md', 'https://acme.atlassian.net/wiki/spaces/DOC/pages/3'],
+  ['services/account.md', 'https://acme.atlassian.net/wiki/spaces/DOC/pages/1'],
+  ['./personal data.md', 'https://acme.atlassian.net/wiki/spaces/DOC/pages/2'],
+  ['../My page.md', 'https://acme.atlassian.net/wiki/spaces/DOC/pages/3'],
   ['missing.md', null]
 ]);
 const out = linkLocalPages(MD, urls);
