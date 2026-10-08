@@ -5,6 +5,8 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-10-08
+
 ### Added
 
 - Downloading asks for an optional subfolder inside the download folder, such
