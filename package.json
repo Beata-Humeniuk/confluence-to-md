@@ -1,8 +1,8 @@
 {
   "name": "confluence-to-md",
   "displayName": "Confluence to Markdown",
-  "description": "Fetch Confluence pages as Markdown and publish Markdown back to Confluence, following links to other pages.",
-  "version": "1.8.0",
+  "description": "Fetch Confluence pages as Markdown, edit them in a visual editor, and publish them back to Confluence, following links to other pages.",
+  "version": "1.9.0",
   "publisher": "beatahumeniuk",
   "license": "MIT",
   "author": {
@@ -57,6 +57,57 @@
         "command": "confluenceToMd.pullPage",
         "title": "Pull Page",
         "category": "Confluence"
+      },
+      {
+        "command": "confluenceToMd.openVisualEditor",
+        "title": "Open Visual Editor",
+        "category": "Confluence",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "confluenceToMd.openMarkdownSource",
+        "title": "Open Markdown Source",
+        "category": "Confluence",
+        "icon": "$(code)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "confluenceToMd.openVisualEditor",
+          "when": "resourceLangId == markdown && activeCustomEditorId != confluenceToMd.visualEditor",
+          "group": "navigation"
+        },
+        {
+          "command": "confluenceToMd.openMarkdownSource",
+          "when": "activeCustomEditorId == confluenceToMd.visualEditor",
+          "group": "navigation"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "confluenceToMd.openVisualEditor",
+          "when": "resourceLangId == markdown",
+          "group": "navigation"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "confluenceToMd.openMarkdownSource",
+          "when": "activeCustomEditorId == confluenceToMd.visualEditor"
+        }
+      ]
+    },
+    "customEditors": [
+      {
+        "viewType": "confluenceToMd.visualEditor",
+        "displayName": "Confluence Visual Editor",
+        "selector": [
+          {
+            "filenamePattern": "*.md"
+          }
+        ],
+        "priority": "option"
       }
     ],
     "markdown.markdownItPlugins": true,
@@ -123,8 +174,9 @@
     }
   },
   "scripts": {
-    "build": "esbuild src/extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify",
+    "build": "esbuild src/extension.js --bundle --outfile=out/extension.js --external:vscode --format=cjs --platform=node --minify && node scripts/copy-vditor.js",
     "vscode:prepublish": "npm run build",
+    "pretest": "node scripts/copy-vditor.js",
     "test": "node test/run.js",
     "package": "npm run build && vsce package --no-dependencies"
   },
@@ -135,6 +187,7 @@
   "dependencies": {
     "@joplin/turndown-plugin-gfm": "^1.0.67",
     "markdown-it": "^15.0.0",
-    "turndown": "^7.2.4"
+    "turndown": "^7.2.4",
+    "vditor": "3.11.3"
   }
 }

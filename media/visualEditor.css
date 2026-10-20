@@ -1,0 +1,64 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  background: var(--vscode-editor-background);
+}
+
+#visual-editor {
+  height: 100vh;
+}
+
+.vditor {
+  --border-color: var(--vscode-widget-border, var(--vscode-panel-border, rgba(127, 127, 127, 0.35)));
+  --toolbar-background-color: var(--vscode-editorWidget-background, var(--vscode-sideBar-background));
+  --toolbar-icon-color: var(--vscode-icon-foreground, var(--vscode-foreground));
+  --toolbar-icon-hover-color: var(--vscode-textLink-foreground);
+  --panel-background-color: var(--vscode-editorWidget-background, var(--vscode-editor-background));
+  --panel-shadow: 0 2px 8px var(--vscode-widget-shadow, rgba(0, 0, 0, 0.3));
+  --textarea-background-color: var(--vscode-editor-background);
+  --textarea-text-color: var(--vscode-editor-foreground);
+  --resize-background-color: var(--vscode-editorWidget-background);
+  --resize-icon-color: var(--vscode-icon-foreground);
+  --heading-border-color: var(--vscode-widget-border, rgba(127, 127, 127, 0.25));
+  --second-color: var(--vscode-descriptionForeground);
+  border: 0;
+  border-radius: 0;
+}
+
+.vditor-reset {
+  color: var(--vscode-editor-foreground);
+  font-family: var(--vscode-font-family);
+}
+
+.vditor-reset a {
+  color: var(--vscode-textLink-foreground);
+}
+
+.vditor-toolbar .confluence-to-md-button button {
+  width: auto;
+  padding: 4px 6px;
+  font-size: 12px;
+  line-height: 16px;
+  white-space: nowrap;
+  color: var(--toolbar-icon-color);
+}
+
+.vditor-toolbar .confluence-to-md-button button:hover {
+  color: var(--toolbar-icon-hover-color);
+}
+
+.vditor-toolbar .confluence-to-md-publish button,
+.vditor-toolbar .confluence-to-md-pull button {
+  margin-left: 4px;
+  border: 1px solid var(--vscode-button-border, var(--border-color));
+  border-radius: 3px;
+  color: var(--vscode-button-secondaryForeground, var(--toolbar-icon-color));
+  background: var(--vscode-button-secondaryBackground, transparent);
+}
+
+.vditor-toolbar .confluence-to-md-publish button:hover,
+.vditor-toolbar .confluence-to-md-pull button:hover {
+  background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground, transparent));
+}

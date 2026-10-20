@@ -38,6 +38,18 @@ Markdown links.
 See [Downloading pages](docs/DOWNLOADING.md) for save locations, link handling,
 images, and extracted code samples.
 
+## Edit visually
+
+Click **Open Visual Editor** (pencil icon) in the top right corner of a
+Markdown file to edit it like a Confluence page instead of as Markdown text.
+The toolbar has headings, bold and italic, lists and task lists, links,
+tables, code blocks, quotes, and Mermaid diagrams that you edit with a live
+preview. **↻ Pull** and **↑ Publish** are in the toolbar too.
+
+The file stays plain Markdown, and the `confluence:` binding is kept as it is.
+See [Visual editor](docs/EDITING.md), including how to make it the default
+editor for `.md` files.
+
 ## Update a page from Confluence
 
 A downloaded file can be refreshed from Confluence, like `git pull`. Open the

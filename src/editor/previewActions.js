@@ -47,4 +47,4 @@ async function handlePreviewUri(uri) {
   await action(document);
 }
 
-module.exports = { handlePreviewUri };
+module.exports = { handlePreviewUri, publishFromPreview };
