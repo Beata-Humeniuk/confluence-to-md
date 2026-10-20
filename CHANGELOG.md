@@ -5,6 +5,17 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-10-20
+
+### Added
+
+- A visual editor for Markdown files. Open it with **Open Visual Editor** in
+  the editor title or the Explorer context menu. It edits headings, lists,
+  task lists, links, tables, code blocks, quotes, and Mermaid diagrams with a
+  live preview, without showing Markdown syntax. **Pull** and **Publish** are
+  in its toolbar. The front matter with the `confluence:` binding is kept as
+  it is. See [docs/EDITING.md](docs/EDITING.md).
+
 ## [1.8.0] - 2026-10-08
 
 ### Added

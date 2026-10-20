@@ -6,13 +6,17 @@ const { handlePreviewUri } = require('./editor/previewActions');
 const { provideDocumentLinks, openPageLinkCommand } = require('./editor/documentLinks');
 const { previewButtons } = require('./core/previewButton');
 const { PAGE_DIFF_SCHEME, pageDiffContentProvider } = require('./editor/pageDiff');
+const { registerVisualEditor, openVisualEditorCommand, openMarkdownSourceCommand } = require('./editor/visualEditor');
 
 function activate(context) {
   context.subscriptions.push(
     vscode.commands.registerCommand('confluenceToMd.fetchPage', fetchPageCommand),
     vscode.commands.registerCommand('confluenceToMd.publishPage', publishPageCommand),
     vscode.commands.registerCommand('confluenceToMd.pullPage', pullPageCommand),
-    vscode.commands.registerCommand('confluenceToMd.openPageLink', openPageLinkCommand),
+    vscode.commands.registerCommand('confluenceToMd.openPageLink', (target) => openPageLinkCommand(target)),
+    vscode.commands.registerCommand('confluenceToMd.openVisualEditor', openVisualEditorCommand),
+    vscode.commands.registerCommand('confluenceToMd.openMarkdownSource', openMarkdownSourceCommand),
+    registerVisualEditor(context),
     vscode.languages.registerDocumentLinkProvider({ language: 'markdown' }, { provideDocumentLinks }),
     vscode.window.registerUriHandler({ handleUri: handlePreviewUri }),
     vscode.workspace.registerTextDocumentContentProvider(PAGE_DIFF_SCHEME, pageDiffContentProvider)

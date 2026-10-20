@@ -31,9 +31,10 @@ function provideDocumentLinks(doc) {
   return out;
 }
 
-async function openPageLinkCommand(rawTarget) {
+async function openPageLinkCommand(rawTarget, document) {
   const editor = vscode.window.activeTextEditor;
-  const { meta } = parseFrontMatter(editor ? editor.document.getText() : '');
+  const source = document || (editor && editor.document);
+  const { meta } = parseFrontMatter(source ? source.getText() : '');
   if (!meta) {
     vscode.window.showErrorMessage('Cannot tell which Confluence instance this link belongs to — the file has no front matter block (download the page with the "Confluence: Download Page" command).');
     return;
