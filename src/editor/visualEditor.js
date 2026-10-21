@@ -119,6 +119,7 @@ class VisualEditorProvider {
     };
 
     const commands = {
+      save: () => document.save(),
       source: () => vscode.commands.executeCommand('vscode.openWith', document.uri, 'default'),
       pull: () => pullPageCommand(document.uri),
       publish: () => publishFromPreview(document)
@@ -128,6 +129,7 @@ class VisualEditorProvider {
       webview.onDidReceiveMessage(async (message) => {
         if (message.type === 'loaded') {
           post('init');
+          webview.postMessage({ type: 'state', dirty: document.isDirty });
         } else if (message.type === 'edit') {
           if (message.flush) {
             if (message.body !== null) shown = normalizeBody(message.body);
@@ -155,14 +157,18 @@ class VisualEditorProvider {
         }
       }),
       vscode.workspace.onDidChangeTextDocument((e) => {
-        if (e.document.uri.toString() !== document.uri.toString() || !e.contentChanges.length) return;
-        if (queued || shown === null) return;
+        if (e.document.uri.toString() !== document.uri.toString()) return;
+        webview.postMessage({ type: 'state', dirty: document.isDirty });
+        if (!e.contentChanges.length || queued || shown === null) return;
         const parts = splitDocument(document.getText());
         if (parts.bound !== bound) post('init');
         else if (!sameBody(parts.body, shown)) post('update');
       }),
       // Saving asks the webview for its latest text first, so a save right
       // after typing does not miss the last keystrokes.
+      vscode.workspace.onDidSaveTextDocument((saved) => {
+        if (saved.uri.toString() === document.uri.toString()) webview.postMessage({ type: 'state', dirty: false });
+      }),
       vscode.workspace.onWillSaveTextDocument((e) => {
         if (e.document.uri.toString() !== document.uri.toString() || shown === null) return;
         e.waitUntil(new Promise((resolve) => {

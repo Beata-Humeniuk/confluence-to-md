@@ -10,6 +10,7 @@
 
   const MERMAID_SAMPLE = '\n```mermaid\nflowchart TD\n  A[Start] --> B{Decision}\n  B -->|Yes| C[Do it]\n  B -->|No| D[Skip]\n```\n';
   const EDIT_DELAY = 250;
+  const SAVE_LABEL = '&#x1F4BE; Save';
   // Named like the panel types in Confluence.
   const PANELS = [
     { type: 'NOTE', label: 'Info', text: 'Information.' },
@@ -51,7 +52,18 @@
     if (body !== null) vscode.postMessage({ type: 'edit', body });
   }
 
+  let dirty = false;
+
+  function showDirty() {
+    const button = root.querySelector('.confluence-to-md-save button');
+    if (!button) return;
+    button.innerHTML = dirty ? SAVE_LABEL : '&#x2713; Saved';
+    button.parentElement.classList.toggle('confluence-to-md-saved', !dirty);
+  }
+
   function scheduleEdit() {
+    dirty = true;
+    showDirty();
     clearTimeout(pending);
     pending = setTimeout(flush, EDIT_DELAY);
   }
@@ -96,13 +108,14 @@
         click: () => editor.insertValue(MERMAID_SAMPLE)
       },
       '|', 'undo', 'redo', '|',
+      hostButton('save', SAVE_LABEL, 'Save the file <Ctrl+S>'),
       hostButton('source', '&lt;/&gt; Markdown', 'Open the Markdown source in the text editor')
     ];
+    // Only a file bound to a Confluence page gets the Confluence buttons; a
+    // new page can still be published with Confluence: Publish Page.
     if (bound) {
       items.push(hostButton('pull', '&#x21bb; Pull', 'Update this file from Confluence'));
       items.push(hostButton('publish', '&#x2191; Publish', 'Publish this file to Confluence'));
-    } else {
-      items.push(hostButton('publish', '&#x2191; Publish to Confluence', 'Create a new Confluence page from this file'));
     }
     return items;
   }
@@ -157,6 +170,7 @@
       after: () => {
         saved = markdown();
         setUpStyleMenu();
+        showDirty();
         vscode.postMessage({ type: 'ready' });
       }
     });
@@ -318,6 +332,9 @@
       pending = null;
       editor.setValue(message.body, true);
       saved = markdown();
+    } else if (message.type === 'state') {
+      dirty = !!message.dirty;
+      showDirty();
     } else if (message.type === 'pasteText') {
       const text = plainMarkdown(message.text || '');
       if (editor && text) editor.insertValue(text);

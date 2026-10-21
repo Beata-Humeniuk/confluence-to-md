@@ -18,6 +18,10 @@ follows [Semantic Versioning](https://semver.org/).
   heading back into text. Clicking the button no longer removes a heading
   by itself, and the menu shows each style in its size without shortcut
   hints.
+- The visual editor has a **Save** button, which reads **Saved** when there
+  is nothing to save. Its **Pull** and **Publish** buttons appear only for
+  files bound to a Confluence page, so a Markdown file kept elsewhere, such
+  as in Jira or Git, no longer offers **Publish to Confluence**.
 - The heading ID field that the visual editor showed above headings is gone;
   Confluence does not use it.
 

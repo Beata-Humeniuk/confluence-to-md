@@ -43,8 +43,9 @@ The same choice in settings:
 | **+ Panel** | Insert an Info, Success, Warning, or Error panel |
 | **+ Mermaid** | Insert a Mermaid diagram |
 | Undo, redo | Undo or redo your last edits |
+| **💾 Save** | Save the file, like Ctrl+S. It reads **✓ Saved** when there is nothing to save. |
 | **</> Markdown** | Open the Markdown text |
-| **↻ Pull**, **↑ Publish** | Same as the preview buttons. A file without a binding shows **↑ Publish to Confluence**. |
+| **↻ Pull**, **↑ Publish** | Same as the preview buttons. Shown only for a file bound to a Confluence page; publish a new page with **Confluence: Publish Page**. |
 
 Markdown shortcuts work too: type `## ` at the start of a line for a heading,
 `- ` for a list, `1. ` for a numbered list, or ```` ``` ```` for a code block.

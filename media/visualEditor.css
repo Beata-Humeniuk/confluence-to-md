@@ -158,3 +158,12 @@ body {
 .vditor-panel input[placeholder^="ID"] {
   display: none;
 }
+
+.vditor-toolbar .confluence-to-md-save button {
+  font-weight: 600;
+}
+
+.vditor-toolbar .confluence-to-md-saved button {
+  font-weight: normal;
+  opacity: 0.6;
+}
