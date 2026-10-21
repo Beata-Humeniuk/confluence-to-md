@@ -35,6 +35,9 @@ follows [Semantic Versioning](https://semver.org/).
   the left margin, and code uses the colours of the VS Code theme instead of
   bright blue. Text uses the theme's colour too, and the editor follows a
   change of the VS Code colour theme without reopening.
+- Headings in the visual editor have the sizes of the Markdown preview, from
+  a large, underlined level 1 down to level 6, so the levels are easy to tell
+  apart.
 - A `<br>` line break in a table cell is published as a line break instead
   of the text `<br>`.
 - Centered and right-aligned table cells keep their alignment. A downloaded

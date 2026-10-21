@@ -88,3 +88,29 @@ body {
   color: var(--vscode-editor-foreground);
   background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.15));
 }
+
+/* Heading sizes as in the VS Code Markdown preview, so each level stands out. */
+#visual-editor .vditor-reset h1,
+#visual-editor .vditor-reset h2,
+#visual-editor .vditor-reset h3,
+#visual-editor .vditor-reset h4,
+#visual-editor .vditor-reset h5,
+#visual-editor .vditor-reset h6 {
+  margin: 24px 0 16px;
+  font-weight: 600;
+  line-height: 1.25;
+  color: var(--vscode-editor-foreground);
+}
+
+#visual-editor .vditor-reset h1,
+#visual-editor .vditor-reset h2 {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--vscode-widget-border, rgba(127, 127, 127, 0.35));
+}
+
+#visual-editor .vditor-reset h1 { font-size: 2em; }
+#visual-editor .vditor-reset h2 { font-size: 1.5em; }
+#visual-editor .vditor-reset h3 { font-size: 1.25em; }
+#visual-editor .vditor-reset h4 { font-size: 1em; }
+#visual-editor .vditor-reset h5 { font-size: 0.875em; }
+#visual-editor .vditor-reset h6 { font-size: 0.85em; color: var(--vscode-descriptionForeground, inherit); }
