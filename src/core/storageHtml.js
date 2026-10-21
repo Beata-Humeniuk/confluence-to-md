@@ -1,4 +1,5 @@
 const { escapeXml, decodeEntities, plainTextOf } = require('./markup');
+const { expandTableSpans } = require('./tableSpans');
 
 function cdataToHtml(s) {
   return escapeXml(plainTextOf(s));
@@ -115,7 +116,7 @@ function cleanupConfluenceHtml(input) {
   s = s.replace(/(<t[hd]\b[^>]*>)([\s\S]*?)(<\/t[hd]>)/gi,
     (m, open, body, close) => open + body.replace(/<\/?h[1-6]\b[^>]*>/gi, '') + close);
 
-  return s;
+  return expandTableSpans(s);
 }
 
 module.exports = { storageToHtml, cleanupConfluenceHtml };

@@ -5,6 +5,24 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-21
+
+### Added
+
+- Merged table cells survive downloading and publishing. Markdown has no
+  merged cells, so a cell covered by a merged cell is written as `<<` (merged
+  with the cell on the left) or `^^` (merged with the cell above). Publishing
+  turns the markers back into merged cells, the Markdown preview shows them
+  merged, and the visual editor shows them faded.
+
+### Fixed
+
+- A table with cells merged across rows no longer shifts the cells of the
+  next rows into the wrong columns.
+- Centered and right-aligned table cells keep their alignment. A downloaded
+  column is aligned when most of its cells are, and publishing aligns the
+  cells the way Confluence does.
+
 ## [1.9.0] - 2026-10-20
 
 ### Added

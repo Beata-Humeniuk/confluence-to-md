@@ -123,6 +123,30 @@ native Confluence tasks, and `[text](confluence:KEY/Title)` becomes a native
 page link that remains valid after a title change. Other URLs are published as
 plain links.
 
+### Merged cells and alignment
+
+Markdown tables have no merged cells, so the extension marks them. A cell that
+contains only `<<` belongs to the cell on its left, and a cell that contains
+only `^^` belongs to the cell above it:
+
+```markdown
+| Name         | Status | Notes |
+| ------------ | :----: | ----- |
+| Both columns |   <<   | x     |
+| Two rows     |  mid   | y     |
+| ^^           |   c    | z     |
+```
+
+Downloading writes the markers for merged cells, and publishing turns them
+back into merged cells. The Markdown preview shows the cells merged too. Any
+rectangle works: `<<` and `^^` together merge over several rows and columns.
+Markers that do not form a rectangle, that have no cell to merge into, or that
+would merge a body cell into the header row are published as text.
+
+Markdown aligns whole columns (`:---` left, `:---:` center, `---:` right).
+Downloading aligns a column when most of its cells are aligned that way in
+Confluence, and publishing aligns each cell of the column in Confluence.
+
 ### Links to other Markdown files
 
 A link to another Markdown file, such as `[Account](services/account.md)`,
@@ -184,9 +208,9 @@ features that Markdown cannot represent.
 | Headings and inline formatting | Panels become plain blockquotes |
 | Code blocks with languages | Images are omitted or become attachment links |
 | Mermaid diagrams (with a Mermaid app) | |
-| Tables | TOC and similar macros are removed |
+| Tables, merged cells, column alignment | TOC and similar macros are removed |
 | Lists, including task lists | Layouts and unknown macros keep only their text |
-| Links | |
+| Links | Alignment of single cells that differs from their column |
 
 Confluence TOC macros produce links to Confluence-specific anchors. During
 downloading, the extension matches those links to headings and rewrites them

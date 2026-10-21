@@ -48,6 +48,18 @@ The same choice in settings:
 Markdown shortcuts work too: type `## ` at the start of a line for a heading,
 `- ` for a list, `1. ` for a numbered list, or ```` ``` ```` for a code block.
 
+## Merged cells and alignment
+
+Markdown cannot merge table cells, so a merged cell is written as the text
+`<<` (merged with the cell on the left) or `^^` (merged with the cell above).
+The visual editor shows these cells faded, with a tooltip. To merge cells,
+type `<<` or `^^` in the cells to merge; to split them, replace the marker
+with text. Confluence and the Markdown preview show the cells merged. See
+[Merged cells and alignment](PUBLISHING.md#merged-cells-and-alignment).
+
+To center or right-align, click a cell and use the alignment buttons that
+appear above the table. Markdown aligns the whole column, not single cells.
+
 ## Mermaid diagrams
 
 A Mermaid block is shown as the diagram. Click the diagram to edit its code:

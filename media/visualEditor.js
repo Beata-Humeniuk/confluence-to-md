@@ -119,6 +119,21 @@
     return href.indexOf(linkBase) === 0 ? href.slice(linkBase.length) : href;
   }
 
+  const MERGED = { '<<': 'Merged with the cell on the left', '^^': 'Merged with the cell above' };
+
+  // Markdown has no merged cells, so the file marks them with << and ^^.
+  // Show those cells faded, with a tooltip saying what they mean.
+  function markMergedCells() {
+    for (const cell of root.querySelectorAll('.vditor-wysiwyg td, .vditor-wysiwyg th')) {
+      const tip = MERGED[cell.textContent.trim()];
+      cell.classList.toggle('confluence-to-md-merged', !!tip);
+      if (tip) cell.title = tip;
+      else cell.removeAttribute('title');
+    }
+  }
+
+  new MutationObserver(markMergedCells).observe(root, { childList: true, subtree: true, characterData: true });
+
   function isUndoRedo(e) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
     const key = e.key.toLowerCase();

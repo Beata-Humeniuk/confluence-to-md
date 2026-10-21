@@ -62,3 +62,10 @@ body {
 .vditor-toolbar .confluence-to-md-pull button:hover {
   background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground, transparent));
 }
+
+.vditor-reset table .confluence-to-md-merged {
+  color: var(--vscode-descriptionForeground, #888);
+  background: var(--vscode-editor-inactiveSelectionBackground, rgba(127, 127, 127, 0.12));
+  text-align: center;
+  font-style: italic;
+}
