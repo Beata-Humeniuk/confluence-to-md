@@ -18,7 +18,10 @@
 
   let editor = null;
   let bound = false;
-  let lastBody = '';
+  // The text as the editor writes it, when it last matched the file. Toolbar
+  // changes reach the input callback late, so saving compares against this
+  // instead of waiting for it.
+  let saved = '';
   let pending = null;
   let modifierClick = false;
 
@@ -31,14 +34,19 @@
       title.trim() && title.trim().toLowerCase() !== type.toLowerCase() ? marker + ' ' + title.trim() : marker);
   }
 
-  function flush() {
-    if (pending === null) return;
+  function changes() {
     clearTimeout(pending);
     pending = null;
+    if (!editor) return null;
     const body = markdown();
-    if (body === lastBody) return;
-    lastBody = body;
-    vscode.postMessage({ type: 'edit', body });
+    if (body === saved) return null;
+    saved = body;
+    return body;
+  }
+
+  function flush() {
+    const body = changes();
+    if (body !== null) vscode.postMessage({ type: 'edit', body });
   }
 
   function scheduleEdit() {
@@ -98,7 +106,13 @@
   }
 
   function create(body) {
-    lastBody = body;
+    // destroy() removes the icon script, but its icons stay in the page. Mark
+    // them as loaded, or Vditor requests them again in a way that fails here.
+    if (!document.getElementById('vditorIconScript')) {
+      const marker = document.createElement('meta');
+      marker.id = 'vditorIconScript';
+      document.head.appendChild(marker);
+    }
     editor = new Vditor('visual-editor', {
       cdn,
       value: body,
@@ -138,7 +152,10 @@
       },
       input: scheduleEdit,
       blur: flush,
-      after: () => vscode.postMessage({ type: 'ready' })
+      after: () => {
+        saved = markdown();
+        vscode.postMessage({ type: 'ready' });
+      }
     });
   }
 
@@ -184,29 +201,23 @@
     if (message.type === 'init') {
       if (editor && bound === !!message.bound) return;
       bound = !!message.bound;
+      let body = message.body;
       if (editor) {
         flush();
+        body = markdown();
         editor.destroy();
       }
-      create(editor ? lastBody : message.body);
+      create(body);
     } else if (message.type === 'update') {
-      if (!editor || message.body === lastBody) return;
-      if (pending !== null) {
-        clearTimeout(pending);
-        pending = null;
-      }
-      lastBody = message.body;
+      if (!editor) return;
+      clearTimeout(pending);
+      pending = null;
       editor.setValue(message.body, true);
+      saved = markdown();
     } else if (message.type === 'flush') {
-      // Without unsent typing there is nothing to save, and sending the text
-      // anyway would rewrite an unchanged file in the editor's Markdown style.
-      let body = null;
-      if (editor && pending !== null) {
-        clearTimeout(pending);
-        pending = null;
-        body = lastBody = markdown();
-      }
-      vscode.postMessage({ type: 'edit', body, flush: true });
+      // Without changes there is nothing to save, and sending the text anyway
+      // would rewrite an unchanged file in the editor's Markdown style.
+      vscode.postMessage({ type: 'edit', body: changes(), flush: true });
     }
   });
 

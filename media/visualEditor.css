@@ -69,3 +69,22 @@ body {
   text-align: center;
   font-style: italic;
 }
+
+/* Vditor labels headings and code blocks (H1, </>) in the left margin. */
+.vditor-wysiwyg > .vditor-reset > h1::before,
+.vditor-wysiwyg > .vditor-reset > h2::before,
+.vditor-wysiwyg > .vditor-reset > h3::before,
+.vditor-wysiwyg > .vditor-reset > h4::before,
+.vditor-wysiwyg > .vditor-reset > h5::before,
+.vditor-wysiwyg > .vditor-reset > h6::before,
+.vditor-wysiwyg div.vditor-wysiwyg__block::before {
+  display: none;
+}
+
+/* The editor's dark theme paints code bright blue; use the VS Code colours. */
+#visual-editor .vditor-reset code:not(.hljs):not(.highlight-chroma),
+#visual-editor .vditor-reset pre code,
+#visual-editor .vditor-reset pre.vditor-wysiwyg__pre {
+  color: var(--vscode-editor-foreground);
+  background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.15));
+}

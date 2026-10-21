@@ -27,6 +27,13 @@ follows [Semantic Versioning](https://semver.org/).
 
 - A table with cells merged across rows no longer shifts the cells of the
   next rows into the wrong columns.
+- The visual editor shows its toolbar icons in VS Code. They were missing, so
+  headings, lists, tables, and the other toolbar actions could not be used.
+- Changes made with the visual editor's toolbar, such as turning a line into
+  a heading, are saved even when you save right after making them.
+- The visual editor no longer labels headings and code blocks (H1, `</>`) in
+  the left margin, and code uses the colours of the VS Code theme instead of
+  bright blue.
 - A `<br>` line break in a table cell is published as a line break instead
   of the text `<br>`.
 - Centered and right-aligned table cells keep their alignment. A downloaded
