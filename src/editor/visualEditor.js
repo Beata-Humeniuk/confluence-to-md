@@ -1,5 +1,3 @@
-const crypto = require('crypto');
-const fs = require('fs');
 const vscode = require('vscode');
 const { splitDocument, normalizeBody, sameBody, mergeBody, linkTarget } = require('../core/visualDocument');
 const { parseFrontMatter } = require('../core/frontMatter');
@@ -10,27 +8,14 @@ const { openPageLinkCommand } = require('./documentLinks');
 
 const VISUAL_EDITOR = 'confluenceToMd.visualEditor';
 const FLUSH_TIMEOUT = 1500;
-// Vditor injects these files as inline scripts, so the policy allows them by hash.
-const INLINE_SCRIPTS = ['dist/js/icons/ant.js', 'dist/js/i18n/en_US.js'];
-
-let scriptHashes = null;
-
-function inlineScriptHashes(vditorRoot) {
-  if (!scriptHashes) {
-    scriptHashes = INLINE_SCRIPTS.map((file) => "'sha256-" + crypto.createHash('sha256')
-      .update(fs.readFileSync(vscode.Uri.joinPath(vditorRoot, file).fsPath)).digest('base64') + "'");
-  }
-  return scriptHashes;
-}
 
 function escapeAttribute(value) {
   return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
 function webviewHtml(webview, extensionUri, document) {
-  const vditorRoot = vscode.Uri.joinPath(extensionUri, 'out', 'vditor');
   const media = vscode.Uri.joinPath(extensionUri, 'media');
-  const cdn = webview.asWebviewUri(vditorRoot).toString();
+  const cdn = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'vditor')).toString();
   const linkBase = webview.asWebviewUri(vscode.Uri.joinPath(document.uri, '..')).toString() + '/';
   const source = webview.cspSource;
   const policy = [
@@ -39,7 +24,7 @@ function webviewHtml(webview, extensionUri, document) {
     'style-src ' + source + " 'unsafe-inline'",
     'font-src ' + source + ' data:',
     'connect-src ' + source,
-    'script-src ' + source + ' ' + inlineScriptHashes(vditorRoot).join(' ')
+    'script-src ' + source
   ].join('; ');
   return '<!DOCTYPE html>\n<html lang="en">\n<head>\n<meta charset="UTF-8">\n' +
     '<meta http-equiv="Content-Security-Policy" content="' + policy + '">\n' +
@@ -48,6 +33,9 @@ function webviewHtml(webview, extensionUri, document) {
     '<link rel="stylesheet" href="' + webview.asWebviewUri(vscode.Uri.joinPath(media, 'visualEditor.css')) + '">\n' +
     '</head>\n<body>\n' +
     '<div id="visual-editor" data-cdn="' + escapeAttribute(cdn) + '" data-link-base="' + escapeAttribute(linkBase) + '"></div>\n' +
+    // Vditor would load the icons with a synchronous request, which the
+    // webview cannot serve, so the toolbar would show no icons.
+    '<script id="vditorIconScript" src="' + cdn + '/dist/js/icons/ant.js"></script>\n' +
     '<script src="' + cdn + '/dist/index.min.js"></script>\n' +
     '<script src="' + webview.asWebviewUri(vscode.Uri.joinPath(media, 'visualEditor.js')) + '"></script>\n' +
     '</body>\n</html>';

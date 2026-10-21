@@ -1,4 +1,5 @@
 const { escapeXml, decodeEntities, plainTextOf } = require('./markup');
+const { expandTableSpans } = require('./tableSpans');
 
 function cdataToHtml(s) {
   return escapeXml(plainTextOf(s));
@@ -26,8 +27,9 @@ function storageToHtml(input) {
   s = s.replace(/<ac:structured-macro[^>]*ac:name="(info|note|warning|tip|panel)"[^>]*>([\s\S]*?)<\/ac:structured-macro>/g,
     (m, kind, body) => {
       const rich = body.match(/<ac:rich-text-body>([\s\S]*?)<\/ac:rich-text-body>/);
+      const title = body.match(/<ac:parameter[^>]*ac:name="title"[^>]*>([\s\S]*?)<\/ac:parameter>/);
       return '<div class="confluence-information-macro confluence-information-macro-' + kind + '">' +
-        (rich ? rich[1] : body) + '</div>';
+        (title ? '<p class="title">' + title[1] + '</p>' : '') + (rich ? rich[1] : body) + '</div>';
     });
   s = s.replace(/<ac:structured-macro[^>]*ac:name="status"[^>]*>([\s\S]*?)<\/ac:structured-macro>/g, (m, body) => {
     const t = body.match(/<ac:parameter[^>]*ac:name="title"[^>]*>([\s\S]*?)<\/ac:parameter>/);
@@ -115,7 +117,7 @@ function cleanupConfluenceHtml(input) {
   s = s.replace(/(<t[hd]\b[^>]*>)([\s\S]*?)(<\/t[hd]>)/gi,
     (m, open, body, close) => open + body.replace(/<\/?h[1-6]\b[^>]*>/gi, '') + close);
 
-  return s;
+  return expandTableSpans(s);
 }
 
 module.exports = { storageToHtml, cleanupConfluenceHtml };

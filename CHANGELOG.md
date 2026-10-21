@@ -5,6 +5,45 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.0] - 2026-10-21
+
+### Added
+
+- Merged table cells survive downloading and publishing. Markdown has no
+  merged cells, so a cell covered by a merged cell is written as `<<` (merged
+  with the cell on the left) or `^^` (merged with the cell above). Publishing
+  turns the markers back into merged cells, the Markdown preview shows them
+  merged, and the visual editor shows them faded.
+- Confluence panels keep their type and title. Info, Success, Warning, and
+  Error panels become GitHub alerts (`> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`,
+  `> [!CAUTION]`) with the title after the marker, and publishing turns them
+  back into panels. Panels inside table cells work too. The visual editor and
+  the Markdown preview show them as coloured panels, and the visual editor
+  has a **+ Panel** menu.
+- A mention downloaded as a link to a Confluence Cloud profile is published
+  as a mention again.
+
+### Fixed
+
+- A table with cells merged across rows no longer shifts the cells of the
+  next rows into the wrong columns.
+- The visual editor shows its toolbar icons in VS Code. They were missing, so
+  headings, lists, tables, and the other toolbar actions could not be used.
+- Changes made with the visual editor's toolbar, such as turning a line into
+  a heading, are saved even when you save right after making them.
+- The visual editor no longer labels headings and code blocks (H1, `</>`) in
+  the left margin, and code uses the colours of the VS Code theme instead of
+  bright blue. Text uses the theme's colour too, and the editor follows a
+  change of the VS Code colour theme without reopening.
+- Headings in the visual editor have the sizes of the Markdown preview, from
+  a large, underlined level 1 down to level 6, so the levels are easy to tell
+  apart.
+- A `<br>` line break in a table cell is published as a line break instead
+  of the text `<br>`.
+- Centered and right-aligned table cells keep their alignment. A downloaded
+  column is aligned when most of its cells are, and publishing aligns the
+  cells the way Confluence does.
+
 ## [1.9.0] - 2026-10-20
 
 ### Added

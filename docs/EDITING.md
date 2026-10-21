@@ -40,6 +40,7 @@ The same choice in settings:
 | `</>` | Code block. Type the language, for example `bash`, in the box above the block. |
 | `<>` | Inline code |
 | Quote, line | Quote block and horizontal line |
+| **+ Panel** | Insert an Info, Success, Warning, or Error panel |
 | **+ Mermaid** | Insert a Mermaid diagram |
 | Undo, redo | Undo or redo your last edits |
 | **</> Markdown** | Open the Markdown text |
@@ -47,6 +48,18 @@ The same choice in settings:
 
 Markdown shortcuts work too: type `## ` at the start of a line for a heading,
 `- ` for a list, `1. ` for a numbered list, or ```` ``` ```` for a code block.
+
+## Merged cells and alignment
+
+Markdown cannot merge table cells, so a merged cell is written as the text
+`<<` (merged with the cell on the left) or `^^` (merged with the cell above).
+The visual editor shows these cells faded, with a tooltip. To merge cells,
+type `<<` or `^^` in the cells to merge; to split them, replace the marker
+with text. Confluence and the Markdown preview show the cells merged. See
+[Merged cells and alignment](PUBLISHING.md#merged-cells-and-alignment).
+
+To center or right-align, click a cell and use the alignment buttons that
+appear above the table. Markdown aligns the whole column, not single cells.
 
 ## Mermaid diagrams
 

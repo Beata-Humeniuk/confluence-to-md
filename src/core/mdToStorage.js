@@ -3,6 +3,8 @@ const { mermaidMacroXml } = require('./mermaid');
 const { adaptMermaid } = require('./mermaidSyntax');
 const { confluenceTargetOf } = require('./pageLink');
 const { escapeXml, cdata } = require('./markup');
+const { tableSpans } = require('./tableSpans');
+const { panels, lineBreakTags, cellPanels } = require('./panels');
 
 function codeMacro(lang, code) {
   return '<ac:structured-macro ac:name="code" ac:schema-version="1">' +
@@ -45,10 +47,30 @@ function anchorLinks(html) {
   });
 }
 
+// A link to a person's profile in Confluence Cloud, as downloaded mentions
+// are, becomes a mention again.
+function userMentions(html) {
+  return html.replace(/<a href="[^"]*\/wiki\/people\/([^"/?#]+)[^"]*"[^>]*>[\s\S]*?<\/a>/g, (m, id) => {
+    let accountId = id;
+    try {
+      accountId = decodeURIComponent(id);
+    } catch (e) { }
+    return '<ac:link><ri:user ri:account-id="' + escapeXml(accountId) + '" /></ac:link>';
+  });
+}
+
+// Confluence aligns the paragraph in a cell, like its own editor does.
+function cellAlignment(html) {
+  return html.replace(/<(t[hd])([^>]*?) style="text-align:(left|center|right)"([^>]*)>([\s\S]*?)<\/\1>/g,
+    (m, tag, before, align, after, body) => '<' + tag + before + after + '>' +
+      '<p style="text-align: ' + align + ';">' + body + '</p></' + tag + '>');
+}
+
 function mdToStorage(md, options) {
   const opts = options || {};
   const mermaidMacro = String(opts.mermaidMacro || '').trim();
-  const mdit = new MarkdownIt({ html: false, xhtmlOut: true, linkify: true });
+  const mdit = new MarkdownIt({ html: false, xhtmlOut: true, linkify: true }).use(tableSpans)
+    .use(panels, { storage: true }).use(lineBreakTags);
   mdit.renderer.rules.fence = (tokens, idx) => {
     const info = (tokens[idx].info || '').trim().split(/\s+/)[0] || '';
     if (mermaidMacro && info.toLowerCase() === 'mermaid') {
@@ -57,7 +79,7 @@ function mdToStorage(md, options) {
     return codeMacro(info, tokens[idx].content);
   };
   mdit.renderer.rules.code_block = (tokens, idx) => codeMacro('', tokens[idx].content);
-  return anchorLinks(confluenceLinks(taskLists(mdit.render(String(md))))).trim();
+  return cellAlignment(cellPanels(userMentions(anchorLinks(confluenceLinks(taskLists(mdit.render(String(md)))))))).trim();
 }
 
 module.exports = { mdToStorage };

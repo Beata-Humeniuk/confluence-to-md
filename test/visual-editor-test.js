@@ -112,8 +112,9 @@ const tick = () => new Promise((done) => setTimeout(done, 0));
   provider.resolveCustomTextEditor(document, panel);
 
   const html = panel.webview.html;
-  assert(/script-src vscode-resource: 'sha256-[^']+' 'sha256-[^']+'/.test(html),
-    'scripts load only from the extension, with the inline Vditor files allowed by hash');
+  assert(/script-src vscode-resource:(;|")/.test(html), 'scripts load only from the extension');
+  assert(/<script id="vditorIconScript" src="[^"]*\/dist\/js\/icons\/ant\.js"><\/script>/.test(html),
+    'the toolbar icons are loaded by the page, not by a synchronous request');
   assert(!/unsafe-eval|script-src[^;]*unsafe-inline/.test(html), 'no inline or eval scripts are allowed');
   assert(html.includes('data-link-base="webview:/w/"'), 'relative images resolve against the file folder');
 

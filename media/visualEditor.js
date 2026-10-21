@@ -3,26 +3,52 @@
   const root = document.getElementById('visual-editor');
   const cdn = root.getAttribute('data-cdn');
   const linkBase = root.getAttribute('data-link-base');
-  const dark = document.body.classList.contains('vscode-dark') ||
-    document.body.classList.contains('vscode-high-contrast');
+  const isDark = () => document.body.classList.contains('vscode-dark') ||
+    document.body.classList.contains('vscode-high-contrast') &&
+    !document.body.classList.contains('vscode-high-contrast-light');
+  let dark = isDark();
 
   const MERMAID_SAMPLE = '\n```mermaid\nflowchart TD\n  A[Start] --> B{Decision}\n  B -->|Yes| C[Do it]\n  B -->|No| D[Skip]\n```\n';
   const EDIT_DELAY = 250;
+  // Named like the panel types in Confluence.
+  const PANELS = [
+    { type: 'NOTE', label: 'Info', text: 'Information.' },
+    { type: 'TIP', label: 'Success', text: 'Good to know.' },
+    { type: 'WARNING', label: 'Warning', text: 'Be careful.' },
+    { type: 'CAUTION', label: 'Error', text: 'Do not do this.' }
+  ];
 
   let editor = null;
   let bound = false;
-  let lastBody = '';
+  // The text as the editor writes it, when it last matched the file. Toolbar
+  // changes reach the input callback late, so saving compares against this
+  // instead of waiting for it.
+  let saved = '';
   let pending = null;
   let modifierClick = false;
 
-  function flush() {
-    if (pending === null) return;
+  // The editor writes panels with an icon and a default title, as in
+  // "> [!NOTE] ✏️ Note". Keep the file in the plain "> [!NOTE]" form.
+  const CALLOUT = /^(\s*> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\])[ \t]*(?:\p{Extended_Pictographic}\uFE0F?[ \t]*)?(.*)$/gmu;
+
+  function markdown() {
+    return editor.getValue().replace(CALLOUT, (m, marker, type, title) =>
+      title.trim() && title.trim().toLowerCase() !== type.toLowerCase() ? marker + ' ' + title.trim() : marker);
+  }
+
+  function changes() {
     clearTimeout(pending);
     pending = null;
-    const body = editor.getValue();
-    if (body === lastBody) return;
-    lastBody = body;
-    vscode.postMessage({ type: 'edit', body });
+    if (!editor) return null;
+    const body = markdown();
+    if (body === saved) return null;
+    saved = body;
+    return body;
+  }
+
+  function flush() {
+    const body = changes();
+    if (body !== null) vscode.postMessage({ type: 'edit', body });
   }
 
   function scheduleEdit() {
@@ -50,6 +76,18 @@
       'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
       'link', 'table', 'code', 'inline-code', 'quote', 'line',
       {
+        name: 'panel',
+        tipPosition: 'n',
+        tip: 'Insert panel',
+        className: 'confluence-to-md-button',
+        icon: '<span>+ Panel</span>',
+        toolbar: PANELS.map((panel) => ({
+          name: 'panel-' + panel.type.toLowerCase(),
+          icon: panel.label,
+          click: () => editor.insertValue('\n> [!' + panel.type + ']\n> ' + panel.text + '\n')
+        }))
+      },
+      {
         name: 'mermaid',
         tipPosition: 'n',
         tip: 'Insert Mermaid diagram',
@@ -70,7 +108,13 @@
   }
 
   function create(body) {
-    lastBody = body;
+    // destroy() removes the icon script, but its icons stay in the page. Mark
+    // them as loaded, or Vditor requests them again in a way that fails here.
+    if (!document.getElementById('vditorIconScript')) {
+      const marker = document.createElement('meta');
+      marker.id = 'vditorIconScript';
+      document.head.appendChild(marker);
+    }
     editor = new Vditor('visual-editor', {
       cdn,
       value: body,
@@ -96,7 +140,7 @@
           mark: false,
           sup: false,
           sub: false,
-          callout: false,
+          callout: true,
           gfmAutoLink: true,
           codeBlockPreview: true,
           mathBlockPreview: false
@@ -110,7 +154,10 @@
       },
       input: scheduleEdit,
       blur: flush,
-      after: () => vscode.postMessage({ type: 'ready' })
+      after: () => {
+        saved = markdown();
+        vscode.postMessage({ type: 'ready' });
+      }
     });
   }
 
@@ -118,6 +165,29 @@
     const href = element.getAttribute('href') || '';
     return href.indexOf(linkBase) === 0 ? href.slice(linkBase.length) : href;
   }
+
+  const MERGED = { '<<': 'Merged with the cell on the left', '^^': 'Merged with the cell above' };
+
+  // Markdown has no merged cells, so the file marks them with << and ^^.
+  // Show those cells faded, with a tooltip saying what they mean.
+  function markMergedCells() {
+    for (const cell of root.querySelectorAll('.vditor-wysiwyg td, .vditor-wysiwyg th')) {
+      const tip = MERGED[cell.textContent.trim()];
+      cell.classList.toggle('confluence-to-md-merged', !!tip);
+      if (tip) cell.title = tip;
+      else cell.removeAttribute('title');
+    }
+  }
+
+  new MutationObserver(markMergedCells).observe(root, { childList: true, subtree: true, characterData: true });
+
+  // VS Code changes the body class when the colour theme changes.
+  new MutationObserver(() => {
+    if (!editor || isDark() === dark) return;
+    dark = isDark();
+    editor.setTheme(dark ? 'dark' : 'classic', dark ? 'dark' : 'light', dark ? 'github-dark' : 'github',
+      cdn + '/dist/css/content-theme');
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
   function isUndoRedo(e) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
@@ -141,29 +211,23 @@
     if (message.type === 'init') {
       if (editor && bound === !!message.bound) return;
       bound = !!message.bound;
+      let body = message.body;
       if (editor) {
         flush();
+        body = markdown();
         editor.destroy();
       }
-      create(editor ? lastBody : message.body);
+      create(body);
     } else if (message.type === 'update') {
-      if (!editor || message.body === lastBody) return;
-      if (pending !== null) {
-        clearTimeout(pending);
-        pending = null;
-      }
-      lastBody = message.body;
+      if (!editor) return;
+      clearTimeout(pending);
+      pending = null;
       editor.setValue(message.body, true);
+      saved = markdown();
     } else if (message.type === 'flush') {
-      // Without unsent typing there is nothing to save, and sending the text
-      // anyway would rewrite an unchanged file in the editor's Markdown style.
-      let body = null;
-      if (editor && pending !== null) {
-        clearTimeout(pending);
-        pending = null;
-        body = lastBody = editor.getValue();
-      }
-      vscode.postMessage({ type: 'edit', body, flush: true });
+      // Without changes there is nothing to save, and sending the text anyway
+      // would rewrite an unchanged file in the editor's Markdown style.
+      vscode.postMessage({ type: 'edit', body: changes(), flush: true });
     }
   });
 
