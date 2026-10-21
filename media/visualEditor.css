@@ -27,7 +27,7 @@ body {
   border-radius: 0;
 }
 
-.vditor-reset {
+#visual-editor .vditor-reset {
   color: var(--vscode-editor-foreground);
   font-family: var(--vscode-font-family);
 }

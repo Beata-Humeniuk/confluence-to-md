@@ -33,7 +33,8 @@ follows [Semantic Versioning](https://semver.org/).
   a heading, are saved even when you save right after making them.
 - The visual editor no longer labels headings and code blocks (H1, `</>`) in
   the left margin, and code uses the colours of the VS Code theme instead of
-  bright blue.
+  bright blue. Text uses the theme's colour too, and the editor follows a
+  change of the VS Code colour theme without reopening.
 - A `<br>` line break in a table cell is published as a line break instead
   of the text `<br>`.
 - Centered and right-aligned table cells keep their alignment. A downloaded

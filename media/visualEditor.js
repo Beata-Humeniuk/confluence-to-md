@@ -3,8 +3,10 @@
   const root = document.getElementById('visual-editor');
   const cdn = root.getAttribute('data-cdn');
   const linkBase = root.getAttribute('data-link-base');
-  const dark = document.body.classList.contains('vscode-dark') ||
-    document.body.classList.contains('vscode-high-contrast');
+  const isDark = () => document.body.classList.contains('vscode-dark') ||
+    document.body.classList.contains('vscode-high-contrast') &&
+    !document.body.classList.contains('vscode-high-contrast-light');
+  let dark = isDark();
 
   const MERMAID_SAMPLE = '\n```mermaid\nflowchart TD\n  A[Start] --> B{Decision}\n  B -->|Yes| C[Do it]\n  B -->|No| D[Skip]\n```\n';
   const EDIT_DELAY = 250;
@@ -178,6 +180,14 @@
   }
 
   new MutationObserver(markMergedCells).observe(root, { childList: true, subtree: true, characterData: true });
+
+  // VS Code changes the body class when the colour theme changes.
+  new MutationObserver(() => {
+    if (!editor || isDark() === dark) return;
+    dark = isDark();
+    editor.setTheme(dark ? 'dark' : 'classic', dark ? 'dark' : 'light', dark ? 'github-dark' : 'github',
+      cdn + '/dist/css/content-theme');
+  }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
   function isUndoRedo(e) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
