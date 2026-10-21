@@ -8,6 +8,13 @@
 
   const MERMAID_SAMPLE = '\n```mermaid\nflowchart TD\n  A[Start] --> B{Decision}\n  B -->|Yes| C[Do it]\n  B -->|No| D[Skip]\n```\n';
   const EDIT_DELAY = 250;
+  // Named like the panel types in Confluence.
+  const PANELS = [
+    { type: 'NOTE', label: 'Info', text: 'Information.' },
+    { type: 'TIP', label: 'Success', text: 'Good to know.' },
+    { type: 'WARNING', label: 'Warning', text: 'Be careful.' },
+    { type: 'CAUTION', label: 'Error', text: 'Do not do this.' }
+  ];
 
   let editor = null;
   let bound = false;
@@ -15,11 +22,20 @@
   let pending = null;
   let modifierClick = false;
 
+  // The editor writes panels with an icon and a default title, as in
+  // "> [!NOTE] ✏️ Note". Keep the file in the plain "> [!NOTE]" form.
+  const CALLOUT = /^(\s*> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\])[ \t]*(?:\p{Extended_Pictographic}\uFE0F?[ \t]*)?(.*)$/gmu;
+
+  function markdown() {
+    return editor.getValue().replace(CALLOUT, (m, marker, type, title) =>
+      title.trim() && title.trim().toLowerCase() !== type.toLowerCase() ? marker + ' ' + title.trim() : marker);
+  }
+
   function flush() {
     if (pending === null) return;
     clearTimeout(pending);
     pending = null;
-    const body = editor.getValue();
+    const body = markdown();
     if (body === lastBody) return;
     lastBody = body;
     vscode.postMessage({ type: 'edit', body });
@@ -49,6 +65,18 @@
       'headings', 'bold', 'italic', 'strike', '|',
       'list', 'ordered-list', 'check', 'outdent', 'indent', '|',
       'link', 'table', 'code', 'inline-code', 'quote', 'line',
+      {
+        name: 'panel',
+        tipPosition: 'n',
+        tip: 'Insert panel',
+        className: 'confluence-to-md-button',
+        icon: '<span>+ Panel</span>',
+        toolbar: PANELS.map((panel) => ({
+          name: 'panel-' + panel.type.toLowerCase(),
+          icon: panel.label,
+          click: () => editor.insertValue('\n> [!' + panel.type + ']\n> ' + panel.text + '\n')
+        }))
+      },
       {
         name: 'mermaid',
         tipPosition: 'n',
@@ -96,7 +124,7 @@
           mark: false,
           sup: false,
           sub: false,
-          callout: false,
+          callout: true,
           gfmAutoLink: true,
           codeBlockPreview: true,
           mathBlockPreview: false
@@ -176,7 +204,7 @@
       if (editor && pending !== null) {
         clearTimeout(pending);
         pending = null;
-        body = lastBody = editor.getValue();
+        body = lastBody = markdown();
       }
       vscode.postMessage({ type: 'edit', body, flush: true });
     }

@@ -110,7 +110,7 @@ convert that HTML, with extra rules for:
 - tables and strikethrough;
 - task lists;
 - Confluence page links and images;
-- info, note, warning, and tip panels as plain blockquotes.
+- info, tip, note, and warning panels as alerts, see [Panels](#panels).
 
 Any `ac:` and `ri:` macros that reach the converter unrendered are turned into
 HTML first, so an unknown macro keeps its text when possible.
@@ -122,6 +122,42 @@ Confluence storage format. Code blocks become `code` macros, task lists become
 native Confluence tasks, and `[text](confluence:KEY/Title)` becomes a native
 page link that remains valid after a title change. Other URLs are published as
 plain links.
+
+### Panels
+
+Confluence panels become [GitHub alerts](https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts),
+matched by colour. The panel title follows the marker:
+
+```markdown
+> [!WARNING] New model
+> Add these fields to the service.
+```
+
+| Panel in Confluence | Macro | Markdown |
+|---|---|---|
+| Info (blue) | `info` | `> [!NOTE]` |
+| Success (green) | `tip` | `> [!TIP]` |
+| Warning (yellow) | `note` | `> [!WARNING]` |
+| Error (red) | `warning` | `> [!CAUTION]` |
+
+Publishing turns each alert back into its panel. `> [!IMPORTANT]`, which has
+no Confluence macro, is published as an Info panel, and a quote without a
+marker stays a quote. The Markdown preview and the visual editor show alerts
+as coloured panels.
+
+A table cell holds a single line of Markdown, so a panel in a cell is written
+as quoted lines separated by `<br>`, and publishing turns them back into a
+panel in the cell:
+
+```markdown
+| Field  | Notes |
+| ------ | ----- |
+| status | from - to<br><br>> [!WARNING] New model<br>> Add these fields.<br><br>Translated by OFFER_STATUS |
+```
+
+A mention of a person is downloaded as a link to their profile, such as
+`[@Beata](https://example.atlassian.net/wiki/people/…)`, and published as a
+mention again (Confluence Cloud).
 
 ### Merged cells and alignment
 
@@ -205,12 +241,12 @@ features that Markdown cannot represent.
 
 | Preserved | Lost or simplified |
 |---|---|
-| Headings and inline formatting | Panels become plain blockquotes |
+| Headings and inline formatting | Custom panels (other colours or icons) become plain blockquotes |
 | Code blocks with languages | Images are omitted or become attachment links |
 | Mermaid diagrams (with a Mermaid app) | |
 | Tables, merged cells, column alignment | TOC and similar macros are removed |
 | Lists, including task lists | Layouts and unknown macros keep only their text |
-| Links | Alignment of single cells that differs from their column |
+| Links, panels with titles, mentions (Cloud) | Alignment of single cells that differs from their column |
 
 Confluence TOC macros produce links to Confluence-specific anchors. During
 downloading, the extension matches those links to headings and rewrites them

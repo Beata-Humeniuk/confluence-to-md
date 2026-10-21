@@ -22,3 +22,26 @@
   text-decoration: none;
   background: var(--vscode-button-secondaryHoverBackground, var(--vscode-button-secondaryBackground, transparent));
 }
+
+.confluence-to-md-panel {
+  margin: 0 0 16px;
+  padding: 8px 16px;
+  border-left: 4px solid var(--confluence-to-md-panel-color);
+  border-radius: 3px;
+  background: color-mix(in srgb, var(--confluence-to-md-panel-color) 12%, transparent);
+}
+
+.confluence-to-md-panel > :last-child {
+  margin-bottom: 0;
+}
+
+.confluence-to-md-panel-title {
+  font-weight: 600;
+  color: var(--confluence-to-md-panel-color);
+}
+
+.confluence-to-md-panel-note { --confluence-to-md-panel-color: #0969da; }
+.confluence-to-md-panel-tip { --confluence-to-md-panel-color: #1a7f37; }
+.confluence-to-md-panel-important { --confluence-to-md-panel-color: #8250df; }
+.confluence-to-md-panel-warning { --confluence-to-md-panel-color: #bf8700; }
+.confluence-to-md-panel-caution { --confluence-to-md-panel-color: #cf222e; }

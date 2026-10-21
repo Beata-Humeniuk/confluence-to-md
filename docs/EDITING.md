@@ -40,6 +40,7 @@ The same choice in settings:
 | `</>` | Code block. Type the language, for example `bash`, in the box above the block. |
 | `<>` | Inline code |
 | Quote, line | Quote block and horizontal line |
+| **+ Panel** | Insert an Info, Success, Warning, or Error panel |
 | **+ Mermaid** | Insert a Mermaid diagram |
 | Undo, redo | Undo or redo your last edits |
 | **</> Markdown** | Open the Markdown text |

@@ -14,11 +14,21 @@ follows [Semantic Versioning](https://semver.org/).
   with the cell on the left) or `^^` (merged with the cell above). Publishing
   turns the markers back into merged cells, the Markdown preview shows them
   merged, and the visual editor shows them faded.
+- Confluence panels keep their type and title. Info, Success, Warning, and
+  Error panels become GitHub alerts (`> [!NOTE]`, `> [!TIP]`, `> [!WARNING]`,
+  `> [!CAUTION]`) with the title after the marker, and publishing turns them
+  back into panels. Panels inside table cells work too. The visual editor and
+  the Markdown preview show them as coloured panels, and the visual editor
+  has a **+ Panel** menu.
+- A mention downloaded as a link to a Confluence Cloud profile is published
+  as a mention again.
 
 ### Fixed
 
 - A table with cells merged across rows no longer shifts the cells of the
   next rows into the wrong columns.
+- A `<br>` line break in a table cell is published as a line break instead
+  of the text `<br>`.
 - Centered and right-aligned table cells keep their alignment. A downloaded
   column is aligned when most of its cells are, and publishing aligns the
   cells the way Confluence does.

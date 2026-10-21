@@ -31,8 +31,8 @@ assert(md.includes('# Tytuł strony'), 'heading + entity decode');
 assert(md.includes('**bold text**') && md.includes('*italic text*'), 'inline bold/italic');
 assert(md.includes('`x < 7`'), 'inline code with entities decoded');
 assert(md.includes('```java') && md.includes('if (a < b) { return "x&y"; }'), 'code macro -> fenced block, CDATA verbatim');
-assert(md.includes('> Ważna notka.') && !md.includes('**Info:**'),
-  'info panel -> plain blockquote, no label from the extension');
+assert(md.includes('> [!NOTE]\n> Ważna notka.') && !md.includes('**Info:**'),
+  'info panel -> [!NOTE] alert, no label from the extension');
 assert(/\| Field\s*\| Description\s*\|/.test(md) && /\|\s*---\s*\|\s*---\s*\|/.test(md), 'table with header row');
 assert(md.includes('identifier \\| key'), 'pipes escaped in cells');
 assert(/^-\s+one$/m.test(md) && /^-\s+two$/m.test(md) && /^\s+1\.\s+two-a$/m.test(md) && /^\s+2\.\s+two-b$/m.test(md),
@@ -70,8 +70,8 @@ const ev = convertHtmlToMd(exportView);
 assert(ev.markdown.includes('## Section'), 'export_view heading');
 assert(ev.markdown.includes('```js') && ev.markdown.includes('const a = 1 < 2;'),
   'export_view code panel -> fenced block with brush language');
-assert(ev.markdown.includes('> Do not do this.') && !ev.markdown.includes('**Warning:**'),
-  'export_view warning panel -> plain blockquote, no label');
+assert(ev.markdown.includes('> [!CAUTION]\n> Do not do this.') && !ev.markdown.includes('**Warning:**'),
+  'export_view warning panel (red) -> [!CAUTION] alert, no label');
 assert(ev.markdown.includes('- [x] done') && ev.markdown.includes('- [ ] to do'),
   'export_view inline task list');
 assert(ev.markdown.includes('[the architecture](/wiki/spaces/DOC/pages/123456/Architecture)'),

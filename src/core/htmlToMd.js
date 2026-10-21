@@ -3,6 +3,7 @@ const { gfm } = require('@joplin/turndown-plugin-gfm');
 const { pageRefOfHref } = require('./pageLink');
 const { storageToHtml, cleanupConfluenceHtml } = require('./storageHtml');
 const { rewriteTocAnchors } = require('./tocAnchors');
+const { panelMarkdown } = require('./panels');
 
 function pageLinkOf(href, node, origin) {
   const ref = pageRefOfHref(href, origin);
@@ -45,12 +46,22 @@ function convertHtmlToMd(html, options) {
     }
   });
 
+  const isPanel = (node) => node && node.nodeName === 'DIV' && node.classList &&
+    node.classList.contains('confluence-information-macro');
+
+  td.addRule('confluencePanelTitle', {
+    filter: (node) => node.nodeName === 'P' && node.classList && node.classList.contains('title') &&
+      isPanel(node.parentNode),
+    replacement: () => ''
+  });
+
   td.addRule('confluencePanel', {
-    filter: (node) => node.nodeName === 'DIV' && node.classList &&
-      node.classList.contains('confluence-information-macro'),
-    replacement: (content) => {
-      const quoted = content.trim().split('\n').map((ln) => ('> ' + ln).trimEnd()).join('\n');
-      return '\n\n' + quoted + '\n\n';
+    filter: isPanel,
+    replacement: (content, node) => {
+      const kind = (/confluence-information-macro-(\w+)/.exec(node.className) || [])[1] || '';
+      const title = Array.from(node.childNodes).find((child) =>
+        child.nodeName === 'P' && child.classList && child.classList.contains('title'));
+      return '\n\n' + panelMarkdown(kind, title ? title.textContent.trim() : '', content) + '\n\n';
     }
   });
 
