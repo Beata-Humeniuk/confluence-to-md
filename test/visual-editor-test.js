@@ -1,6 +1,6 @@
 const { assert, same } = require('./assert');
 
-const listeners = { change: [], willSave: [] };
+const listeners = { change: [], willSave: [], didSave: [] };
 const commands = [];
 const errors = [];
 let text = '';
@@ -22,12 +22,21 @@ function joinPath(base, ...parts) {
 
 const document = {
   uri: uri('/w/page.md'),
+  isDirty: false,
+  saves: 0,
+  save: async () => {
+    document.saves += 1;
+    document.isDirty = false;
+    listeners.didSave.forEach((listener) => listener(document));
+    return true;
+  },
   getText: () => text,
   positionAt: (offset) => offset
 };
 
 function setText(next) {
   text = next;
+  document.isDirty = true;
   listeners.change.forEach((listener) => listener({ document, contentChanges: [{}] }));
 }
 
@@ -68,9 +77,12 @@ const vscodeStub = {
     },
     getWorkspaceFolder: () => ({ uri: uri('/w') }),
     onDidChangeTextDocument: event(listeners.change),
-    onWillSaveTextDocument: event(listeners.willSave)
+    onWillSaveTextDocument: event(listeners.willSave),
+    onDidSaveTextDocument: event(listeners.didSave)
   },
-  env: { openExternal: async (target) => { commands.push(['openExternal', target.value]); } },
+  env: {
+    clipboard: { readText: async () => 'copied *text*' },
+    openExternal: async (target) => { commands.push(['openExternal', target.value]); } },
   commands: { executeCommand: async (...args) => { commands.push(args); } }
 };
 
@@ -89,13 +101,18 @@ const { viewType, provider } = registerVisualEditor({ extensionUri });
 same(viewType, 'confluenceToMd.visualEditor', 'the custom editor is registered under its view type');
 
 const posted = [];
+const states = [];
 let receive = null;
 let dispose = null;
 const panel = {
   webview: {
     cspSource: 'vscode-resource:',
     asWebviewUri: (target) => 'webview:' + target.path,
-    postMessage: async (message) => { posted.push(message); return true; },
+    postMessage: async (message) => {
+      if (message.type === 'state') states.push(message.dirty);
+      else posted.push(message);
+      return true;
+    },
     onDidReceiveMessage: (listener) => {
       receive = listener;
       return { dispose: () => {} };
@@ -175,8 +192,19 @@ const tick = () => new Promise((done) => setTimeout(done, 0));
   await receive({ type: 'openLink', href: 'https://example.com/' });
   same(commands.pop()[1], 'https://example.com/', 'a web link opens in the browser');
 
+  same(states[states.length - 1], true, 'the webview knows the file has unsaved changes');
+  await receive({ type: 'command', name: 'save' });
+  same(document.saves, 1, 'the Save button saves the file');
+  same(states[states.length - 1], false, 'after saving the webview shows the file as saved');
+
+  posted.length = 0;
+  await receive({ type: 'pastePlain' });
+  same(JSON.stringify(posted), JSON.stringify([{ type: 'pasteText', text: 'copied *text*' }]),
+    'Ctrl+Shift+V gets the clipboard text from VS Code');
+
   dispose();
-  same(listeners.change.length + listeners.willSave.length, 0, 'closing the editor stops listening');
+  same(listeners.change.length + listeners.willSave.length + listeners.didSave.length, 0,
+    'closing the editor stops listening');
   same(errors.length, 0, 'no errors: ' + errors.join('; '));
   console.log('PASS: visual editor keeps the file and the webview in sync');
 })().catch((e) => {

@@ -31,7 +31,7 @@ The same choice in settings:
 
 | Button | What it does |
 |---|---|
-| **H** | Heading level 1 to 6 |
+| **Normal text ▾** | Text style menu, as in Confluence. The button shows the style of the line with the cursor, such as **Heading 4**. Pick **Normal text** or **Heading 1** to **Heading 6**; the current style is highlighted. |
 | **B**, *I*, ~~S~~ | Bold, italic, strikethrough |
 | Bullets, numbers, checkbox | Bulleted list, numbered list, task list |
 | Indent, outdent | Nest list items, or move them back out |
@@ -43,11 +43,20 @@ The same choice in settings:
 | **+ Panel** | Insert an Info, Success, Warning, or Error panel |
 | **+ Mermaid** | Insert a Mermaid diagram |
 | Undo, redo | Undo or redo your last edits |
+| **💾 Save** | Save the file, like Ctrl+S. It reads **✓ Saved** when there is nothing to save. |
 | **</> Markdown** | Open the Markdown text |
-| **↻ Pull**, **↑ Publish** | Same as the preview buttons. A file without a binding shows **↑ Publish to Confluence**. |
+| **↻ Pull**, **↑ Publish** | Same as the preview buttons. Shown only for a file bound to a Confluence page; publish a new page with **Confluence: Publish Page**. |
 
 Markdown shortcuts work too: type `## ` at the start of a line for a heading,
 `- ` for a list, `1. ` for a numbered list, or ```` ``` ```` for a code block.
+
+## Paste
+
+**Ctrl+V** (Cmd+V on macOS) keeps the formatting of what you copied, such as
+headings, bold text, lists, and tables. **Ctrl+Shift+V** (Cmd+Shift+V, or
+Cmd+Option+Shift+V) pastes plain text in the current style: characters such
+as `*` or `#` stay text, and each copied line becomes a paragraph. In the
+visual editor this shortcut does not open the Markdown preview.
 
 ## Merged cells and alignment
 

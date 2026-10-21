@@ -2,7 +2,7 @@
   "name": "confluence-to-md",
   "displayName": "Confluence to Markdown",
   "description": "Fetch Confluence pages as Markdown, edit them in a visual editor, and publish them back to Confluence, following links to other pages.",
-  "version": "1.10.0",
+  "version": "1.10.1",
   "publisher": "beatahumeniuk",
   "license": "MIT",
   "author": {

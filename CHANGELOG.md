@@ -5,6 +5,26 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-10-21
+
+### Fixed
+
+- **Ctrl+Shift+V** (Cmd+Shift+V on macOS) in the visual editor pastes plain
+  text without the formatting of what you copied, instead of opening the
+  Markdown preview or pasting with formatting.
+- The heading button of the visual editor is a text style menu, as in
+  Confluence. It names the style of the line with the cursor, such as
+  **Heading 4**, and highlights it in the menu. **Normal text** turns a
+  heading back into text. Clicking the button no longer removes a heading
+  by itself, and the menu shows each style in its size without shortcut
+  hints.
+- The visual editor has a **Save** button, which reads **Saved** when there
+  is nothing to save. Its **Pull** and **Publish** buttons appear only for
+  files bound to a Confluence page, so a Markdown file kept elsewhere, such
+  as in Jira or Git, no longer offers **Publish to Confluence**.
+- The heading ID field that the visual editor showed above headings is gone;
+  Confluence does not use it.
+
 ## [1.10.0] - 2026-10-21
 
 ### Added
