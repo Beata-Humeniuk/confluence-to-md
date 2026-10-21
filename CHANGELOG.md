@@ -20,6 +20,10 @@ follows [Semantic Versioning](https://semver.org/).
   showed above the current heading, list item or quote is gone. Tables still
   get their alignment and row and column buttons, and code blocks their
   language field.
+- **Tab** in a list item of the visual editor nests the item under the one
+  above it, and **Shift+Tab** moves it back out, wherever the cursor is in
+  the item, as in Confluence. Before, this worked only at the start of the
+  item.
 - **</> Text editor** (formerly **</> Markdown**) replaces the visual
   editor's tab with the text editor, like **Reopen Editor With → Text
   Editor**, so commands of other Markdown extensions are available again.

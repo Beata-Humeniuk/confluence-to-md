@@ -470,6 +470,19 @@
     if (isUndoRedo(e)) e.stopPropagation();
   });
 
+  // In a list, Tab nests the item and Shift+Tab moves it out wherever the
+  // cursor is, as in Confluence. Vditor does this only at the start of an item.
+  root.addEventListener('keydown', (e) => {
+    if (e.key !== 'Tab' || e.ctrlKey || e.metaKey || e.altKey || !editor) return;
+    const element = caretElement();
+    if (!element || !element.closest('li') || element.closest('[data-type="code-block"]')) return;
+    const button = root.querySelector('.vditor-toolbar [data-type="' + (e.shiftKey ? 'outdent' : 'indent') + '"]');
+    if (!button) return;
+    e.preventDefault();
+    e.stopPropagation();
+    button.click();
+  }, true);
+
   // Like in the text editor, Ctrl/Cmd+click opens a link and a plain click edits it.
   window.addEventListener('mousedown', (e) => {
     modifierClick = e.ctrlKey || e.metaKey;

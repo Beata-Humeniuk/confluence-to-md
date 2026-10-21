@@ -52,6 +52,9 @@ To make the text editor the default again, choose **Text Editor** in the same
 | **</> Text editor** | Leave the visual editor and show the file as text |
 | **↻ Pull**, **↑ Publish** | Same as the preview buttons. Shown only for a file bound to a Confluence page; publish a new page with **Confluence: Publish Page**. |
 
+In a list, **Tab** nests the item under the one above it and **Shift+Tab**
+moves it back out, wherever the cursor is in the item.
+
 Markdown shortcuts work too: type `## ` at the start of a line for a heading,
 `- ` for a list, `1. ` for a numbered list, or ```` ``` ```` for a code block.
 
