@@ -5,6 +5,18 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-10-21
+
+### Fixed
+
+- The list buttons of the visual editor turn all selected lines into one
+  list, not only the line with the cursor. Clicking the same button again
+  turns the lines back into text, and another list button changes the kind
+  of list.
+- The list buttons also work on lines that contain inline code. They were
+  turned off there and showed a red "not allowed" sign, and the list the
+  cursor was in was not highlighted.
+
 ## [1.10.1] - 2026-10-21
 
 ### Fixed

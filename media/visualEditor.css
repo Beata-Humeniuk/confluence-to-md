@@ -167,3 +167,8 @@ body {
   font-weight: normal;
   opacity: 0.6;
 }
+
+/* A button Vditor turned off shows the normal cursor, not a red sign. */
+#visual-editor .vditor-toolbar .vditor-menu--disabled {
+  cursor: default;
+}

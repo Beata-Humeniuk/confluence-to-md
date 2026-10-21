@@ -33,7 +33,7 @@ The same choice in settings:
 |---|---|
 | **Normal text ▾** | Text style menu, as in Confluence. The button shows the style of the line with the cursor, such as **Heading 4**. Pick **Normal text** or **Heading 1** to **Heading 6**; the current style is highlighted. |
 | **B**, *I*, ~~S~~ | Bold, italic, strikethrough |
-| Bullets, numbers, checkbox | Bulleted list, numbered list, task list |
+| Bullets, numbers, checkbox | Bulleted list, numbered list, task list. With several lines selected, every line becomes an item of one list; clicking the same button again turns them back into lines. The button of the list the cursor is in is highlighted. |
 | Indent, outdent | Nest list items, or move them back out |
 | Link | Insert or edit a link |
 | Table | Insert a table. Click a cell to add or remove rows and columns and to align columns. |

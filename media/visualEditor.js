@@ -170,6 +170,7 @@
       after: () => {
         saved = markdown();
         setUpStyleMenu();
+        setUpListButtons();
         showDirty();
         vscode.postMessage({ type: 'ready' });
       }
@@ -288,6 +289,146 @@
     showStyle();
   }
 
+  const LISTS = {
+    list: { tag: 'UL', task: false, marker: () => '* ' },
+    'ordered-list': { tag: 'OL', task: false, marker: (i) => (i + 1) + '. ' },
+    check: { tag: 'UL', task: true, marker: () => '* [ ] ' }
+  };
+  const ITEM_MARKER = /^(?:[*+-]|\d+[.)])[ \t]+(?:\[[ xX]\][ \t]+)?/;
+
+  function editArea() {
+    return root.querySelector('.vditor-wysiwyg > .vditor-reset');
+  }
+
+  // The top-level blocks the selection touches, in order.
+  function selectedBlocks() {
+    const area = editArea();
+    const selection = window.getSelection();
+    if (!area || !selection.rangeCount) return [];
+    const range = selection.getRangeAt(0);
+    const top = (container, offset) => {
+      let node = container === area ? area.children[Math.min(offset, area.children.length - 1)] : container;
+      while (node && node.parentNode !== area) node = node.parentNode;
+      return node;
+    };
+    const first = top(range.startContainer, range.startOffset);
+    const last = top(range.endContainer, Math.max(range.endOffset - 1, 0));
+    if (!first || !last) return [];
+    const blocks = [];
+    for (let node = first; node; node = node.nextElementSibling) {
+      blocks.push(node);
+      if (node === last) return blocks;
+    }
+    return [];
+  }
+
+  function isList(block, kind) {
+    const task = !!block.querySelector(':scope > li.vditor-task');
+    return block.tagName === kind.tag && task === kind.task;
+  }
+
+  // Each item: its first line, and the lines nested under it.
+  function blockItems(block, lute) {
+    const md = lute.VditorDOM2Md(block.outerHTML).replace(/\n+$/, '');
+    if (block.tagName === 'UL' || block.tagName === 'OL') {
+      const items = [];
+      for (const line of md.split('\n')) {
+        if (!line.trim()) continue;
+        if (ITEM_MARKER.test(line)) items.push({ text: line.replace(ITEM_MARKER, ''), nested: [] });
+        else if (items.length) items[items.length - 1].nested.push(line);
+      }
+      return items;
+    }
+    if (block.tagName === 'P' || HEADING.test(block.tagName)) {
+      return md.replace(/^#{1,6}[ \t]+/, '').split('\n')
+        .map((line) => line.replace(/(?:[ \t]{2,}|\\)$/, '').trim())
+        .filter((line) => line).map((text) => ({ text, nested: [] }));
+    }
+    return null;
+  }
+
+  // Vditor turns only the line with the cursor into a list item, and not at
+  // all when the line contains inline code. This turns every selected line
+  // into an item of one list, or the lines back into text when they all are
+  // that kind of list already, as in Confluence.
+  function toggleList(name) {
+    const kind = LISTS[name];
+    const lute = editor.vditor.lute;
+    const blocks = selectedBlocks();
+    if (!blocks.length) return false;
+    const items = [];
+    for (const block of blocks) {
+      const own = blockItems(block, lute);
+      if (!own) return false;
+      items.push(...own);
+    }
+    if (!items.length) return false;
+    const off = blocks.every((block) => isList(block, kind));
+    const md = off
+      ? items.map((item) => [item.text].concat(item.nested.map((line) => line.trim())).join('\n\n')).join('\n\n')
+      : items.map((item, i) => [kind.marker(i) + item.text].concat(item.nested).join('\n')).join('\n');
+    const holder = document.createElement('div');
+    holder.innerHTML = lute.Md2VditorDOM(md + '\n');
+    const inserted = Array.from(holder.children);
+    for (const node of inserted) blocks[0].parentNode.insertBefore(node, blocks[0]);
+    blocks.forEach((block) => block.remove());
+    const range = document.createRange();
+    range.selectNodeContents(inserted[inserted.length - 1]);
+    range.collapse(false);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    editor.vditor.undo.addToUndoStack(editor.vditor);
+    scheduleEdit();
+    return true;
+  }
+
+  function caretElement() {
+    const selection = window.getSelection();
+    const node = selection && selection.anchorNode;
+    const element = node && (node.nodeType === 1 ? node : node.parentElement);
+    const area = editArea();
+    return element && area && area.contains(element) ? element : null;
+  }
+
+  // Vditor greys the list buttons out inside inline code, where ours work,
+  // and then stops marking the list the cursor is in. Show both correctly.
+  function syncListButtons() {
+    const element = caretElement();
+    const item = element && element.closest('li');
+    const blocked = !!(element && element.closest('[data-type="code-block"], [data-type="table"]'));
+    for (const name of Object.keys(LISTS)) {
+      const button = root.querySelector('.vditor-toolbar [data-type="' + name + '"]');
+      if (!button) continue;
+      const kind = LISTS[name];
+      const current = !!item && item.parentElement.tagName === kind.tag &&
+        item.classList.contains('vditor-task') === kind.task;
+      if (button.classList.contains('vditor-menu--disabled') !== blocked) {
+        button.classList.toggle('vditor-menu--disabled', blocked);
+      }
+      if (button.classList.contains('vditor-menu--current') !== current) {
+        button.classList.toggle('vditor-menu--current', current);
+      }
+    }
+  }
+
+  function setUpListButtons() {
+    for (const name of Object.keys(LISTS)) {
+      const button = root.querySelector('.vditor-toolbar [data-type="' + name + '"]');
+      if (!button) continue;
+      new MutationObserver(syncListButtons).observe(button, { attributes: true, attributeFilter: ['class'] });
+      button.parentElement.addEventListener('click', (e) => {
+        if (!button.contains(e.target)) return;
+        const element = caretElement();
+        // Vditor handles a single line outside inline code; the rest is ours.
+        if (selectedBlocks().length < 2 && !(element && element.closest('code'))) return;
+        e.preventDefault();
+        e.stopPropagation();
+        toggleList(name);
+      }, true);
+    }
+  }
+
   function showStyle() {
     const label = root.querySelector('.confluence-to-md-style-label');
     if (!label) return;
@@ -295,7 +436,10 @@
     label.textContent = (style === 'p' || !style ? 'Normal text' : 'Heading ' + style.slice(1)) + ' \u25BE';
   }
 
-  document.addEventListener('selectionchange', showStyle);
+  document.addEventListener('selectionchange', () => {
+    showStyle();
+    syncListButtons();
+  });
 
   function isUndoRedo(e) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
