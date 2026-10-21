@@ -16,6 +16,10 @@ follows [Semantic Versioning](https://semver.org/).
 - The list buttons also work on lines that contain inline code. They were
   turned off there and showed a red "not allowed" sign, and the list the
   cursor was in was not highlighted.
+- The small toolbar with up, down and delete buttons that the visual editor
+  showed above the current heading, list item or quote is gone. Tables still
+  get their alignment and row and column buttons, and code blocks their
+  language field.
 
 ## [1.10.1] - 2026-10-21
 

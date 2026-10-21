@@ -171,6 +171,7 @@
         saved = markdown();
         setUpStyleMenu();
         setUpListButtons();
+        watchBlockToolbar();
         showDirty();
         vscode.postMessage({ type: 'ready' });
       }
@@ -410,6 +411,22 @@
         button.classList.toggle('vditor-menu--current', current);
       }
     }
+  }
+
+  // With its move and delete buttons hidden, the toolbar Vditor shows above
+  // headings, list items and quotes is empty; hide it rather than show an
+  // empty box. Tables, code blocks and links keep theirs.
+  function hideEmptyBlockToolbar(panel) {
+    if (panel.style.display === 'none') return;
+    const useful = Array.from(panel.children).some((child) => getComputedStyle(child).display !== 'none');
+    if (!useful) panel.style.display = 'none';
+  }
+
+  function watchBlockToolbar() {
+    const panel = root.querySelector('.vditor-wysiwyg > .vditor-panel');
+    if (!panel) return;
+    const observer = new MutationObserver(() => hideEmptyBlockToolbar(panel));
+    observer.observe(panel, { attributes: true, attributeFilter: ['style'], childList: true });
   }
 
   function setUpListButtons() {
