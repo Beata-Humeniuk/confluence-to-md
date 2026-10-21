@@ -5,6 +5,30 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.2] - 2026-10-21
+
+### Fixed
+
+- The list buttons of the visual editor turn all selected lines into one
+  list, not only the line with the cursor. Clicking the same button again
+  turns the lines back into text, and another list button changes the kind
+  of list.
+- The list buttons also work on lines that contain inline code. They were
+  turned off there and showed a red "not allowed" sign, and the list the
+  cursor was in was not highlighted.
+- The small toolbar with up, down and delete buttons that the visual editor
+  showed above the current heading, list item or quote is gone. Tables still
+  get their alignment and row and column buttons, and code blocks their
+  language field.
+- **Tab** in a list item of the visual editor nests the item under the one
+  above it, and **Shift+Tab** moves it back out, wherever the cursor is in
+  the item, as in Confluence. Before, this worked only at the start of the
+  item.
+- **</> Text editor** (formerly **</> Markdown**) replaces the visual
+  editor's tab with the text editor, like **Reopen Editor With → Text
+  Editor**, so commands of other Markdown extensions are available again.
+  The editor title icon is now called **Open in Text Editor**.
+
 ## [1.10.1] - 2026-10-21
 
 ### Fixed

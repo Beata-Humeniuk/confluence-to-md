@@ -154,8 +154,13 @@ body {
   z-index: 50;
 }
 
-/* The heading toolbar offers a custom anchor ID, which Confluence ignores. */
-.vditor-panel input[placeholder^="ID"] {
+/* Vditor shows a small toolbar above the current block to move it up or
+   down, delete it, or give a heading a custom ID, which Confluence ignores.
+   Keep only the parts that edit tables, code block languages and links. */
+.vditor-wysiwyg > .vditor-panel > button[data-type="up"],
+.vditor-wysiwyg > .vditor-panel > button[data-type="down"],
+.vditor-wysiwyg > .vditor-panel > button[data-type="remove"],
+.vditor-wysiwyg > .vditor-panel > span:has(> input[placeholder^="ID"]) {
   display: none;
 }
 
@@ -166,4 +171,9 @@ body {
 .vditor-toolbar .confluence-to-md-saved button {
   font-weight: normal;
   opacity: 0.6;
+}
+
+/* A button Vditor turned off shows the normal cursor, not a red sign. */
+#visual-editor .vditor-toolbar .vditor-menu--disabled {
+  cursor: default;
 }
