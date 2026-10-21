@@ -70,7 +70,9 @@ const vscodeStub = {
     onDidChangeTextDocument: event(listeners.change),
     onWillSaveTextDocument: event(listeners.willSave)
   },
-  env: { openExternal: async (target) => { commands.push(['openExternal', target.value]); } },
+  env: {
+    clipboard: { readText: async () => 'copied *text*' },
+    openExternal: async (target) => { commands.push(['openExternal', target.value]); } },
   commands: { executeCommand: async (...args) => { commands.push(args); } }
 };
 
@@ -174,6 +176,11 @@ const tick = () => new Promise((done) => setTimeout(done, 0));
   same(commands.pop()[1].path, '/w/steps/step 1.md', 'a relative link opens the linked file');
   await receive({ type: 'openLink', href: 'https://example.com/' });
   same(commands.pop()[1], 'https://example.com/', 'a web link opens in the browser');
+
+  posted.length = 0;
+  await receive({ type: 'pastePlain' });
+  same(JSON.stringify(posted), JSON.stringify([{ type: 'pasteText', text: 'copied *text*' }]),
+    'Ctrl+Shift+V gets the clipboard text from VS Code');
 
   dispose();
   same(listeners.change.length + listeners.willSave.length, 0, 'closing the editor stops listening');

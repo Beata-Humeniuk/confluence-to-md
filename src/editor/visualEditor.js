@@ -149,6 +149,9 @@ class VisualEditorProvider {
           } catch (e) {
             vscode.window.showErrorMessage(e.message);
           }
+        } else if (message.type === 'pastePlain') {
+          // The webview cannot always read the clipboard itself.
+          webview.postMessage({ type: 'pasteText', text: await vscode.env.clipboard.readText() });
         }
       }),
       vscode.workspace.onDidChangeTextDocument((e) => {

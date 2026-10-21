@@ -49,6 +49,14 @@ The same choice in settings:
 Markdown shortcuts work too: type `## ` at the start of a line for a heading,
 `- ` for a list, `1. ` for a numbered list, or ```` ``` ```` for a code block.
 
+## Paste
+
+**Ctrl+V** (Cmd+V on macOS) keeps the formatting of what you copied, such as
+headings, bold text, lists, and tables. **Ctrl+Shift+V** (Cmd+Shift+V, or
+Cmd+Option+Shift+V) pastes plain text in the current style: characters such
+as `*` or `#` stay text, and each copied line becomes a paragraph. In the
+visual editor this shortcut does not open the Markdown preview.
+
 ## Merged cells and alignment
 
 Markdown cannot merge table cells, so a merged cell is written as the text

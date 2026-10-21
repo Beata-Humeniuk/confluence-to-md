@@ -189,6 +189,29 @@
       cdn + '/dist/css/content-theme');
   }).observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
+  // Text pasted with Ctrl+Shift+V keeps no formatting: Markdown characters in
+  // it are escaped, and each line becomes a paragraph.
+  function plainMarkdown(text) {
+    return String(text).replace(/\r\n?/g, '\n').split('\n')
+      .map((line) => line.trim() ? line.replace(/[\\`*_[\]{}()#+!|~^-]/g, '\\$&')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/^(\s*\d+)\./, '$1\\.') : '')
+      .join('\n\n').replace(/\n{3,}/g, '\n\n').replace(/^\n+|\n+$/g, '');
+  }
+
+  function isPlainPaste(e) {
+    return (e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'v';
+  }
+
+  // VS Code opens the Markdown preview on Ctrl+Shift+V, and the editor would
+  // paste with formatting. The extension reads the clipboard instead.
+  window.addEventListener('keydown', (e) => {
+    if (!isPlainPaste(e) || !editor) return;
+    e.preventDefault();
+    e.stopPropagation();
+    vscode.postMessage({ type: 'pastePlain' });
+  }, true);
+
   function isUndoRedo(e) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;
     const key = e.key.toLowerCase();
@@ -224,6 +247,9 @@
       pending = null;
       editor.setValue(message.body, true);
       saved = markdown();
+    } else if (message.type === 'pasteText') {
+      const text = plainMarkdown(message.text || '');
+      if (editor && text) editor.insertValue(text);
     } else if (message.type === 'flush') {
       // Without changes there is nothing to save, and sending the text anyway
       // would rewrite an unchanged file in the editor's Markdown style.

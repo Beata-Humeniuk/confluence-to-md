@@ -5,6 +5,14 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.1] - 2026-10-21
+
+### Fixed
+
+- **Ctrl+Shift+V** (Cmd+Shift+V on macOS) in the visual editor pastes plain
+  text without the formatting of what you copied, instead of opening the
+  Markdown preview or pasting with formatting.
+
 ## [1.10.0] - 2026-10-21
 
 ### Added
