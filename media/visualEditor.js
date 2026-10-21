@@ -156,6 +156,7 @@
       blur: flush,
       after: () => {
         saved = markdown();
+        setUpStyleMenu();
         vscode.postMessage({ type: 'ready' });
       }
     });
@@ -211,6 +212,76 @@
     e.stopPropagation();
     vscode.postMessage({ type: 'pastePlain' });
   }, true);
+
+  const HEADING = /^H[1-6]$/;
+
+  function currentStyle() {
+    const selection = window.getSelection();
+    let node = selection && selection.anchorNode;
+    const area = root.querySelector('.vditor-wysiwyg');
+    while (node && node !== area) {
+      if (node.nodeType === 1 && HEADING.test(node.tagName)) return node.tagName.toLowerCase();
+      node = node.parentNode;
+    }
+    return area && selection && area.contains(selection.anchorNode) ? 'p' : '';
+  }
+
+  // Like the text style menu in Confluence: the button names the style of the
+  // line with the cursor, and opening it never changes the line by itself.
+  // Vditor's own button removes a heading when clicked inside one.
+  function setUpStyleMenu() {
+    const item = root.querySelector('.vditor-toolbar [data-type="headings"]');
+    const panel = item && item.parentElement.querySelector('.vditor-hint');
+    if (!item || !panel || panel.querySelector('[data-tag="p"]')) return;
+    const label = document.createElement('span');
+    label.className = 'confluence-to-md-style-label';
+    item.innerHTML = '';
+    item.appendChild(label);
+    item.setAttribute('aria-label', 'Text style');
+    for (const button of panel.querySelectorAll('button[data-tag]')) {
+      button.textContent = 'Heading ' + button.getAttribute('data-tag').slice(1);
+    }
+    const normal = document.createElement('button');
+    normal.setAttribute('data-tag', 'p');
+    normal.textContent = 'Normal text';
+    panel.insertBefore(normal, panel.firstChild);
+    panel.classList.add('confluence-to-md-style-menu');
+
+    let native = false;
+    item.parentElement.addEventListener('click', (e) => {
+      if (native || !item.contains(e.target)) return;
+      e.preventDefault();
+      e.stopPropagation();
+      const style = currentStyle();
+      for (const button of panel.querySelectorAll('button[data-tag]')) {
+        button.classList.toggle('confluence-to-md-style-current', button.getAttribute('data-tag') === style);
+      }
+      panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }, true);
+    normal.addEventListener('click', (e) => {
+      e.preventDefault();
+      panel.style.display = 'none';
+      // Vditor turns a heading back into text when its button is clicked
+      // inside one.
+      if (HEADING.test(currentStyle().toUpperCase()) && item.classList.contains('vditor-menu--current')) {
+        native = true;
+        item.click();
+        native = false;
+      }
+      showStyle();
+    });
+    panel.addEventListener('click', () => setTimeout(showStyle, 0));
+    showStyle();
+  }
+
+  function showStyle() {
+    const label = root.querySelector('.confluence-to-md-style-label');
+    if (!label) return;
+    const style = currentStyle();
+    label.textContent = (style === 'p' || !style ? 'Normal text' : 'Heading ' + style.slice(1)) + ' \u25BE';
+  }
+
+  document.addEventListener('selectionchange', showStyle);
 
   function isUndoRedo(e) {
     if (!(e.ctrlKey || e.metaKey) || e.altKey) return false;

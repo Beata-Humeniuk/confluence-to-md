@@ -31,7 +31,7 @@ The same choice in settings:
 
 | Button | What it does |
 |---|---|
-| **H** | Heading level 1 to 6 |
+| **Normal text ▾** | Text style menu, as in Confluence. The button shows the style of the line with the cursor, such as **Heading 4**. Pick **Normal text** or **Heading 1** to **Heading 6**; the current style is highlighted. |
 | **B**, *I*, ~~S~~ | Bold, italic, strikethrough |
 | Bullets, numbers, checkbox | Bulleted list, numbered list, task list |
 | Indent, outdent | Nest list items, or move them back out |
