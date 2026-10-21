@@ -120,7 +120,7 @@ class VisualEditorProvider {
 
     const commands = {
       save: () => document.save(),
-      source: () => vscode.commands.executeCommand('vscode.openWith', document.uri, 'default'),
+      source: () => openAsText(document.uri),
       pull: () => pullPageCommand(document.uri),
       publish: () => publishFromPreview(document)
     };
@@ -210,7 +210,18 @@ async function openVisualEditorCommand(uri) {
 async function openMarkdownSourceCommand(uri) {
   const target = uri instanceof vscode.Uri ? uri : activeVisualEditorUri();
   if (!target) return;
-  await vscode.commands.executeCommand('vscode.openWith', target, 'default');
+  await openAsText(target);
+}
+
+// Replaces the visual editor's tab with the text editor, like View: Reopen
+// Editor With Text Editor, so other Markdown extensions offer their commands.
+async function openAsText(uri) {
+  const active = activeVisualEditorUri();
+  if (active && active.toString() === uri.toString()) {
+    await vscode.commands.executeCommand('workbench.action.reopenTextEditor');
+  } else {
+    await vscode.commands.executeCommand('vscode.openWith', uri, 'default');
+  }
 }
 
 function activeVisualEditorUri() {

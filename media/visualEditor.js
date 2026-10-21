@@ -109,7 +109,7 @@
       },
       '|', 'undo', 'redo', '|',
       hostButton('save', SAVE_LABEL, 'Save the file <Ctrl+S>'),
-      hostButton('source', '&lt;/&gt; Markdown', 'Open the Markdown source in the text editor')
+      hostButton('source', '&lt;/&gt; Text editor', 'Leave the visual editor and edit the file as text, where other extensions offer their commands')
     ];
     // Only a file bound to a Confluence page gets the Confluence buttons; a
     // new page can still be published with Confluence: Publish Page.

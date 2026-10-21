@@ -10,8 +10,10 @@ and never have to read Markdown syntax. The file on disk stays plain Markdown.
   Markdown editor, or right-click a `.md` file in the Explorer.
 - Or run **Confluence: Open Visual Editor**.
 
-To go back to the Markdown text, click **</> Markdown** in the toolbar or the
-**Open Markdown Source** icon in the editor title.
+To leave the visual editor, click **</> Text editor** in the toolbar or the
+**Open in Text Editor** icon in the editor title. The tab then shows the file
+as text, with the commands and buttons other Markdown extensions add, for
+example to publish the file elsewhere.
 
 ### Make it the default editor for Markdown
 
@@ -26,6 +28,9 @@ The same choice in settings:
 ```
 
 **Open With… → Text Editor** still opens the Markdown text when you need it.
+To make the text editor the default again, choose **Text Editor** in the same
+**Configure default editor for '*.md'…** list, or remove the line from
+`workbench.editorAssociations`.
 
 ## Toolbar
 
@@ -44,7 +49,7 @@ The same choice in settings:
 | **+ Mermaid** | Insert a Mermaid diagram |
 | Undo, redo | Undo or redo your last edits |
 | **💾 Save** | Save the file, like Ctrl+S. It reads **✓ Saved** when there is nothing to save. |
-| **</> Markdown** | Open the Markdown text |
+| **</> Text editor** | Leave the visual editor and show the file as text |
 | **↻ Pull**, **↑ Publish** | Same as the preview buttons. Shown only for a file bound to a Confluence page; publish a new page with **Confluence: Publish Page**. |
 
 Markdown shortcuts work too: type `## ` at the start of a line for a heading,

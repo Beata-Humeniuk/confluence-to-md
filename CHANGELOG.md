@@ -20,6 +20,10 @@ follows [Semantic Versioning](https://semver.org/).
   showed above the current heading, list item or quote is gone. Tables still
   get their alignment and row and column buttons, and code blocks their
   language field.
+- **</> Text editor** (formerly **</> Markdown**) replaces the visual
+  editor's tab with the text editor, like **Reopen Editor With → Text
+  Editor**, so commands of other Markdown extensions are available again.
+  The editor title icon is now called **Open in Text Editor**.
 
 ## [1.10.1] - 2026-10-21
 
