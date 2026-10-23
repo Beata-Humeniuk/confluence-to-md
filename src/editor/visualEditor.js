@@ -204,7 +204,18 @@ async function openVisualEditorCommand(uri) {
     vscode.window.showErrorMessage('Open a Markdown file first.');
     return;
   }
+  // Like Reopen Editor With: the visual editor takes the place of the text
+  // editor's tab instead of opening next to it.
+  const textTab = activeTextTab(target);
   await vscode.commands.executeCommand('vscode.openWith', target, VISUAL_EDITOR);
+  if (textTab) await vscode.window.tabGroups.close(textTab, true);
+}
+
+function activeTextTab(uri) {
+  const tab = vscode.window.tabGroups && vscode.window.tabGroups.activeTabGroup.activeTab;
+  const input = tab && tab.input;
+  return vscode.TabInputText && input instanceof vscode.TabInputText &&
+    input.uri.toString() === uri.toString() ? tab : null;
 }
 
 async function openMarkdownSourceCommand(uri) {

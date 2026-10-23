@@ -19,6 +19,9 @@ follows [Semantic Versioning](https://semver.org/).
 - A table or code block in the visual editor can be deleted again with the
   **Delete table** or **Delete code block** button above it. The button went
   away with the move and delete toolbar in 1.10.2.
+- **Open Visual Editor** replaces the Markdown text tab with the visual
+  editor, like **Reopen Editor With**, instead of opening a second tab next
+  to it.
 
 ## [1.10.2] - 2026-10-21
 
