@@ -164,6 +164,13 @@ body {
   display: none;
 }
 
+/* A table or code block keeps the delete button, the only way to remove the
+   whole block. */
+.vditor-wysiwyg > .vditor-panel:has(> button[data-type="deleteRow"]) > button[data-type="remove"],
+.vditor-wysiwyg > .vditor-panel:has(> span > input[placeholder^="Language"]) > button[data-type="remove"] {
+  display: inline-block;
+}
+
 .vditor-toolbar .confluence-to-md-save button {
   font-weight: 600;
 }
@@ -183,6 +190,8 @@ body {
    code alone; diagrams keep their picture under the code. */
 .vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__pre {
   display: block !important;
+  /* Vditor pulls the copy up under the code with a negative margin. */
+  margin-bottom: 16px;
 }
 
 .vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__preview {

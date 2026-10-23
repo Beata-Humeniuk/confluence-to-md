@@ -41,7 +41,7 @@ To make the text editor the default again, choose **Text Editor** in the same
 | Bullets, numbers, checkbox | Bulleted list, numbered list, task list. With several lines selected, every line becomes an item of one list; clicking the same button again turns them back into lines. The button of the list the cursor is in is highlighted. |
 | Indent, outdent | Nest list items, or move them back out |
 | Link | Insert or edit a link |
-| Table | Insert a table. Click a cell to add or remove rows and columns and to align columns. |
+| Table | Insert a table. Click a cell to add or remove rows and columns, align columns, or delete the whole table with **Delete table**. |
 | `</>` | Code block. Type the language, for example `bash`, in the box above the block. |
 | `<>` | Inline code |
 | Quote, line | Quote block and horizontal line |
