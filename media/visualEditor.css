@@ -177,3 +177,20 @@ body {
 #visual-editor .vditor-toolbar .vditor-menu--disabled {
   cursor: default;
 }
+
+/* Vditor shows a code block as a read-only copy and adds the editable code
+   above it only when clicked, so the code appears twice. Show the editable
+   code alone; diagrams keep their picture under the code. */
+.vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__pre {
+  display: block !important;
+}
+
+.vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__preview {
+  display: none !important;
+}
+
+/* Room for the language field above a code block, so it does not cover the
+   line before it. */
+.vditor-wysiwyg__block[data-type="code-block"] {
+  margin-top: 1.8em;
+}
