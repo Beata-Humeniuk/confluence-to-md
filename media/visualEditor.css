@@ -164,6 +164,13 @@ body {
   display: none;
 }
 
+/* A table or code block keeps the delete button, the only way to remove the
+   whole block. */
+.vditor-wysiwyg > .vditor-panel:has(> button[data-type="deleteRow"]) > button[data-type="remove"],
+.vditor-wysiwyg > .vditor-panel:has(> span > input[placeholder^="Language"]) > button[data-type="remove"] {
+  display: inline-block;
+}
+
 .vditor-toolbar .confluence-to-md-save button {
   font-weight: 600;
 }
@@ -176,4 +183,23 @@ body {
 /* A button Vditor turned off shows the normal cursor, not a red sign. */
 #visual-editor .vditor-toolbar .vditor-menu--disabled {
   cursor: default;
+}
+
+/* Vditor shows a code block as a read-only copy and adds the editable code
+   above it only when clicked, so the code appears twice. Show the editable
+   code alone; diagrams keep their picture under the code. */
+.vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__pre {
+  display: block !important;
+  /* Vditor pulls the copy up under the code with a negative margin. */
+  margin-bottom: 16px;
+}
+
+.vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__preview {
+  display: none !important;
+}
+
+/* Room for the language field above a code block, so it does not cover the
+   line before it. */
+.vditor-wysiwyg__block[data-type="code-block"] {
+  margin-top: 1.8em;
 }

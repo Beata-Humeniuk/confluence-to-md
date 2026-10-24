@@ -418,6 +418,11 @@
   // empty box. Tables, code blocks and links keep theirs.
   function hideEmptyBlockToolbar(panel) {
     if (panel.style.display === 'none') return;
+    const remove = panel.querySelector(':scope > button[data-type="remove"]');
+    if (remove) {
+      remove.setAttribute('aria-label', panel.querySelector(':scope > button[data-type="deleteRow"]')
+        ? 'Delete table' : 'Delete code block');
+    }
     const useful = Array.from(panel.children).some((child) => getComputedStyle(child).display !== 'none');
     if (!useful) panel.style.display = 'none';
   }

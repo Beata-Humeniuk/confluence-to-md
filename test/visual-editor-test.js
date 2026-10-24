@@ -6,8 +6,11 @@ const errors = [];
 let text = '';
 let duringApply = null;
 
+function Uri() {}
+
 function uri(path) {
-  return { scheme: 'file', path, fsPath: path, toString: () => 'file://' + path };
+  return Object.assign(Object.create(Uri.prototype),
+    { scheme: 'file', path, fsPath: path, toString: () => 'file://' + path });
 }
 
 function joinPath(base, ...parts) {
@@ -56,12 +59,21 @@ const event = (list) => (listener) => {
   return { dispose: () => list.splice(list.indexOf(listener), 1) };
 };
 
+function TabInputText(target) { this.uri = target; }
+const closedTabs = [];
+const textTab = { input: null };
+
 const vscodeStub = {
-  Uri: { joinPath, parse: (value) => ({ value }) },
+  TabInputText,
+  Uri: Object.assign(Uri, { joinPath, parse: (value) => ({ value }) }),
   Range: function Range(start, end) { this.start = start; this.end = end; },
   TextEdit: { replace: (range, value) => ({ range, value }) },
   WorkspaceEdit,
   window: {
+    tabGroups: {
+      activeTabGroup: { activeTab: textTab },
+      close: async (tab) => { closedTabs.push(tab); return true; }
+    },
     showErrorMessage: (message) => { errors.push(message); },
     registerCustomEditorProvider: (viewType, provider) => ({ viewType, provider })
   },
@@ -94,7 +106,7 @@ Module._resolveFilename = function (request, ...rest) {
 require.cache.vscode = { id: 'vscode', filename: 'vscode', loaded: true, exports: vscodeStub, children: [], paths: [] };
 
 const path = require('path');
-const { registerVisualEditor } = require('../src/editor/visualEditor');
+const { registerVisualEditor, openVisualEditorCommand } = require('../src/editor/visualEditor');
 
 const extensionUri = uri(path.join(__dirname, '..'));
 const { viewType, provider } = registerVisualEditor({ extensionUri });
@@ -201,6 +213,15 @@ const tick = () => new Promise((done) => setTimeout(done, 0));
   await receive({ type: 'pastePlain' });
   same(JSON.stringify(posted), JSON.stringify([{ type: 'pasteText', text: 'copied *text*' }]),
     'Ctrl+Shift+V gets the clipboard text from VS Code');
+
+  commands.length = 0;
+  textTab.input = new TabInputText(document.uri);
+  await openVisualEditorCommand(document.uri);
+  same(commands[0][2], 'confluenceToMd.visualEditor', 'the command opens the visual editor');
+  same(closedTabs[0], textTab, 'the visual editor replaces the text editor tab instead of opening a second one');
+  textTab.input = new TabInputText(uri('/w/other.md'));
+  await openVisualEditorCommand(document.uri);
+  same(closedTabs.length, 1, 'a tab of another file is left open');
 
   dispose();
   same(listeners.change.length + listeners.willSave.length + listeners.didSave.length, 0,
