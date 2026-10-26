@@ -75,7 +75,8 @@ shows **↑ Publish to Confluence** there instead, which asks for the parent pag
   someone changed the page since your version, the extension asks first and
   offers **Compare**, which shows their changes next to your file.
 - A file without a binding creates a page under the parent whose link you
-  provide. The new binding is added to the file.
+  provide. The new binding is added to the file. If the page you link already
+  has the file's title, the extension offers to publish to that page instead.
 - Links to other Markdown files point at their Confluence pages. Linked files
   that are not in Confluence yet can be published in the same step, as pages
   under the page that links to them.

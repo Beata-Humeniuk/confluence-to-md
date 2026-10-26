@@ -27,6 +27,9 @@ space: DOC
   [Changes made by someone else](#changes-made-by-someone-else).
 - **An unbound file** has no `confluence:` block. Publishing creates a page
   under the parent whose link you provide, then adds the binding to the file.
+  To publish to a page that already exists, paste a link to that page: when
+  its title matches the file's title, the extension asks to publish to it and
+  binds the file to it.
 
 Existing front matter is metadata, not page content. The extension preserves
 its keys and adds a new binding to the same block when needed.
