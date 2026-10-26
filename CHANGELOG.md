@@ -5,6 +5,14 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Publishing a file without a binding to an existing page works. When the
+  page whose link you paste already has the file's title, the extension
+  offers to publish to that page and binds the file to it. Before, it tried
+  to create a second page with the same title under it, which Confluence
+  refuses.
+
 ## [1.10.3] - 2026-10-23
 
 ### Fixed

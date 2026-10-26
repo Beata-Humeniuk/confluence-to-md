@@ -12,6 +12,7 @@ const { askToPublishLinked, publishLinked, linkedNote } = require('./linkedPages
 
 const COMPARE = 'Compare';
 const OVERWRITE = 'Overwrite';
+const UPDATE_PAGE = 'Publish to this page';
 
 function resolveParentPage(creds, parsed) {
   if (parsed.pageId) return fetchPageMeta(creds, parsed.site, parsed.pageId);
@@ -82,10 +83,20 @@ async function publishUpdate(doc, withLinked, note) {
   return { url: meta.url, pageId: String(updated.id || parsed.pageId), action: 'updated' };
 }
 
+async function confirmSamePage(title) {
+  const picked = await vscode.window.showWarningMessage(
+    'The page you pasted is already called "' + title + '", so a new page with that title cannot ' +
+    'be created under it. Publish your file to this page instead? Its current content will be ' +
+    'replaced, and the file will be bound to the page.',
+    { modal: true }, UPDATE_PAGE);
+  return picked === UPDATE_PAGE;
+}
+
 async function publishNew(doc, withLinked, note) {
   const { source, title } = doc;
   const parentUrl = await vscode.window.showInputBox({
-    prompt: 'New page — paste a link to the parent page in Confluence (the new page will be created under it)',
+    prompt: 'New page — paste a link to the parent page in Confluence (the new page will be created under it). ' +
+      'To publish to an existing page with the same title, paste a link to that page.',
     placeHolder: 'https://…',
     ignoreFocusOut: true
   });
@@ -98,6 +109,11 @@ async function publishNew(doc, withLinked, note) {
   const parent = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Checking parent page…' },
     () => resolveParentPage(creds, parsed));
+  if (parent.title === title) {
+    if (!await confirmSamePage(title)) return;
+    const meta = { url: pageWebUrl(parsed.site, parent.spaceKey, parent.id), version: parent.version };
+    return publishUpdate(Object.assign({}, doc, { meta }), withLinked, note);
+  }
   const ctx = linkContext(parsed.site, creds, parent.spaceKey, doc);
   const created = await vscode.window.withProgress(
     { location: vscode.ProgressLocation.Notification, title: 'Creating page in Confluence…' },

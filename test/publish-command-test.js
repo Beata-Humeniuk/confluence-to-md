@@ -164,6 +164,26 @@ async function main() {
   assert(post.body.space.key === 'DOC', 'the new page lands in the parent space');
 
   reset();
+  disk.set('/w/release.md', '# Release notes\n\nBody.\n');
+  answers.input = SITE + '/spaces/DOC/pages/12345';
+  routes = [
+    { method: 'GET', match: '/rest/api/content/12345', body: { id: '12345', title: 'Release notes', space: { key: 'DOC' }, version: { number: 3 } } },
+    UPDATED
+  ];
+  await publishPageCommand(uri('/w/release.md'));
+  assert(warnings.length === 1 && warnings[0].includes('already called "Release notes"'),
+    'pasting a page with the same title asks to publish to it, got: ' + warnings.join(' | '));
+  assert(!sent.some((r) => r.method === 'PUT' || r.method === 'POST'), 'declining that question publishes nothing');
+  answers.warning = 'Publish to this page';
+  result = await publishPageCommand(uri('/w/release.md'));
+  assert(result && result.action === 'updated' && result.pageId === '12345',
+    'confirming updates the pasted page instead of creating one under it');
+  assert(!sent.some((r) => r.method === 'POST'), 'no page is created when publishing to the pasted page');
+  assert(sent.find((r) => r.method === 'PUT').body.version.number === 4, 'the pasted page gets its next version');
+  assert(disk.get('/w/release.md').includes('url: ' + PAGE_URL) && disk.get('/w/release.md').includes('version: 4'),
+    'the file is bound to the pasted page');
+
+  reset();
   disk.set('/w/pkg/api.md', '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\n---\n\n# API\n\n## Steps\n\n- [Validation](parts/step-01.md)\n');
   disk.set('/w/pkg/parts/step-01.md', '---\ntype: guide-part\n---\n\n## Validation\n\nCheck the payload.\n');
   routes = [META, UPDATED];
