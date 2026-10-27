@@ -7,6 +7,9 @@ follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- Text in angle brackets, such as `<nazwa promocji>`, is shown in the
+  Markdown preview and the visual editor. Before, it was read as an HTML tag
+  and hidden. Downloading now writes it as `\<nazwa promocji>`.
 - Nested numbered lists are numbered like in Confluence in the Markdown
   preview and the visual editor: 1., then a., then i. The file keeps the
   Markdown numbers (1.), as Markdown has no letters for list items.

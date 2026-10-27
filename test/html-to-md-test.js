@@ -217,4 +217,10 @@ assert(cells.includes('Pass on<br><br>- the promotion<br>- defaultAccountNumber<
 assert(cells.includes('| `{`<br>`` "a": `1` ``<br>`}` |'), 'each line of a code block in a cell is inline code');
 assert(blockCells.links.some((l) => l.pageId === '308845322'), 'a link in such a table is still followed');
 
+const angle = convertHtmlToMd('<table><tbody><tr><th>Label</th><th>P</th></tr><tr><td>&lt;nazwa promocji&gt;</td><td>-</td></tr></tbody></table>' +
+  '<p>a &lt;b&gt; c &lt; d &lt;/div&gt; <code>&lt;x&gt;</code></p><pre>&lt;tag&gt;</pre>').markdown;
+assert(angle.includes('| \\<nazwa promocji> |'), 'text in angle brackets is not read as an HTML tag');
+assert(angle.includes('a \\<b> c < d \\</div> `<x>`') && angle.includes('```\n<tag>\n```'),
+  'only a "<" that would start a tag is escaped, and code is left as it is');
+
 console.log('PASS: html->md converter (storage + export_view) ok');
