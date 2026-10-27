@@ -198,4 +198,23 @@ assert(toc.includes('#ApiSpec-Missingsection'),
 assert(toc.includes('do not touch [x](#ApiSpec-Scopeofchanges)'),
   'code block content is not rewritten');
 
+const blockCells = convertHtmlToMd([
+  '<table class="relative-table wrapped confluenceTable"><thead><tr><th>Field</th><th>Service</th><th>Notes</th></tr></thead><tbody>',
+  '<tr><td>Dates</td><td><pre class="example microlight"><code class="language-json"><span class="hljs-attr">startDate</span></code>',
+  ' - <code class="language-json"><span class="hljs-attr">endDate</span></code></pre></td><td><br></td></tr>',
+  '<tr><td>Action</td><td>-</td><td><p>If status = ACTV show "Resign". Go to <a href="/pages/viewpage.action?pageId=308845322">Resign</a>.</p>',
+  '<p>Pass on</p><ul><li data-uuid="a">the promotion&nbsp;</li><li data-uuid="b">defaultAccountNumber</li></ul>',
+  '<ol><li>first</li><li>second</li></ol></td></tr>',
+  '<tr><td>Body</td><td><pre data-code-language="json">{\n  "a": `1`\n}</pre></td><td>x</td></tr>',
+  '</tbody></table>'
+].join(''));
+const cells = blockCells.markdown;
+assert(!cells.includes('joplin-table-wrapper') && !cells.includes('<td'),
+  'lists and code blocks in cells no longer keep the whole table as raw HTML');
+assert(cells.includes('| Dates | `startDate` - `endDate` |'), 'code in a cell stays inline code');
+assert(cells.includes('Pass on<br><br>- the promotion<br>- defaultAccountNumber<br><br>1. first<br>2. second |'),
+  'list items in a cell are lines joined by <br>');
+assert(cells.includes('| `{`<br>`` "a": `1` ``<br>`}` |'), 'each line of a code block in a cell is inline code');
+assert(blockCells.links.some((l) => l.pageId === '308845322'), 'a link in such a table is still followed');
+
 console.log('PASS: html->md converter (storage + export_view) ok');

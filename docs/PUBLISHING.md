@@ -158,6 +158,17 @@ panel in the cell:
 | status | from - to<br><br>> [!WARNING] New model<br>> Add these fields.<br><br>Translated by OFFER_STATUS |
 ```
 
+Lists and code blocks in a cell are written the same way: each list item is a
+line that starts with `- ` or `1. `, and each line of code is inline code.
+Publishing turns the list lines back into a list in the cell:
+
+```markdown
+| Field  | Notes |
+| ------ | ----- |
+| dates  | `startDate` - `endDate` |
+| action | Pass on<br><br>- the promotion<br>- defaultAccountNumber |
+```
+
 A mention of a person is downloaded as a link to their profile, such as
 `[@Beata](https://example.atlassian.net/wiki/people/…)`, and published as a
 mention again (Confluence Cloud).

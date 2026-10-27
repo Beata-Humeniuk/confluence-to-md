@@ -7,6 +7,11 @@ follows [Semantic Versioning](https://semver.org/).
 
 ### Fixed
 
+- A table with a list or a code block in a cell is downloaded as a Markdown
+  table. Before, the whole table stayed raw HTML in the file, its links were
+  not followed, and publishing it put the HTML on the page as text. List
+  items in a cell are lines joined by `<br>`, code is inline code, and
+  publishing turns the list lines back into lists.
 - Publishing a file without a binding to an existing page works. When the
   page whose link you paste already has the file's title, the extension
   offers to publish to that page and binds the file to it. Before, it tried

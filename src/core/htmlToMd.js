@@ -23,6 +23,25 @@ function imageMarkdown(node, mode, origin) {
   return '![' + name + '](' + href + ')';
 }
 
+// The lines of a code block in a cell, whose line breaks are <br> elements.
+function preLines(node) {
+  const lines = [''];
+  const walk = (parent) => Array.from(parent.childNodes).forEach((child) => {
+    if (child.nodeName === 'BR') lines.push('');
+    else if (child.nodeType === 3) lines[lines.length - 1] += child.nodeValue;
+    else walk(child);
+  });
+  walk(node);
+  return lines;
+}
+
+function inlineCode(text) {
+  const longest = Math.max(0, ...(text.match(/`+/g) || []).map((run) => run.length));
+  const fence = '`'.repeat(longest + 1);
+  const pad = /^`|`$/.test(text) ? ' ' : '';
+  return fence + pad + text + pad + fence;
+}
+
 function convertHtmlToMd(html, options) {
   const origin = (options && options.origin) || '';
   const images = (options && options.images) || 'skip';
@@ -71,6 +90,37 @@ function convertHtmlToMd(html, options) {
     replacement: (content, node) => {
       const done = /\bchecked\b/.test(node.className || '');
       return '- [' + (done ? 'x' : ' ') + '] ' + content.trim() + '\n';
+    }
+  });
+
+  // A Markdown cell holds one line, so blocks in cells (renamed in
+  // cleanupConfluenceHtml) become lines, which the table joins with <br>.
+  td.addRule('cellList', {
+    filter: ['cell-ul', 'cell-ol'],
+    replacement: (content) => '\n\n' + content.trim().split('\n').map((line) => line.trim()).join('\n') + '\n\n'
+  });
+
+  td.addRule('cellListItem', {
+    filter: 'cell-li',
+    replacement: (content, node) => {
+      const list = node.parentNode;
+      let marker = '- ';
+      if (list && /inline-task-list/.test(list.className || '')) {
+        marker = '- [' + (/\bchecked\b/.test(node.className || '') ? 'x' : ' ') + '] ';
+      } else if (list && list.nodeName === 'CELL-OL') {
+        const items = Array.from(list.childNodes).filter((child) => child.nodeName === 'CELL-LI');
+        marker = (items.indexOf(node) + 1) + '. ';
+      }
+      return marker + content.trim().replace(/\n{2,}/g, '\n') + '\n';
+    }
+  });
+
+  td.addRule('cellCodeBlock', {
+    filter: 'cell-pre',
+    replacement: (content, node) => {
+      const lines = preLines(node).filter((line) => line.trim());
+      if (lines.length === 1 && node.querySelector('code')) return '\n\n' + content.trim() + '\n\n';
+      return '\n\n' + lines.map((line) => inlineCode(line.replace(/\s+$/, ''))).join('\n') + '\n\n';
     }
   });
 

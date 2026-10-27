@@ -45,4 +45,15 @@ assert(preview.includes('<td colspan="2">wide</td>'), 'the Markdown preview show
 const mixed = convertHtmlToMd('<table><tbody><tr><th>A</th></tr><tr><td><p style="text-align: right;">1</p><p>2</p></td></tr></tbody></table>').markdown;
 assert(/\| --- \|/.test(mixed), 'a cell with paragraphs aligned differently is not aligned');
 
+const blocks = convertHtmlToMd('<table><tbody><tr><th>A</th><th>B</th><th>C</th></tr>' +
+  '<tr><td rowspan="2"><p>List:</p><ul><li>one</li><li>two</li></ul></td><td colspan="2"><pre>l1\nl2</pre></td></tr>' +
+  '<tr><td>b2</td><td><ol><li>a</li></ol></td></tr></tbody></table>').markdown;
+assert(blocks.includes('| List:<br><br>- one<br>- two | `l1`<br>`l2` | <<  |') && blocks.includes('| ^^  | b2  | 1. a |'),
+  'merged cells with lists and code blocks are downloaded as a Markdown table with markers');
+const blocksBack = mdToStorage(blocks);
+assert(blocksBack.includes('<td rowspan="2"><p>List:</p><ul><li>one</li><li>two</li></ul></td>') &&
+  blocksBack.includes('<td colspan="2"><code>l1</code><br />\n<code>l2</code></td>') &&
+  blocksBack.includes('<td><ol><li>a</li></ol></td>'),
+  'and published as merged cells with lists again');
+
 console.log('PASS: merged and aligned table cells');
