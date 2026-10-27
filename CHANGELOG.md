@@ -5,6 +5,8 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.4] - 2026-10-27
+
 ### Fixed
 
 - Text in angle brackets, such as `<nazwa promocji>`, is shown in the
