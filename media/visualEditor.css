@@ -203,3 +203,16 @@ body {
 .vditor-wysiwyg__block[data-type="code-block"] {
   margin-top: 1.8em;
 }
+
+/* Nested numbered lists are numbered like in Confluence: 1., a., i. */
+.vditor-reset ol ol {
+  list-style-type: lower-alpha;
+}
+
+.vditor-reset ol ol ol {
+  list-style-type: lower-roman;
+}
+
+.vditor-reset ol ol ol ol {
+  list-style-type: decimal;
+}
