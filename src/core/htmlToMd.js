@@ -55,6 +55,11 @@ function convertHtmlToMd(html, options) {
   });
   td.use(gfm);
 
+  // Text such as "<nazwa promocji>" would be read as an HTML tag and hidden by
+  // the preview and the visual editor.
+  const escape = td.escape.bind(td);
+  td.escape = (text) => escape(text).replace(/<(?=[A-Za-z/!?])/g, '\\<');
+
   td.addRule('confluenceCodeBlock', {
     filter: 'pre',
     replacement: (content, node) => {
