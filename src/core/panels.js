@@ -93,11 +93,31 @@ function paragraphs(lines) {
   return out.join('');
 }
 
+const LIST_ITEM = /^(?:- |\d+\. )/;
+
+function listBlock(items) {
+  const tag = /^- /.test(items[0]) ? 'ul' : 'ol';
+  return '<' + tag + '>' + items.map((item) => '<li>' + item.replace(LIST_ITEM, '') + '</li>').join('') +
+    '</' + tag + '>';
+}
+
 function cellBlocks(body) {
   const segments = body.split(/<br \/>\n?/);
   const blocks = [];
   let text = [];
   for (let i = 0; i < segments.length; i++) {
+    if (LIST_ITEM.test(segments[i])) {
+      if (text.length) blocks.push(paragraphs(text));
+      text = [];
+      const items = [];
+      const ordered = !/^- /.test(segments[i]);
+      while (i < segments.length && LIST_ITEM.test(segments[i]) && !/^- /.test(segments[i]) === ordered) {
+        items.push(segments[i++]);
+      }
+      i -= 1;
+      blocks.push(listBlock(items));
+      continue;
+    }
     if (!/^&gt;/.test(segments[i])) {
       text.push(segments[i]);
       continue;
@@ -116,10 +136,11 @@ function cellBlocks(body) {
 }
 
 // Panels in table cells are written as quoted lines, like
-// "> [!WARNING] Title<br>> text", because a cell holds only one line.
+// "> [!WARNING] Title<br>> text", and lists as "- item<br>- item", because a
+// cell holds only one line.
 function cellPanels(html) {
   return String(html).replace(/<(t[hd])([^>]*)>([\s\S]*?)<\/\1>/g, (m, tag, attrs, body) => {
-    if (!/(?:^|<br \/>\n?)&gt; ?\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i.test(body)) return m;
+    if (!/(?:^|<br \/>\n?)(?:&gt; ?\[!(?:NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]|- |\d+\. )/i.test(body)) return m;
     return '<' + tag + attrs + '>' + cellBlocks(body) + '</' + tag + '>';
   });
 }

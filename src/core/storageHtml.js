@@ -114,8 +114,16 @@ function cleanupConfluenceHtml(input) {
 
   s = s.replace(/<span\b([^>]*\bclass="[^"]*\bjira-status\b[^"]*"[^>]*)>/gi, ' <span$1>');
 
-  s = s.replace(/(<t[hd]\b[^>]*>)([\s\S]*?)(<\/t[hd]>)/gi,
-    (m, open, body, close) => open + body.replace(/<\/?h[1-6]\b[^>]*>/gi, '') + close);
+  // Lists and code blocks would keep the whole table as HTML, so in cells they
+  // get their own tags, which htmlToMd writes as lines of the cell.
+  s = s.replace(/(<t[hd]\b[^>]*>)([\s\S]*?)(<\/t[hd]>)/gi, (m, open, body, close) => {
+    body = body.replace(/<\/?h[1-6]\b[^>]*>/gi, '');
+    if (/<table\b/i.test(body)) return open + body + close;
+    body = body.replace(/<pre\b([^>]*)>([\s\S]*?)<\/pre>/gi, (mm, attrs, code) =>
+      '<cell-pre' + attrs + '>' + code.replace(/\r?\n/g, '<br>') + '</cell-pre>');
+    body = body.replace(/<(\/?)(ul|ol|li)\b/gi, '<$1cell-$2');
+    return open + body + close;
+  });
 
   return expandTableSpans(s);
 }

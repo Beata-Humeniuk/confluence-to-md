@@ -65,4 +65,9 @@ assert(preview.includes('<div class="confluence-to-md-panel confluence-to-md-pan
 same(new MarkdownIt().use(panels).render('> [!TIP]\n> t\n').match(/panel-title">([^<]*)/)[1], 'Tip',
   'a panel without a title shows its type');
 
+const cellList = mdToStorage('| a | b |\n| --- | --- |\n| x | Pass on<br><br>- one<br>- two<br><br>1. first<br>2. second<br>text |\n');
+assert(cellList.includes('<td><p>Pass on</p><ul><li>one</li><li>two</li></ul><ol><li>first</li><li>second</li></ol><p>text</p></td>'),
+  'list lines in a cell are published as lists');
+assert(mdToStorage('| a | b |\n| --- | --- |\n| x | - |\n').includes('<td>-</td>'), 'a lone dash in a cell stays text');
+
 console.log('PASS: Confluence panels');
