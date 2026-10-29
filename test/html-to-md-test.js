@@ -212,10 +212,19 @@ const cells = blockCells.markdown;
 assert(!cells.includes('joplin-table-wrapper') && !cells.includes('<td'),
   'lists and code blocks in cells no longer keep the whole table as raw HTML');
 assert(cells.includes('| Dates | `startDate` - `endDate` |'), 'code in a cell stays inline code');
-assert(cells.includes('Pass on<br><br>- the promotion<br>- defaultAccountNumber<br><br>1. first<br>2. second |'),
+assert(cells.includes('Pass on<br>- the promotion<br>- defaultAccountNumber<br>1. first<br>2. second |'),
   'list items in a cell are lines joined by <br>');
 assert(cells.includes('| `{`<br>`` "a": `1` ``<br>`}` |'), 'each line of a code block in a cell is inline code');
 assert(blockCells.links.some((l) => l.pageId === '308845322'), 'a link in such a table is still followed');
+
+const breaks = convertHtmlToMd('<table><tbody><tr><th>A</th></tr>' +
+  '<tr><td><p>one</p><p>two<br /></p><p>three</p></td></tr>' +
+  '<tr><td>one<br />two</td></tr>' +
+  '<tr><td><p>one</p><p><br /></p><p>two</p></td></tr>' +
+  '<tr><td>one<br /><br />two<br /></td></tr></tbody></table>').markdown;
+assert(breaks.includes('| one<br>two<br>three |'), 'each paragraph in a cell is one line, not two');
+assert(breaks.includes('| one<br>two |'), 'a line break in a cell leaves no spaces before the <br>');
+assert(breaks.split('| one<br><br>two |').length === 3, 'an empty line in a cell is kept');
 
 const angle = convertHtmlToMd('<table><tbody><tr><th>Label</th><th>P</th></tr><tr><td>&lt;nazwa promocji&gt;</td><td>-</td></tr></tbody></table>' +
   '<p>a &lt;b&gt; c &lt; d &lt;/div&gt; <code>&lt;x&gt;</code></p><pre>&lt;tag&gt;</pre>').markdown;

@@ -43,7 +43,7 @@ assert(mdToStorage('> plain\n').includes('<blockquote>'), 'a plain quote stays a
 
 const cell = convertHtmlToMd('<table><tbody><tr><th>A</th><th>B</th></tr><tr><td>x</td><td><p>before</p>' +
   exportPanel('note', 'Nowy model', 'inside') + '<p>after</p></td></tr></tbody></table>').markdown;
-assert(cell.includes('before<br><br>> [!WARNING] Nowy model<br>> inside<br><br>after'),
+assert(cell.includes('before<br>> [!WARNING] Nowy model<br>> inside<br>after'),
   'a panel in a table cell is written as quoted lines in the cell');
 const cellBack = mdToStorage(cell);
 assert(cellBack.includes('<td><p>before</p><ac:structured-macro ac:name="note" ac:schema-version="1">' +

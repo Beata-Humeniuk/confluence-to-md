@@ -5,6 +5,16 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.10.5] - 2026-10-29
+
+### Fixed
+
+- A table cell with several lines, typed in Confluence with Enter, is
+  downloaded with one `<br>` between the lines. Before, each line break became
+  `<br><br>`, and publishing the file added an empty line between the lines
+  on the page. An empty line in a cell is still kept, and a line break no
+  longer leaves two spaces before the `<br>`.
+
 ## [1.10.4] - 2026-10-27
 
 ### Fixed
