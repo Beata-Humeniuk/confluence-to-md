@@ -35,6 +35,22 @@ function preLines(node) {
   return lines;
 }
 
+// A line break in a table cell, until the cell joins its lines with <br>.
+const CELL_BREAK = '\uE000';
+const CELL_BREAKS = new RegExp('[ \\t]*' + CELL_BREAK + '\\n?[ \\t]*', 'g');
+
+function isInCell(node) {
+  for (let parent = node.parentNode; parent; parent = parent.parentNode) {
+    if (parent.nodeName === 'CELL-PRE') return false;
+    if (parent.nodeName === 'TD' || parent.nodeName === 'TH') return true;
+  }
+  return false;
+}
+
+function cellLines(content) {
+  return content.replace(/\s*\n\s*/g, '\n').replace(CELL_BREAKS, '\n');
+}
+
 function inlineCode(text) {
   const longest = Math.max(0, ...(text.match(/`+/g) || []).map((run) => run.length));
   const fence = '`'.repeat(longest + 1);
@@ -129,6 +145,21 @@ function convertHtmlToMd(html, options) {
     }
   });
 
+  // Confluence starts a new paragraph on Enter in a cell. Each paragraph,
+  // list or code block in a cell is one line, so only a <br> on a line of its
+  // own, as in an empty paragraph, leaves an empty line. A <br> at the end of
+  // a paragraph shows nothing.
+  td.addRule('cellLineBreak', {
+    filter: (node) => node.nodeName === 'BR' && isInCell(node),
+    replacement: () => CELL_BREAK
+  });
+
+  const cell = td.rules.array.find((rule) => String(rule.filter) === 'th,td').replacement;
+  td.addRule('cellLines', {
+    filter: ['th', 'td'],
+    replacement: (content, node, options) => cell(cellLines(content), node, options)
+  });
+
   td.addRule('confluenceImage', {
     filter: 'img',
     replacement: (content, node) => imageMarkdown(node, images, origin)
@@ -145,8 +176,9 @@ function convertHtmlToMd(html, options) {
     }
   });
 
-  const markdown = rewriteTocAnchors(
-    td.turndown(cleanupConfluenceHtml(storageToHtml(html))).trim() + '\n');
+  // A table kept as HTML has no cell rule that takes its breaks.
+  const markdown = rewriteTocAnchors(td.turndown(cleanupConfluenceHtml(storageToHtml(html)))
+    .split(CELL_BREAK).join('  \n').trim() + '\n');
 
   const seen = new Set();
   const uniq = links.filter((l) => {

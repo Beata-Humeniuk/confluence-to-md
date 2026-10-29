@@ -48,7 +48,7 @@ assert(/\| --- \|/.test(mixed), 'a cell with paragraphs aligned differently is n
 const blocks = convertHtmlToMd('<table><tbody><tr><th>A</th><th>B</th><th>C</th></tr>' +
   '<tr><td rowspan="2"><p>List:</p><ul><li>one</li><li>two</li></ul></td><td colspan="2"><pre>l1\nl2</pre></td></tr>' +
   '<tr><td>b2</td><td><ol><li>a</li></ol></td></tr></tbody></table>').markdown;
-assert(blocks.includes('| List:<br><br>- one<br>- two | `l1`<br>`l2` | <<  |') && blocks.includes('| ^^  | b2  | 1. a |'),
+assert(blocks.includes('| List:<br>- one<br>- two | `l1`<br>`l2` | <<  |') && blocks.includes('| ^^  | b2  | 1. a |'),
   'merged cells with lists and code blocks are downloaded as a Markdown table with markers');
 const blocksBack = mdToStorage(blocks);
 assert(blocksBack.includes('<td rowspan="2"><p>List:</p><ul><li>one</li><li>two</li></ul></td>') &&
