@@ -35,9 +35,10 @@ function previewButtons(md, options) {
       '" title="' + md.utils.escapeHtml(title) + '">' + label + '</a>';
     const known = version ? ' (local copy: version ' + version + ')' : '';
     const buttons = bound
-      ? button('pull', '&#x21bb; Pull', 'Update this file from Confluence' + known) +
-        button('publish', '&#x2191; Publish', 'Publish this file to Confluence' + known)
-      : button('publish', '&#x2191; Publish to Confluence', 'Create a new Confluence page from this file');
+      ? button('pull', '&#x21bb; Pull from Confluence', 'Update this file from Confluence' + known) +
+        button('publish', '&#x2191; Publish to Confluence', 'Publish this file to Confluence' + known)
+      : button('publish', '&#x2191; Publish to Confluence',
+        'Publish this file to Confluence: as a new page, or to an existing page');
     return '<div class="confluence-to-md-actions">' + buttons + '</div>\n';
   };
 

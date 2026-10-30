@@ -114,8 +114,8 @@
     // Only a file bound to a Confluence page gets the Confluence buttons; a
     // new page can still be published with Confluence: Publish Page.
     if (bound) {
-      items.push(hostButton('pull', '&#x21bb; Pull', 'Update this file from Confluence'));
-      items.push(hostButton('publish', '&#x2191; Publish', 'Publish this file to Confluence'));
+      items.push(hostButton('pull', '&#x21bb; Pull from Confluence', 'Update this file from Confluence'));
+      items.push(hostButton('publish', '&#x2191; Publish to Confluence', 'Publish this file to Confluence'));
     }
     return items;
   }

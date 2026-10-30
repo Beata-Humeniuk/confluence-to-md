@@ -5,6 +5,29 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-30
+
+### Added
+
+- Publishing a file without a binding can publish it to an existing page: after
+  the page link, choose between a new page under it and publishing to it,
+  which replaces its content. Before, a link to a page with another title
+  always created a page under it.
+- When the space already has a page with the file's title, publishing offers to
+  publish to that page instead of failing with Confluence's error that the
+  page already exists.
+
+### Changed
+
+- The preview and visual editor buttons say where they go: **↻ Pull from
+  Confluence** and **↑ Publish to Confluence**.
+
+### Fixed
+
+- A file bound to both a Jira issue (Jira to Markdown) and a Confluence page
+  keeps both bindings. Before, the Confluence binding could take the issue's
+  address when the `jira:` block came first.
+
 ## [1.10.5] - 2026-10-29
 
 ### Fixed

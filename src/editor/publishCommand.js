@@ -1,7 +1,7 @@
 const vscode = require('vscode');
 const { editorSource, uriSource, writeBinding } = require('./publishSource');
 const {
-  parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, createPage, updatePage, pageWebUrl
+  parsePageUrl, fetchPageMeta, fetchPageById, fetchPageByTitle, findPageByTitle, createPage, updatePage, pageWebUrl
 } = require('../core/confluenceClient');
 const { credentialsFor } = require('./credentials');
 const { errorMessage, countOf } = require('../core/messages');
@@ -13,6 +13,7 @@ const { askToPublishLinked, publishLinked, linkedNote } = require('./linkedPages
 const COMPARE = 'Compare';
 const OVERWRITE = 'Overwrite';
 const UPDATE_PAGE = 'Publish to this page';
+const UPDATE_EXISTING = 'Publish to that page';
 
 function resolveParentPage(creds, parsed) {
   if (parsed.pageId) return fetchPageMeta(creds, parsed.site, parsed.pageId);
@@ -92,11 +93,37 @@ async function confirmSamePage(title) {
   return picked === UPDATE_PAGE;
 }
 
+// The pasted page is either the parent of a new page or the page to publish to.
+async function pickTarget(pasted, title) {
+  if (pasted.title === title) return await confirmSamePage(title) ? 'update' : null;
+  const create = { label: 'Create a new page under "' + pasted.title + '"', description: '"' + title + '"' };
+  const update = {
+    label: 'Publish to "' + pasted.title + '"',
+    description: 'replaces its content and renames it to "' + title + '"'
+  };
+  const picked = await vscode.window.showQuickPick([create, update],
+    { placeHolder: 'Where should "' + title + '" go?', ignoreFocusOut: true });
+  return picked ? (picked === create ? 'create' : 'update') : null;
+}
+
+async function confirmExisting(existing, title) {
+  const picked = await vscode.window.showWarningMessage(
+    'Space ' + existing.spaceKey + ' already has a page called "' + title + '", and Confluence allows ' +
+    'each title once in a space. Publish your file to that page instead? Its current content will be ' +
+    'replaced, and the file will be bound to the page.',
+    { modal: true }, UPDATE_EXISTING);
+  return picked === UPDATE_EXISTING;
+}
+
+function publishTo(doc, site, page, withLinked, note) {
+  const meta = { url: pageWebUrl(site, page.spaceKey, page.id), version: page.version };
+  return publishUpdate(Object.assign({}, doc, { meta }), withLinked, note);
+}
+
 async function publishNew(doc, withLinked, note) {
   const { source, title } = doc;
   const parentUrl = await vscode.window.showInputBox({
-    prompt: 'New page — paste a link to the parent page in Confluence (the new page will be created under it). ' +
-      'To publish to an existing page with the same title, paste a link to that page.',
+    prompt: 'Paste a link to a Confluence page: the parent of a new page, or the page to publish this file to',
     placeHolder: 'https://…',
     ignoreFocusOut: true
   });
@@ -107,12 +134,18 @@ async function publishNew(doc, withLinked, note) {
   if (!creds) return;
 
   const parent = await vscode.window.withProgress(
-    { location: vscode.ProgressLocation.Notification, title: 'Checking parent page…' },
+    { location: vscode.ProgressLocation.Notification, title: 'Checking the page…' },
     () => resolveParentPage(creds, parsed));
-  if (parent.title === title) {
-    if (!await confirmSamePage(title)) return;
-    const meta = { url: pageWebUrl(parsed.site, parent.spaceKey, parent.id), version: parent.version };
-    return publishUpdate(Object.assign({}, doc, { meta }), withLinked, note);
+  const target = await pickTarget(parent, title);
+  if (!target) return;
+  if (target === 'update') return publishTo(doc, parsed.site, parent, withLinked, note);
+
+  const existing = await vscode.window.withProgress(
+    { location: vscode.ProgressLocation.Notification, title: 'Checking the title in the space…' },
+    () => findPageByTitle(creds, parsed.site, parent.spaceKey, title));
+  if (existing) {
+    if (!await confirmExisting(existing, title)) return;
+    return publishTo(doc, parsed.site, existing, withLinked, note);
   }
   const ctx = linkContext(parsed.site, creds, parent.spaceKey, doc);
   const created = await vscode.window.withProgress(

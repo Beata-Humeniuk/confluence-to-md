@@ -5,7 +5,8 @@ const disk = new Map();
 const sent = [];
 const info = [];
 const errors = [];
-const answers = { input: undefined, warning: undefined };
+const picks = [];
+const answers = { pick: (items) => items[0], input: undefined, warning: undefined };
 const warnings = [];
 const commands = [];
 let routes = [];
@@ -53,6 +54,7 @@ const vscodeStub = {
     showErrorMessage: (message) => { errors.push(message); },
     showWarningMessage: async (message) => { warnings.push(message); return answers.warning; },
     showInputBox: async () => answers.input,
+    showQuickPick: async (items, options) => { picks.push({ items, options }); return answers.pick(items); },
     withProgress: (options, task) => task()
   },
   workspace: {
@@ -98,6 +100,8 @@ function reset() {
   routes = [];
   answers.input = undefined;
   answers.warning = undefined;
+  answers.pick = (items) => items[0];
+  picks.length = 0;
   warnings.length = 0;
   commands.length = 0;
   vscodeStub.window.activeTextEditor = null;
@@ -182,6 +186,63 @@ async function main() {
   assert(sent.find((r) => r.method === 'PUT').body.version.number === 4, 'the pasted page gets its next version');
   assert(disk.get('/w/release.md').includes('url: ' + PAGE_URL) && disk.get('/w/release.md').includes('version: 4'),
     'the file is bound to the pasted page');
+
+  reset();
+  disk.set('/w/guide.md', '# Login guide\n\nBody.\n');
+  answers.input = SITE + '/spaces/DOC/pages/12345';
+  answers.pick = (items) => items[1];
+  routes = [
+    { method: 'GET', match: '/rest/api/content/12345', body: { id: '12345', title: 'Release notes', space: { key: 'DOC' }, version: { number: 3 } } },
+    UPDATED
+  ];
+  result = await publishPageCommand(uri('/w/guide.md'));
+  assert(picks.length === 1 && picks[0].items[0].label === 'Create a new page under "Release notes"' &&
+    picks[0].items[1].label === 'Publish to "Release notes"' && picks[0].items[1].description.includes('renames it to "Login guide"'),
+  'a pasted page with another title offers both a child page and publishing to it, got: ' + JSON.stringify(picks));
+  assert(result && result.action === 'updated' && result.pageId === '12345' && !sent.some((r) => r.method === 'POST'),
+    'publishing to the pasted page updates it');
+  assert(sent.find((r) => r.method === 'PUT').body.title === 'Login guide', 'the page takes the file title');
+  assert(disk.get('/w/guide.md').startsWith('---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 4\n'), 'the file is bound to the pasted page');
+
+  reset();
+  disk.set('/w/release.md', '# Release notes\n\nBody.\n');
+  answers.input = SITE + '/spaces/DOC/pages/900';
+  routes = [
+    { method: 'GET', match: '/rest/api/content/900', body: { id: '900', title: 'Docs', space: { key: 'DOC' }, version: { number: 2 } } },
+    { method: 'GET', match: '/rest/api/content?title=Release%20notes&spaceKey=DOC', body: { results: [
+      { id: '12345', title: 'Release notes', space: { key: 'DOC' }, version: { number: 3 } }] } },
+    META, UPDATED
+  ];
+  result = await publishPageCommand(uri('/w/release.md'));
+  assert(result === undefined && warnings.length === 1 && warnings[0].includes('already has a page called "Release notes"'),
+    'a title taken in the space is explained instead of failing, got: ' + warnings.join(' | '));
+  assert(!sent.some((r) => r.method === 'POST' || r.method === 'PUT'), 'declining publishes nothing');
+  answers.warning = 'Publish to that page';
+  result = await publishPageCommand(uri('/w/release.md'));
+  assert(result && result.action === 'updated' && result.pageId === '12345' && !sent.some((r) => r.method === 'POST'),
+    'confirming publishes to the page that has the title');
+  assert(disk.get('/w/release.md').includes('url: ' + PAGE_URL), 'the file is bound to that page');
+
+  reset();
+  const JIRA = 'jira:\n  url: https://acme.atlassian.net/browse/PROJ-2\n  updated: 2026-10-29T09:00:00.000+0000\nkey: PROJ-2\n';
+  disk.set('/w/story.md', '---\n' + JIRA + '---\n\n# Login\n\nBody.\n');
+  answers.input = SITE + '/spaces/DOC/pages/900';
+  routes = [
+    { method: 'GET', match: '/rest/api/content/900', body: { id: '900', title: 'Docs', space: { key: 'DOC' }, version: { number: 2 } } },
+    { method: 'POST', match: '/rest/api/content', body: { id: '777', space: { key: 'DOC' }, version: { number: 1 } } }
+  ];
+  result = await publishPageCommand(uri('/w/story.md'));
+  assert(result && result.action === 'created', 'a file bound to Jira is published as a new page');
+  assert(disk.get('/w/story.md') === '---\nconfluence:\n  url: ' + SITE + '/spaces/DOC/pages/777\n  version: 1\n' + JIRA + '---\n\n# Login\n\nBody.\n',
+    'the Jira binding stays next to the new one, got:\n' + disk.get('/w/story.md'));
+
+  reset();
+  disk.set('/w/story.md', '---\n' + JIRA + 'confluence:\n  url: ' + PAGE_URL + '\n  version: 3\n---\n\n# Login\n');
+  routes = [META, UPDATED];
+  result = await publishPageCommand(uri('/w/story.md'));
+  assert(result && result.pageId === '12345', 'the Confluence binding is found below a Jira one, got: ' + JSON.stringify(result));
+  assert(disk.get('/w/story.md').includes('  version: 4\n') && disk.get('/w/story.md').includes(JIRA),
+    'only the Confluence binding is rewritten, got:\n' + disk.get('/w/story.md'));
 
   reset();
   disk.set('/w/pkg/api.md', '---\nconfluence:\n  url: ' + PAGE_URL + '\n  version: 3\n---\n\n# API\n\n## Steps\n\n- [Validation](parts/step-01.md)\n');
