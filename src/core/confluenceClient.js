@@ -172,6 +172,19 @@ async function fetchPageByTitle(cfg, site, spaceKey, title) {
   return withMermaidSources(cfg, site, pageOf(j.results[0], site), j.results[0]);
 }
 
+// A title is unique within a space, so a new page cannot take one that is already there.
+async function findPageByTitle(cfg, site, spaceKey, title) {
+  const q = '/content?title=' + encodeURIComponent(title) + '&spaceKey=' + encodeURIComponent(spaceKey) +
+    '&expand=space,version&limit=1';
+  try {
+    const j = await apiGet(cfg, site, q);
+    return j.results && j.results.length ? pageOf(j.results[0], site) : null;
+  } catch (e) {
+    if (e.message === 'not-found') return null;
+    throw e;
+  }
+}
+
 async function withMermaidSources(cfg, site, page, j) {
   const storage = j && j.body && j.body.storage && j.body.storage.value;
   if (!hasMermaid(storage)) return page;
@@ -203,6 +216,6 @@ function pageOf(j, site) {
 
 module.exports = {
   parsePageUrl, hostOf, isCloud, authFor, authHeader, apiRoot,
-  fetchPageByUrl, fetchPageById, fetchPageByTitle,
+  fetchPageByUrl, fetchPageById, fetchPageByTitle, findPageByTitle,
   fetchPageMeta, createPage, updatePage, pageWebUrl
 };

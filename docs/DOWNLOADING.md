@@ -96,7 +96,7 @@ Links that still point to Confluence remain usable in a downloaded file:
 ## Update a downloaded page
 
 A file with a `confluence:` binding can be updated to the page's current
-version. In the Markdown preview, click **↻ Pull** in the top right corner, or
+version. In the Markdown preview, click **↻ Pull from Confluence** in the top right corner, or
 run **Confluence: Pull Page** with the file open.
 
 - If the page has the version stored in the file, the extension reports that

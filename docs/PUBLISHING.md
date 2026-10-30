@@ -25,14 +25,23 @@ space: DOC
   The extension compares versions first and asks before overwriting a newer
   page, then stores the published version in the file. See
   [Changes made by someone else](#changes-made-by-someone-else).
-- **An unbound file** has no `confluence:` block. Publishing creates a page
-  under the parent whose link you provide, then adds the binding to the file.
-  To publish to a page that already exists, paste a link to that page: when
-  its title matches the file's title, the extension asks to publish to it and
-  binds the file to it.
+- **An unbound file** has no `confluence:` block. Publishing asks for a page
+  link, then what to do with it:
+  - **Create a new page under** the linked page, or
+  - **Publish to** the linked page: your file replaces its content, and the
+    page takes the file's title.
+
+  When the linked page already has the file's title, only publishing to it is
+  possible, so the extension asks just that. A title is unique within a space:
+  if another page there already has the file's title, the extension offers to
+  publish to that page instead of creating one. Either way the binding is
+  added to the file.
 
 Existing front matter is metadata, not page content. The extension preserves
-its keys and adds a new binding to the same block when needed.
+its keys and adds a new binding to the same block when needed. A `jira:` block
+of Jira to Markdown can stand next to the `confluence:` block; each extension
+reads and rewrites only its own, so one file can be published to a page and an
+issue.
 
 The first `#` heading outside a code block becomes the page title and is
 removed from the published body. If there is no level-one heading, the
@@ -57,15 +66,14 @@ the update with a version conflict and the page is left unchanged.
 
 ## Publish from the preview
 
-The Markdown preview of a bound file shows **↑ Publish** next to **↻ Pull** in its
-top right corner. Publish asks for confirmation, saves unsaved edits, and then
+The Markdown preview of a bound file shows **↑ Publish to Confluence** next to
+**↻ Pull from Confluence** in its top right corner. Publish asks for confirmation, saves unsaved edits, and then
 publishes the file as described above, including the check for newer changes
 in Confluence. Like Pull, it only acts on a file that is open in VS Code.
 
-An unbound file shows a single **↑ Publish to Confluence** button instead.
-It saves unsaved edits, asks for a link to the parent page, and creates the
-new page under it. The file then gets its `confluence:` binding, so the
-preview switches to **↻ Pull** and **↑ Publish**.
+An unbound file shows only **↑ Publish to Confluence**. It saves unsaved edits
+and asks for a page link, as described above. The file then gets its
+`confluence:` binding, so the preview shows **↻ Pull from Confluence** too.
 
 ## Split documents
 
