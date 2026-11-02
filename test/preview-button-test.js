@@ -14,6 +14,7 @@ assert(html.includes('href="vscode://beatahumeniuk.confluence-to-md/pull?file=fi
 assert(html.includes('href="vscode://beatahumeniuk.confluence-to-md/publish?file=file%3A%2F%2F%2Fw%2FMy%2520page.md"'),
   'the publish button links back to the extension with the previewed file');
 assert(html.includes('version 7'), 'the tooltip names the local version');
+assert(html.includes('Pull from Confluence') && html.includes('Publish to Confluence'), 'the buttons say where they go, got: ' + html);
 assert(html.includes('<h1>Title</h1>'), 'the page itself still renders');
 
 for (const [text, label] of [['# Title\n\nBody.\n', 'a file without front matter'],

@@ -44,7 +44,8 @@ Click **Open Visual Editor** (pencil icon) in the top right corner of a
 Markdown file to edit it like a Confluence page instead of as Markdown text.
 The toolbar has headings, bold and italic, lists and task lists, links,
 tables, code blocks, quotes, and Mermaid diagrams that you edit with a live
-preview. **↻ Pull** and **↑ Publish** are in the toolbar too.
+preview. **↻ Pull from Confluence** and **↑ Publish to Confluence** are in the
+toolbar too.
 
 The file stays plain Markdown, and the `confluence:` binding is kept as it is.
 See [Visual editor](docs/EDITING.md), including how to make it the default
@@ -53,7 +54,8 @@ editor for `.md` files.
 ## Update a page from Confluence
 
 A downloaded file can be refreshed from Confluence, like `git pull`. Open the
-Markdown preview: a file bound to a page shows a small **↻ Pull** button in its
+Markdown preview: a file bound to a page shows a small **↻ Pull from Confluence**
+button in its
 top right corner. You can also run **Confluence: Pull Page** in the editor.
 
 The extension compares versions first. If the file is up to date, nothing
@@ -67,16 +69,20 @@ details.
 ## Publish a page
 
 Open a Markdown file and run **Confluence: Publish Page**. For a bound file you
-can also click **↑ Publish** in the top right corner of the Markdown preview; it
-asks first and saves unsaved edits before publishing. A file without a binding
-shows **↑ Publish to Confluence** there instead, which asks for the parent page.
+can also click **↑ Publish to Confluence** in the top right corner of the
+Markdown preview; it asks first and saves unsaved edits before publishing. For a
+file without a binding the same button asks for a page link.
 
 - A file with a `confluence:` front matter block updates its bound page. If
   someone changed the page since your version, the extension asks first and
   offers **Compare**, which shows their changes next to your file.
-- A file without a binding creates a page under the parent whose link you
-  provide. The new binding is added to the file. If the page you link already
-  has the file's title, the extension offers to publish to that page instead.
+- A file without a binding asks for a page link, then whether to create a new
+  page under it or to publish to that page, replacing its content. The binding
+  is added to the file. If the space already has a page with the file's title,
+  which Confluence does not allow twice, the extension offers to publish to
+  that page instead.
+- A file can be bound to a Confluence page and a Jira issue (Jira to Markdown)
+  at once, so one file can be published to both.
 - Links to other Markdown files point at their Confluence pages. Linked files
   that are not in Confluence yet can be published in the same step, as pages
   under the page that links to them.

@@ -4,7 +4,8 @@ const disk = new Map();
 const info = [];
 const errors = [];
 const warnings = [];
-const answers = { warning: undefined, input: undefined };
+const picks = [];
+const answers = { pick: (items) => items[0], warning: undefined, input: undefined };
 const commands = [];
 let routes = [];
 let docs = [];
@@ -59,6 +60,7 @@ const vscodeStub = {
     showErrorMessage: (message) => { errors.push(message); },
     showWarningMessage: async (message) => { warnings.push(message); return answers.warning; },
     showInputBox: async () => answers.input,
+    showQuickPick: async (items, options) => { picks.push({ items, options }); return answers.pick(items); },
     withProgress: (options, task) => task()
   },
   workspace: {

@@ -52,7 +52,7 @@ To make the text editor the default again, choose **Text Editor** in the same
 | Undo, redo | Undo or redo your last edits |
 | **💾 Save** | Save the file, like Ctrl+S. It reads **✓ Saved** when there is nothing to save. |
 | **</> Text editor** | Leave the visual editor and show the file as text |
-| **↻ Pull**, **↑ Publish** | Same as the preview buttons. Shown only for a file bound to a Confluence page; publish a new page with **Confluence: Publish Page**. |
+| **↻ Pull from Confluence**, **↑ Publish to Confluence** | Same as the preview buttons. Shown only for a file bound to a Confluence page; publish a new page with **Confluence: Publish Page**. |
 
 In a list, **Tab** nests the item under the one above it and **Shift+Tab**
 moves it back out, wherever the cursor is in the item.
