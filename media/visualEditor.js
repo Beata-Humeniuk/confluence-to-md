@@ -229,6 +229,96 @@
     vscode.postMessage({ type: 'pastePlain' });
   }, true);
 
+  // A link or image path relative to the folder of this file, for a URL of the
+  // same webview resource host (as the Markdown preview writes them). Other
+  // URLs are returned unchanged.
+  function relativeUrl(value) {
+    let target;
+    let base;
+    try {
+      target = new URL(value);
+      base = new URL(linkBase);
+    } catch (e) {
+      return value;
+    }
+    if (target.origin !== base.origin || !/^https?:$/.test(target.protocol)) return value;
+    const from = base.pathname.split('/').slice(0, -1);
+    const to = target.pathname.split('/');
+    let common = 0;
+    while (common < from.length && common < to.length - 1 && from[common] === to[common]) common += 1;
+    const path = from.slice(common).map(() => '..').concat(to.slice(common)).join('/');
+    return path + target.search + target.hash || '.';
+  }
+
+  const PANEL_KIND = /\bconfluence-to-md-panel-(note|tip|important|warning|caution)\b/;
+  const PREVIEW_MARKS = '.code-line, [data-line], .confluence-to-md-panel, .confluence-to-md-actions';
+
+  // The Markdown for HTML copied from the Markdown preview, or null for HTML
+  // from elsewhere. The preview shows panels, its Confluence buttons and
+  // paths to other files in its own way; this turns them back into what the
+  // file had.
+  function previewMarkdown(html) {
+    const body = new DOMParser().parseFromString(html, 'text/html').body;
+    const links = Array.from(body.querySelectorAll('a[href], img[src]'));
+    const rewritten = links.filter((element) => {
+      const name = element.tagName === 'A' ? 'href' : 'src';
+      const value = element.getAttribute(name);
+      const relative = relativeUrl(value);
+      if (relative === value) return false;
+      element.setAttribute(name, relative);
+      return true;
+    });
+    if (!rewritten.length && !body.querySelector(PREVIEW_MARKS)) return null;
+
+    const lute = editor.vditor.lute;
+    body.querySelectorAll('.confluence-to-md-actions').forEach((element) => element.remove());
+    body.querySelectorAll('[style]').forEach((element) => element.removeAttribute('style'));
+    // Panels, the innermost first, become placeholders filled in afterwards.
+    const panels = [];
+    for (const panel of Array.from(body.querySelectorAll('.confluence-to-md-panel')).reverse()) {
+      const kind = (PANEL_KIND.exec(panel.className) || [null, 'note'])[1].toUpperCase();
+      const titleElement = panel.querySelector(':scope > .confluence-to-md-panel-title');
+      const title = titleElement ? titleElement.textContent.trim() : '';
+      if (titleElement) titleElement.remove();
+      const marker = '> [!' + kind + ']' + (title && title.toLowerCase() !== kind.toLowerCase() ? ' ' + title : '');
+      const content = lute.HTML2Md(panel.innerHTML).trim();
+      const lines = [marker].concat(content ? content.split('\n').map((line) => ('> ' + line).trimEnd()) : []);
+      const placeholder = document.createElement('p');
+      placeholder.textContent = 'confluencetomdpanel' + panels.length + 'x';
+      panels.push(lines);
+      panel.replaceWith(placeholder);
+    }
+    let md = lute.HTML2Md(body.innerHTML);
+    for (let i = panels.length - 1; i >= 0; i--) {
+      md = md.replace(new RegExp('^(.*)confluencetomdpanel' + i + 'x[ \\t]*$', 'm'), (m, prefix) =>
+        panels[i].map((line) => (prefix + line).trimEnd()).join('\n'));
+    }
+    return md.replace(/\n+$/, '');
+  }
+
+  let ownPaste = false;
+
+  // Copied from the preview, the text is pasted as the Markdown it shows.
+  root.addEventListener('paste', (e) => {
+    if (ownPaste || !editor || !e.clipboardData) return;
+    const element = caretElement();
+    if (element && element.closest('code, [data-type="code-block"]')) return;
+    const html = e.clipboardData.getData('text/html');
+    const md = html ? previewMarkdown(html) : null;
+    if (md === null) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!md) return;
+    const data = new DataTransfer();
+    data.setData('text/plain', md);
+    ownPaste = true;
+    try {
+      e.target.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+    } finally {
+      ownPaste = false;
+    }
+  }, true);
+
   const HEADING = /^H[1-6]$/;
 
   function currentStyle() {

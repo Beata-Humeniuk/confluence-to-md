@@ -5,6 +5,17 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-11-06
+
+### Fixed
+
+- Text copied from the Markdown preview and pasted into the visual editor keeps
+  what the file had: panels stay panels (`> [!WARNING]`), links and images to
+  other files keep paths relative to the file pasted into, and the preview's
+  **Pull from Confluence** and **Publish to Confluence** buttons are left out.
+  Before, panels became plain paragraphs, the buttons were pasted as links,
+  and paths became `vscode-resource` addresses that work nowhere else.
+
 ## [1.11.0] - 2026-10-30
 
 ### Added
