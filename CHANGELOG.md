@@ -15,6 +15,9 @@ follows [Semantic Versioning](https://semver.org/).
   **Pull from Confluence** and **Publish to Confluence** buttons are left out.
   Before, panels became plain paragraphs, the buttons were pasted as links,
   and paths became `vscode-resource` addresses that work nowhere else.
+- A table wider than the text column in the visual editor uses the free room
+  at the sides of the window and wraps its cells when even that is too narrow.
+  Before, it was cut off at the column and had to be scrolled sideways.
 - Pasting over selected text in the visual editor replaces it. Before, VS Code
   pasted the text next to the selection and the selected text stayed.
 

@@ -172,6 +172,7 @@
         setUpStyleMenu();
         setUpListButtons();
         watchBlockToolbar();
+        scheduleWiden();
         showDirty();
         vscode.postMessage({ type: 'ready' });
       }
@@ -196,7 +197,47 @@
     }
   }
 
-  new MutationObserver(markMergedCells).observe(root, { childList: true, subtree: true, characterData: true });
+  // The same margin Vditor keeps at the sides of the text.
+  const GUTTER = 35;
+
+  // The text stays in a column of readable width. A table wider than that
+  // column uses the room at its sides, up to the window's width, and wraps
+  // its cells when even that is too narrow, instead of scrolling sideways.
+  function widenTables() {
+    const area = editArea();
+    if (!area) return;
+    const style = getComputedStyle(area);
+    const column = area.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const room = Math.max(column, area.clientWidth - 2 * GUTTER);
+    for (const table of area.querySelectorAll(':scope > table')) {
+      table.classList.remove('confluence-to-md-wide');
+      table.style.width = '';
+      table.style.marginLeft = '';
+      // Its width when no cell wraps.
+      table.classList.add('confluence-to-md-measure');
+      const natural = table.scrollWidth;
+      table.classList.remove('confluence-to-md-measure');
+      if (natural <= column + 1 || room <= column) continue;
+      const width = Math.min(natural, room);
+      table.classList.add('confluence-to-md-wide');
+      table.style.width = width + 'px';
+      table.style.marginLeft = -Math.round((width - column) / 2) + 'px';
+    }
+  }
+
+  let widening = null;
+
+  function scheduleWiden() {
+    cancelAnimationFrame(widening);
+    widening = requestAnimationFrame(widenTables);
+  }
+
+  new MutationObserver(() => {
+    markMergedCells();
+    scheduleWiden();
+  }).observe(root, { childList: true, subtree: true, characterData: true });
+  // Vditor sets the column's padding again after the window is resized.
+  window.addEventListener('resize', () => setTimeout(scheduleWiden, 0));
 
   // VS Code changes the body class when the colour theme changes.
   new MutationObserver(() => {
