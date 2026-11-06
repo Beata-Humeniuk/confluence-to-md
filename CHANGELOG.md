@@ -15,6 +15,8 @@ follows [Semantic Versioning](https://semver.org/).
   **Pull from Confluence** and **Publish to Confluence** buttons are left out.
   Before, panels became plain paragraphs, the buttons were pasted as links,
   and paths became `vscode-resource` addresses that work nowhere else.
+- Pasting over selected text in the visual editor replaces it. Before, VS Code
+  pasted the text next to the selection and the selected text stayed.
 
 ## [1.11.0] - 2026-10-30
 

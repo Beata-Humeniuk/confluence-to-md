@@ -298,25 +298,53 @@
 
   let ownPaste = false;
 
+  function pasteData(data, target) {
+    ownPaste = true;
+    try {
+      target.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
+    } finally {
+      ownPaste = false;
+    }
+  }
+
   // Copied from the preview, the text is pasted as the Markdown it shows.
+  //
+  // VS Code pastes into a webview with document.execCommand('paste'). The
+  // editor removes the selected text with execCommand('delete'), which the
+  // browser refuses inside another execCommand, so the text was pasted next
+  // to the selection. The selection is removed first, outside that call.
   root.addEventListener('paste', (e) => {
     if (ownPaste || !editor || !e.clipboardData) return;
     const element = caretElement();
     if (element && element.closest('code, [data-type="code-block"]')) return;
     const html = e.clipboardData.getData('text/html');
     const md = html ? previewMarkdown(html) : null;
-    if (md === null) return;
+    const selection = window.getSelection();
+    const replace = !selection.isCollapsed && !!element;
+    if (md === null && !replace) return;
     e.preventDefault();
     e.stopPropagation();
-    if (!md) return;
+    if (md === '') return;
     const data = new DataTransfer();
-    data.setData('text/plain', md);
-    ownPaste = true;
-    try {
-      e.target.dispatchEvent(new ClipboardEvent('paste', { clipboardData: data, bubbles: true, cancelable: true }));
-    } finally {
-      ownPaste = false;
+    if (md !== null) {
+      data.setData('text/plain', md);
+    } else {
+      for (const type of ['text/html', 'text/plain', 'text/rtf']) {
+        const value = e.clipboardData.getData(type);
+        if (value) data.setData(type, value);
+      }
+      for (const file of Array.from(e.clipboardData.files || [])) data.items.add(file);
     }
+    const target = e.target;
+    if (!replace) {
+      pasteData(data, target);
+      return;
+    }
+    setTimeout(() => {
+      editor.vditor.wysiwyg.preventInput = true;
+      document.execCommand('delete', false, '');
+      pasteData(data, target.isConnected ? target : editArea());
+    }, 0);
   }, true);
 
   const HEADING = /^H[1-6]$/;
