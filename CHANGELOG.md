@@ -5,6 +5,22 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.11.1] - 2026-11-06
+
+### Fixed
+
+- Text copied from the Markdown preview and pasted into the visual editor keeps
+  what the file had: panels stay panels (`> [!WARNING]`), links and images to
+  other files keep paths relative to the file pasted into, and the preview's
+  **Pull from Confluence** and **Publish to Confluence** buttons are left out.
+  Before, panels became plain paragraphs, the buttons were pasted as links,
+  and paths became `vscode-resource` addresses that work nowhere else.
+- A table wider than the text column in the visual editor uses the free room
+  at the sides of the window and wraps its cells when even that is too narrow.
+  Before, it was cut off at the column and had to be scrolled sideways.
+- Pasting over selected text in the visual editor replaces it. Before, VS Code
+  pasted the text next to the selection and the selected text stayed.
+
 ## [1.11.0] - 2026-10-30
 
 ### Added

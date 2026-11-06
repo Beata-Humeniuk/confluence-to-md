@@ -216,3 +216,20 @@ body {
 .vditor-reset ol ol ol ol {
   list-style-type: decimal;
 }
+
+/* A table wider than the text column (see widenTables): its cells wrap
+   instead of making it scroll sideways. */
+.vditor-reset table.confluence-to-md-wide td,
+.vditor-reset table.confluence-to-md-wide th {
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.vditor-reset table.confluence-to-md-measure td,
+.vditor-reset table.confluence-to-md-measure th,
+.vditor-reset table.confluence-to-md-measure td *,
+.vditor-reset table.confluence-to-md-measure th * {
+  white-space: nowrap !important;
+  word-break: keep-all !important;
+  overflow-wrap: normal !important;
+}
