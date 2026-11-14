@@ -33,8 +33,28 @@
   const CALLOUT = /^(\s*> \[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\])[ \t]*(?:\p{Extended_Pictographic}\uFE0F?[ \t]*)?(.*)$/gmu;
 
   function markdown() {
-    return editor.getValue().replace(CALLOUT, (m, marker, type, title) =>
-      title.trim() && title.trim().toLowerCase() !== type.toLowerCase() ? marker + ' ' + title.trim() : marker);
+    return cellBreaksAsInFile(editor.getValue().replace(CALLOUT, (m, marker, type, title) =>
+      title.trim() && title.trim().toLowerCase() !== type.toLowerCase() ? marker + ' ' + title.trim() : marker));
+  }
+
+  // A line break in a table cell is <br> in the file. The editor shows it as
+  // a line break and writes it as <br />; keep the file's <br>, but not in
+  // inline code, where the text is what the cell shows. The cell gets the
+  // removed characters back as spaces, so the columns stay aligned.
+  function cellBreaksAsInFile(text) {
+    return text.replace(/^[ \t]*\|.*$/gm, (row) => {
+      let removed = 0;
+      return row.split(/(`+[^`]*`+)/).map((part, i) => i % 2 ? part
+        : part.replace(/<br\s*\/>|(^|[^\\])\|/gi, (m, before) => {
+          if (before === undefined) {
+            removed += m.length - 4;
+            return '<br>';
+          }
+          const pad = ' '.repeat(removed);
+          removed = 0;
+          return before + pad + '|';
+        })).join('');
+    });
   }
 
   function changes() {
@@ -232,7 +252,18 @@
     widening = requestAnimationFrame(widenTables);
   }
 
+  const BREAK_TAG = /^<br\s*\/?>$/i;
+
+  // Vditor shows a <br> from the file as a grey <br> label in the cell. Show
+  // it as the line break it is, as Vditor does for Enter typed in a cell.
+  function showCellBreaks() {
+    for (const tag of root.querySelectorAll('.vditor-wysiwyg td code[data-type="html-inline"], .vditor-wysiwyg th code[data-type="html-inline"]')) {
+      if (BREAK_TAG.test(tag.textContent.replace(/\u200b/g, '').trim())) tag.replaceWith(document.createElement('br'));
+    }
+  }
+
   new MutationObserver(() => {
+    showCellBreaks();
     markMergedCells();
     scheduleWiden();
   }).observe(root, { childList: true, subtree: true, characterData: true });
@@ -650,6 +681,39 @@
   // Like in the text editor, Ctrl/Cmd+click opens a link and a plain click edits it.
   window.addEventListener('mousedown', (e) => {
     modifierClick = e.ctrlKey || e.metaKey;
+  }, true);
+
+  // A click in a code block puts the caret where it was, which is already in
+  // view, but the view could jump to the end of the block. Keep it where it
+  // was for a moment after the click, unless the mouse drags a selection or
+  // a key moves the caret.
+  const KEEP_VIEW = 400;
+  let keptView = null;
+
+  root.addEventListener('mousedown', (e) => {
+    const area = editArea();
+    const code = e.button === 0 && e.target.closest &&
+      e.target.closest('[data-type="code-block"] > pre.vditor-wysiwyg__pre');
+    keptView = area && code ? { area, top: area.scrollTop, x: e.clientX, y: e.clientY, until: 0 } : null;
+  }, true);
+
+  window.addEventListener('mouseup', () => {
+    if (keptView) keptView.until = Date.now() + KEEP_VIEW;
+  }, true);
+
+  window.addEventListener('mousemove', (e) => {
+    if (keptView && e.buttons && Math.abs(e.clientX - keptView.x) + Math.abs(e.clientY - keptView.y) > 4) keptView = null;
+  }, true);
+
+  for (const type of ['keydown', 'wheel']) window.addEventListener(type, () => { keptView = null; }, true);
+
+  root.addEventListener('scroll', (e) => {
+    if (!keptView || e.target !== keptView.area) return;
+    if (keptView.until && Date.now() > keptView.until) {
+      keptView = null;
+      return;
+    }
+    if (keptView.area.scrollTop !== keptView.top) keptView.area.scrollTop = keptView.top;
   }, true);
 
   window.addEventListener('message', (event) => {

@@ -5,6 +5,16 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.11.2] - 2026-11-13
+
+### Fixed
+
+- A line break in a table cell (`<br>` in the file) is shown in the visual
+  editor as a line break. Before, the cell showed a grey `<br>` label. The
+  file keeps `<br>`, and the table's columns stay aligned.
+- Clicking in a code block in the visual editor no longer moves the view.
+  Before, it could jump to the end of the block.
+
 ## [1.11.1] - 2026-11-06
 
 ### Fixed
