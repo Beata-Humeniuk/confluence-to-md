@@ -168,8 +168,9 @@ assert(jira.split('\n').filter((l) => l.trim()).length === 3,
 assert(!convertHtmlToMd('<p>a</p><script>alert(1)</script><p>b</p>').markdown.includes('alert'),
   'a script on the page does not reach the file');
 
+// A list of links to the page's sections, written by hand.
 const tocView = [
-  '<div class="toc-macro rbtoc"><ul>',
+  '<div><ul>',
   '<li><a href="#ApiSpec-Scopeofchanges">Scope of changes</a></li>',
   '<li><a href="#ApiSpec-Za%C5%82%C4%85czniki">Załączniki</a>',
   '<ul><li><a href="#ApiSpec-S%C5%82ownikpoj%C4%99%C4%87">Słownik pojęć</a></li></ul></li>',

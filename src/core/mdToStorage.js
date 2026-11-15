@@ -6,6 +6,8 @@ const { escapeXml, cdata } = require('./markup');
 const { tableSpans } = require('./tableSpans');
 const { panels, lineBreakTags, cellPanels } = require('./panels');
 const { commentXml } = require('./comments');
+const { expandBlocks } = require('./expand');
+const { tocMacro } = require('./tocMacro');
 
 function codeMacro(lang, code) {
   return '<ac:structured-macro ac:name="code" ac:schema-version="1">' +
@@ -101,7 +103,8 @@ function mdToStorage(md, options) {
   const opts = options || {};
   const mermaidMacro = String(opts.mermaidMacro || '').trim();
   const mdit = new MarkdownIt({ html: false, xhtmlOut: true, linkify: true }).use(tableSpans)
-    .use(panels, { storage: true }).use(lineBreakTags).use(htmlComments);
+    .use(panels, { storage: true }).use(lineBreakTags).use(htmlComments).use(expandBlocks)
+    .use(tocMacro, { storage: true });
   mdit.renderer.rules.fence = (tokens, idx) => {
     const info = (tokens[idx].info || '').trim().split(/\s+/)[0] || '';
     if (mermaidMacro && info.toLowerCase() === 'mermaid') {

@@ -121,7 +121,9 @@ convert that HTML, with extra rules for:
 - tables and strikethrough;
 - task lists;
 - Confluence page links and images;
-- info, tip, note, and warning panels as alerts, see [Panels](#panels).
+- info, tip, note, and warning panels as alerts, see [Panels](#panels);
+- expand macros and the table of contents, see
+  [Expand and table of contents](#expand-and-table-of-contents).
 
 Any `ac:` and `ri:` macros that reach the converter unrendered are turned into
 HTML first, so an unknown macro keeps its text when possible.
@@ -180,6 +182,35 @@ Publishing turns the list lines back into a list in the cell:
 A mention of a person is downloaded as a link to their profile, such as
 `[@Beata](https://example.atlassian.net/wiki/people/…)`, and published as a
 mention again (Confluence Cloud).
+
+### Expand and table of contents
+
+An expand macro (a section the reader opens with a click) is written as
+`<details>`, which GitHub and the Markdown preview also show as a section that
+opens with a click. Its title is the `<summary>`, and the text between the
+lines is ordinary Markdown:
+
+```markdown
+<details>
+<summary>Request examples</summary>
+
+The section's text, with **formatting**, lists, tables, and code.
+
+</details>
+```
+
+Keep `<details>`, `<summary>…</summary>`, and `</details>` on lines of their
+own, with an empty line before the text. Expands can be nested. Publishing
+turns each `<details>` back into an expand macro.
+
+The table of contents macro is written as `[toc]` on a line of its own.
+Confluence builds the list from the page's headings, so the file keeps only
+where it goes, and publishing turns `[toc]` back into the macro. The Markdown
+preview and the visual editor show the page's headings in its place. Options
+of the macro, such as the heading levels it lists, are not kept.
+
+A table cell holds a single line, so an expand in a cell is downloaded as its
+title in bold followed by its text.
 
 ### Merged cells and alignment
 
@@ -266,10 +297,11 @@ features that Markdown cannot represent.
 | Headings and inline formatting | Custom panels (other colours or icons) become plain blockquotes |
 | Code blocks with languages | Images are omitted or become attachment links |
 | Mermaid diagrams (with a Mermaid app) | |
-| Tables, merged cells, column alignment | TOC and similar macros are removed |
+| Tables, merged cells, column alignment | Options of the table of contents macro; page tree and children macros are removed |
 | Lists, including task lists | Layouts and unknown macros keep only their text |
 | Links, panels with titles, mentions (Cloud) | Alignment of single cells that differs from their column |
+| Expand macros and the table of contents | An expand in a table cell becomes its title and text |
 
-Confluence TOC macros produce links to Confluence-specific anchors. During
-downloading, the extension matches those links to headings and rewrites them
-Markdown preview anchors. Links with no matching heading remain unchanged.
+Links to sections of the page in Confluence use Confluence-specific anchors.
+During downloading, the extension matches those links to headings and rewrites
+them to Markdown preview anchors. Links with no matching heading remain unchanged.

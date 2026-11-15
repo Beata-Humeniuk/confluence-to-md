@@ -23,7 +23,9 @@ function storageToHtml(input) {
     const code = body.match(/<ac:plain-text-body>([\s\S]*?)<\/ac:plain-text-body>/);
     return code ? '<pre data-code-language="mermaid">' + cdataToHtml(code[1]) + '</pre>' : '';
   });
-  s = s.replace(/<ac:structured-macro[^>]*ac:name="(toc|anchor|children|pagetree)"[^>]*(?:\/>|>[\s\S]*?<\/ac:structured-macro>)/g, '');
+  s = s.replace(/<ac:structured-macro[^>]*ac:name="toc"[^>]*(?:\/>|>[\s\S]*?<\/ac:structured-macro>)/g,
+    '<div class="toc-macro"></div>');
+  s = s.replace(/<ac:structured-macro[^>]*ac:name="(anchor|children|pagetree)"[^>]*(?:\/>|>[\s\S]*?<\/ac:structured-macro>)/g, '');
   s = s.replace(/<ac:structured-macro[^>]*ac:name="(info|note|warning|tip|panel)"[^>]*>([\s\S]*?)<\/ac:structured-macro>/g,
     (m, kind, body) => {
       const rich = body.match(/<ac:rich-text-body>([\s\S]*?)<\/ac:rich-text-body>/);
@@ -34,6 +36,13 @@ function storageToHtml(input) {
   s = s.replace(/<ac:structured-macro[^>]*ac:name="status"[^>]*>([\s\S]*?)<\/ac:structured-macro>/g, (m, body) => {
     const t = body.match(/<ac:parameter[^>]*ac:name="title"[^>]*>([\s\S]*?)<\/ac:parameter>/);
     return t ? '<code>' + t[1] + '</code>' : '';
+  });
+  // After the macros it may hold, so that its own end is the next one.
+  s = s.replace(/<ac:structured-macro[^>]*ac:name="expand"[^>]*>([\s\S]*?)<\/ac:structured-macro>/g, (m, body) => {
+    const rich = body.match(/<ac:rich-text-body>([\s\S]*?)<\/ac:rich-text-body>/);
+    const title = body.match(/<ac:parameter[^>]*ac:name="title"[^>]*>([\s\S]*?)<\/ac:parameter>/);
+    return '<div class="expand-container"><div class="expand-control"><span class="expand-control-text">' +
+      (title ? title[1] : '') + '</span></div><div class="expand-content">' + (rich ? rich[1] : '') + '</div></div>';
   });
   s = s.replace(/<ac:structured-macro[^>]*>([\s\S]*?)<\/ac:structured-macro>/g, (m, body) => {
     const rich = body.match(/<ac:rich-text-body>([\s\S]*?)<\/ac:rich-text-body>/);

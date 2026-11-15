@@ -70,6 +70,14 @@ body {
   font-style: italic;
 }
 
+/* The closing line of an expand (</details>) shows nothing of its own. */
+.vditor-wysiwyg .confluence-to-md-expand-end .vditor-wysiwyg__preview::before {
+  content: "\25B4  end of expand";
+  color: var(--vscode-descriptionForeground, #888);
+  font-size: 0.85em;
+  font-style: italic;
+}
+
 /* Vditor labels headings and code blocks (H1, </>) in the left margin. */
 .vditor-wysiwyg > .vditor-reset > h1::before,
 .vditor-wysiwyg > .vditor-reset > h2::before,

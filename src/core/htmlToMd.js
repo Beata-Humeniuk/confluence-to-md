@@ -4,6 +4,8 @@ const { pageRefOfHref } = require('./pageLink');
 const { storageToHtml, cleanupConfluenceHtml } = require('./storageHtml');
 const { rewriteTocAnchors } = require('./tocAnchors');
 const { panelMarkdown } = require('./panels');
+const { expandMarkdown } = require('./expand');
+const { TOC_MARKDOWN } = require('./tocMacro');
 
 function pageLinkOf(href, node, origin) {
   const ref = pageRefOfHref(href, origin);
@@ -51,6 +53,40 @@ function cellLines(content) {
   return content.replace(/\s*\n\s*/g, '\n').replace(CELL_BREAKS, '\n');
 }
 
+function hasClass(node, name) {
+  return !!node && node.nodeType === 1 && (' ' + (node.getAttribute('class') || '') + ' ')
+    .replace(/\s+/g, ' ').indexOf(' ' + name + ' ') >= 0;
+}
+
+function macroName(node) {
+  return node && node.nodeType === 1 ? node.getAttribute('data-macro-name') || '' : '';
+}
+
+function isToc(node) {
+  return !!node && node.nodeType === 1 && (hasClass(node, 'toc-macro') || macroName(node) === 'toc');
+}
+
+function isExpand(node) {
+  return !!node && node.nodeType === 1 && (node.nodeName === 'DETAILS' ||
+    hasClass(node, 'expand-container') || macroName(node) === 'expand');
+}
+
+function isExpandTitle(node) {
+  return isExpand(node.parentNode) && (node.nodeName === 'SUMMARY' || hasClass(node, 'expand-control'));
+}
+
+function expandTitle(node) {
+  const control = Array.from(node.childNodes).find(isExpandTitle);
+  if (!control) return '';
+  const text = control.nodeName === 'SUMMARY' ? control
+    : control.querySelector('.expand-control-text') || control;
+  return String(text.textContent || '').replace(/\s+/g, ' ').trim();
+}
+
+function tocMarkdown(node) {
+  return isInCell(node) ? TOC_MARKDOWN : '\n\n' + TOC_MARKDOWN + '\n\n';
+}
+
 function inlineCode(text) {
   const longest = Math.max(0, ...(text.match(/`+/g) || []).map((run) => run.length));
   const fence = '`'.repeat(longest + 1);
@@ -67,7 +103,13 @@ function convertHtmlToMd(html, options) {
     codeBlockStyle: 'fenced',
     bulletListMarker: '-',
     emDelimiter: '*',
-    hr: '---'
+    hr: '---',
+    // Confluence on Cloud fills its table of contents in the browser, so the
+    // page's HTML has an empty element where it goes.
+    blankReplacement: (content, node) => {
+      if (isToc(node)) return tocMarkdown(node);
+      return node.isBlock ? '\n\n' : '';
+    }
   });
   td.use(gfm);
 
@@ -75,6 +117,26 @@ function convertHtmlToMd(html, options) {
   // the preview and the visual editor.
   const escape = td.escape.bind(td);
   td.escape = (text) => escape(text).replace(/<(?=[A-Za-z/!?])/g, '\\<');
+
+  td.addRule('confluenceToc', {
+    filter: isToc,
+    replacement: (content, node) => tocMarkdown(node)
+  });
+
+  td.addRule('confluenceExpandTitle', {
+    filter: isExpandTitle,
+    replacement: () => ''
+  });
+
+  // A cell holds no <details>, so there the title is a bold line above the text.
+  td.addRule('confluenceExpand', {
+    filter: isExpand,
+    replacement: (content, node) => {
+      const title = expandTitle(node);
+      if (isInCell(node)) return '\n\n' + (title ? '**' + td.escape(title) + '**\n\n' : '') + content.trim() + '\n\n';
+      return '\n\n' + expandMarkdown(title, content) + '\n\n';
+    }
+  });
 
   td.addRule('mdComment', {
     filter: (node) => node.nodeName === 'SPAN' && node.hasAttribute('data-md-comment'),

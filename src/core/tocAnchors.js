@@ -72,4 +72,4 @@ function rewriteTocAnchors(markdown) {
   }).join('\n');
 }
 
-module.exports = { rewriteTocAnchors };
+module.exports = { rewriteTocAnchors, mdAnchorOf };

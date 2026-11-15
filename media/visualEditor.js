@@ -168,7 +168,7 @@
         math: { inlineDigit: false },
         markdown: {
           linkBase,
-          toc: false,
+          toc: true,
           footnotes: true,
           mark: false,
           sup: false,
@@ -262,9 +262,23 @@
     }
   }
 
+  const EXPAND_END = /^<\/details>$/i;
+
+  // Vditor shows the HTML lines of an expand (<details> in the file) as
+  // blocks of their own, and the closing one is empty. Label it, so that the
+  // end of the section can be seen.
+  function markExpandEnds() {
+    for (const block of root.querySelectorAll('.vditor-wysiwyg [data-type="html-block"]')) {
+      const code = block.querySelector('code');
+      const end = !!code && EXPAND_END.test(code.textContent.replace(/\u200b/g, '').trim());
+      block.classList.toggle('confluence-to-md-expand-end', end);
+    }
+  }
+
   new MutationObserver(() => {
     showCellBreaks();
     markMergedCells();
+    markExpandEnds();
     scheduleWiden();
   }).observe(root, { childList: true, subtree: true, characterData: true });
   // Vditor sets the column's padding again after the window is resized.

@@ -7,6 +7,7 @@ const { provideDocumentLinks, openPageLinkCommand } = require('./editor/document
 const { previewButtons } = require('./core/previewButton');
 const { tableSpans } = require('./core/tableSpans');
 const { panels } = require('./core/panels');
+const { tocMacro } = require('./core/tocMacro');
 const { PAGE_DIFF_SCHEME, pageDiffContentProvider } = require('./editor/pageDiff');
 const { registerVisualEditor, openVisualEditorCommand, openMarkdownSourceCommand } = require('./editor/visualEditor');
 
@@ -24,7 +25,7 @@ function activate(context) {
     vscode.workspace.registerTextDocumentContentProvider(PAGE_DIFF_SCHEME, pageDiffContentProvider)
   );
   return {
-    extendMarkdownIt: (md) => previewButtons(panels(tableSpans(md)),
+    extendMarkdownIt: (md) => previewButtons(tocMacro(panels(tableSpans(md))),
       { uriScheme: vscode.env.uriScheme, extensionId: context.extension.id })
   };
 }
