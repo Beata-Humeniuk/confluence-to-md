@@ -5,6 +5,21 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.13.0] - 2026-11-15
+
+### Added
+
+- Expand macros (sections the reader opens with a click) are downloaded as
+  `<details>` with the title in `<summary>`, and published as expand macros
+  again. Before, they were downloaded as plain text, and publishing left the
+  section always open. The Markdown preview shows them as sections that open
+  with a click, and the visual editor marks where each one ends.
+- The table of contents macro is downloaded as `[toc]` and published as the
+  macro again. Before, it was downloaded as a list of links, or left out on
+  Confluence Cloud, and was no longer a table of contents after publishing.
+  The Markdown preview and the visual editor show the page's headings in its
+  place.
+
 ## [1.12.0] - 2026-11-15
 
 ### Added

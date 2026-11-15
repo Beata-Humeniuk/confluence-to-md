@@ -58,3 +58,14 @@ ol ol ol {
 ol ol ol ol {
   list-style-type: decimal;
 }
+
+/* [toc] in the file: Confluence's table of contents, built from the headings. */
+.confluence-to-md-toc {
+  margin: 0 0 16px;
+  padding: 4px 12px;
+  border-left: 4px solid var(--vscode-textBlockQuote-border, rgba(127, 127, 127, 0.5));
+}
+
+.confluence-to-md-toc ul {
+  margin: 4px 0;
+}

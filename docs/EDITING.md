@@ -80,6 +80,14 @@ with text. Confluence and the Markdown preview show the cells merged. See
 To center or right-align, click a cell and use the alignment buttons that
 appear above the table. Markdown aligns the whole column, not single cells.
 
+## Expand and table of contents
+
+An expand (`<details>` in the file) is shown as its title, which opens and
+closes the section, with the section's text below it as ordinary text to
+edit. A grey "end of expand" line marks where the section ends. `[toc]` is
+shown as the list of the page's headings. See
+[Expand and table of contents](PUBLISHING.md#expand-and-table-of-contents).
+
 ## Mermaid diagrams
 
 A Mermaid block is shown as the diagram. Click the diagram to edit its code:
