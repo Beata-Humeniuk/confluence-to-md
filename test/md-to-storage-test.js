@@ -105,4 +105,12 @@ assert(anchored.includes('<ac:link ac:anchor="1. Chapter one">' +
   '<ac:link-body>Country</ac:link-body></ac:link>'), 'in-page anchor -> ac:link with ac:anchor');
 assert(!anchored.includes('<a href="#'), 'no raw anchor href left');
 
+const commented = mdToStorage('| Field | Note |\n|---|---|\n| prd | <!-- TODO: my note --> |\n\n' +
+  'Text <!-- hidden --> stays, `<!-- in code -->` too.\n\n<!-- a block\nover two lines -->\n\nAfter.\n\n```\n<!-- fenced -->\n```\n');
+assert(!commented.includes('TODO') && !commented.includes('hidden') && !commented.includes('two lines'),
+  'HTML comments are not published, got: ' + commented);
+assert(commented.includes('<code>&lt;!-- in code --&gt;</code>'), 'a comment in inline code is kept');
+assert(commented.includes('<![CDATA[<!-- fenced -->]]>'), 'a comment in a code block is kept');
+assert(commented.includes('<p>After.</p>') && !commented.includes('<p></p>'), 'a comment block leaves no empty paragraph');
+
 console.log('PASS: md->storage converter + front matter ok');

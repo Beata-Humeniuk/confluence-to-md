@@ -5,6 +5,14 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.11.3] - 2026-11-15
+
+### Fixed
+
+- An HTML comment in the file (`<!-- note -->`) is not published to
+  Confluence, also in a table cell. Before, it was published as visible text.
+  A comment in code is published as written.
+
 ## [1.11.2] - 2026-11-13
 
 ### Fixed

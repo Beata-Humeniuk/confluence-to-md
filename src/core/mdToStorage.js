@@ -66,11 +66,36 @@ function cellAlignment(html) {
       '<p style="text-align: ' + align + ';">' + body + '</p></' + tag + '>');
 }
 
+// An HTML comment is a note for whoever edits the file, as in any Markdown
+// preview, so it is left out of the page. Code keeps it as written.
+function htmlComments(md) {
+  md.inline.ruler.before('html_inline', 'html_comment', (state, silent) => {
+    if (!state.src.startsWith('<!--', state.pos)) return false;
+    const end = state.src.indexOf('-->', state.pos + 4);
+    if (end < 0) return false;
+    state.pos = end + 3;
+    return true;
+  });
+  md.block.ruler.before('html_block', 'html_comment', (state, startLine, endLine, silent) => {
+    const start = state.bMarks[startLine] + state.tShift[startLine];
+    if (state.sCount[startLine] - state.blkIndent >= 4) return false;
+    if (!state.src.startsWith('<!--', start)) return false;
+    const end = state.src.indexOf('-->', start + 4);
+    if (end < 0) return false;
+    let line = startLine;
+    while (line < endLine && state.eMarks[line] < end + 3) line++;
+    if (line >= endLine || state.src.slice(end + 3, state.eMarks[line]).trim()) return false;
+    if (silent) return true;
+    state.line = line + 1;
+    return true;
+  }, { alt: ['paragraph', 'reference', 'blockquote', 'list'] });
+}
+
 function mdToStorage(md, options) {
   const opts = options || {};
   const mermaidMacro = String(opts.mermaidMacro || '').trim();
   const mdit = new MarkdownIt({ html: false, xhtmlOut: true, linkify: true }).use(tableSpans)
-    .use(panels, { storage: true }).use(lineBreakTags);
+    .use(panels, { storage: true }).use(lineBreakTags).use(htmlComments);
   mdit.renderer.rules.fence = (tokens, idx) => {
     const info = (tokens[idx].info || '').trim().split(/\s+/)[0] || '';
     if (mermaidMacro && info.toLowerCase() === 'mermaid') {
