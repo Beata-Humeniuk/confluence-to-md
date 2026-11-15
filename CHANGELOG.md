@@ -5,6 +5,16 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-11-15
+
+### Added
+
+- An HTML comment in the file (`<!-- note -->`) is published as Confluence
+  instruction text, which the page keeps but does not show, also in a table
+  cell. Pulling the page brings it back as the same comment. Before, it was
+  published as visible text and pulled back as text. A comment in code is
+  published as written.
+
 ## [1.11.2] - 2026-11-13
 
 ### Fixed

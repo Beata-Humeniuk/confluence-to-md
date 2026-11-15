@@ -76,6 +76,11 @@ function convertHtmlToMd(html, options) {
   const escape = td.escape.bind(td);
   td.escape = (text) => escape(text).replace(/<(?=[A-Za-z/!?])/g, '\\<');
 
+  td.addRule('mdComment', {
+    filter: (node) => node.nodeName === 'SPAN' && node.hasAttribute('data-md-comment'),
+    replacement: (content, node) => '<!-- ' + node.getAttribute('data-md-comment') + ' -->'
+  });
+
   td.addRule('confluenceCodeBlock', {
     filter: 'pre',
     replacement: (content, node) => {

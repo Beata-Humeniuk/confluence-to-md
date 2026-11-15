@@ -1,4 +1,5 @@
 const { hasMermaid, mermaidPlaceholders, restoreMermaid } = require('./mermaid');
+const { hasComments, commentPlaceholders, restoreComments } = require('./comments');
 
 function hostOf(origin) {
   return String(origin).replace(/^https?:\/\//, '').replace(/\/.*$/, '').replace(/:\d+$/, '');
@@ -185,17 +186,21 @@ async function findPageByTitle(cfg, site, spaceKey, title) {
   }
 }
 
+// The page's HTML has no Mermaid sources or comments (instruction text), so
+// the storage is rendered again with markers in their place.
 async function withMermaidSources(cfg, site, page, j) {
   const storage = j && j.body && j.body.storage && j.body.storage.value;
-  if (!hasMermaid(storage)) return page;
-  const marked = mermaidPlaceholders(storage);
-  if (!marked.sources.length) return page;
+  if (!hasMermaid(storage) && !hasComments(storage)) return page;
+  const marked = hasMermaid(storage) ? mermaidPlaceholders(storage) : { storage, sources: [] };
+  const comments = [];
+  const value = commentPlaceholders(marked.storage, comments);
+  if (!marked.sources.length && !comments.length) return page;
   try {
     const view = await apiSend(cfg, site, 'POST',
       '/contentbody/convert/export_view?contentIdContext=' + encodeURIComponent(page.id),
-      { value: marked.storage, representation: 'storage' });
+      { value, representation: 'storage' });
     if (!view || typeof view.value !== 'string') return page;
-    return Object.assign({}, page, { html: restoreMermaid(view.value, marked.sources) });
+    return Object.assign({}, page, { html: restoreComments(restoreMermaid(view.value, marked.sources), comments) });
   } catch (e) {
     if (e && e.message === 'auth') throw e;
     return page;
