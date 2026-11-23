@@ -5,6 +5,8 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [1.13.1] - 2026-11-23
+
 ### Changed
 
 - The visual editor shows the page as the Markdown preview does, with only
