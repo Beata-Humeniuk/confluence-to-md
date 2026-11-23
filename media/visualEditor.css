@@ -193,16 +193,25 @@ body {
   cursor: default;
 }
 
-/* Vditor shows a code block as a read-only copy and adds the editable code
-   above it only when clicked, so the code appears twice. Show the editable
-   code alone; diagrams keep their picture under the code. */
+/* Vditor shows a code block as a highlighted read-only copy and adds the
+   editable code above it when clicked. Show the copy, as the preview does,
+   and while the code is edited, the code alone in the copy's place (a click
+   on the copy opens the code, see visualEditor.js); diagrams keep their
+   picture under the code. */
+.vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__pre:not([style*="none"]) + pre.vditor-wysiwyg__preview {
+  display: none !important;
+}
+
 .vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__pre {
-  display: block !important;
   /* Vditor pulls the copy up under the code with a negative margin. */
   margin-bottom: 16px;
 }
 
-.vditor-wysiwyg__block[data-type="code-block"]:not(:has(> pre > code.language-mermaid)) > pre.vditor-wysiwyg__preview {
+.vditor-wysiwyg__block[data-type="code-block"] > pre.vditor-wysiwyg__preview {
+  cursor: text;
+}
+
+.vditor-wysiwyg__block[data-type="code-block"] .vditor-copy {
   display: none !important;
 }
 
@@ -240,4 +249,139 @@ body {
   white-space: nowrap !important;
   word-break: keep-all !important;
   overflow-wrap: normal !important;
+}
+
+/* The page looks as in the Markdown preview (Open Preview), where it is
+   read: the same width, fonts, sizes and code blocks. Only the toolbar is
+   added. The --markdown-* values come from the markdown.preview settings. */
+#visual-editor .vditor-wysiwyg > .vditor-reset {
+  /* Vditor keeps the text in a column 800px wide; the preview uses the
+     whole width. */
+  padding: 1em 26px !important;
+  font-family: var(--markdown-font-family, -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, "Ubuntu", "Droid Sans", sans-serif);
+  font-size: var(--markdown-font-size, 14px);
+  line-height: var(--markdown-line-height, 22px);
+}
+
+#visual-editor .vditor-toolbar {
+  padding-left: 21px !important;
+}
+
+#visual-editor .vditor-reset p,
+#visual-editor .vditor-reset ul,
+#visual-editor .vditor-reset ol,
+#visual-editor .vditor-reset blockquote,
+#visual-editor .vditor-reset table {
+  margin-top: 1em;
+  margin-bottom: 1em;
+}
+
+#visual-editor .vditor-reset ul,
+#visual-editor .vditor-reset ol {
+  padding-left: 40px;
+}
+
+#visual-editor .vditor-reset li > ul,
+#visual-editor .vditor-reset li > ol,
+#visual-editor .vditor-reset li > p {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+#visual-editor .vditor-reset > :first-child {
+  margin-top: 0;
+}
+
+#visual-editor .vditor-reset a {
+  text-decoration: none;
+}
+
+#visual-editor .vditor-reset blockquote:not(.callout) {
+  margin-left: 5px;
+  margin-right: 7px;
+  padding: 0 16px 0 10px;
+  color: inherit;
+  border-left: 5px solid var(--vscode-textBlockQuote-border, rgba(127, 127, 127, 0.5));
+  background: var(--vscode-textBlockQuote-background, transparent);
+}
+
+#visual-editor .vditor-reset hr {
+  height: 1px;
+  border: 0;
+  border-bottom: 1px solid var(--vscode-widget-border, rgba(127, 127, 127, 0.35));
+  background: none;
+}
+
+/* Inline code: the editor's monospace font at the text's size, in a box. */
+#visual-editor .vditor-reset :not(pre) > code:not(.hljs):not(.highlight-chroma) {
+  padding: 1px 3px;
+  font-family: var(--vscode-editor-font-family, "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace);
+  font-size: 1em;
+  line-height: 1.357em;
+  border-radius: 4px;
+  color: var(--vscode-textPreformat-foreground, var(--vscode-editor-foreground));
+  background-color: var(--vscode-textPreformat-background, rgba(127, 127, 127, 0.15));
+}
+
+/* Code blocks: lines do not wrap, the block scrolls sideways. */
+#visual-editor .vditor-reset pre.vditor-wysiwyg__pre,
+#visual-editor .vditor-reset pre.vditor-wysiwyg__preview {
+  padding: 16px;
+  border: 1px solid var(--vscode-widget-border, transparent);
+  border-radius: 3px;
+  overflow: auto;
+  background-color: var(--vscode-textCodeBlock-background, rgba(127, 127, 127, 0.15));
+}
+
+#visual-editor .vditor-reset pre > code,
+#visual-editor .vditor-reset pre.vditor-wysiwyg__pre > code {
+  display: block;
+  margin: 0;
+  padding: 0;
+  font-family: var(--vscode-editor-font-family, "SF Mono", Monaco, Menlo, Consolas, "Ubuntu Mono", "Liberation Mono", "DejaVu Sans Mono", "Courier New", monospace);
+  font-size: 1em;
+  line-height: 1.357em;
+  white-space: pre !important;
+  word-break: normal;
+  overflow-wrap: normal;
+  tab-size: 4;
+  color: var(--vscode-editor-foreground);
+  background: none !important;
+}
+
+/* Tables as in the preview: lines between the rows, none around the cells. */
+#visual-editor .vditor-reset table {
+  border-collapse: collapse;
+}
+
+#visual-editor .vditor-reset table th,
+#visual-editor .vditor-reset table td {
+  padding: 5px 10px;
+  border: 0;
+  background: none;
+}
+
+#visual-editor .vditor-reset table tr {
+  border: 0;
+  background: none;
+}
+
+#visual-editor .vditor-reset table th {
+  text-align: start;
+  border-bottom: 1px solid var(--confluence-to-md-table-head-border);
+}
+
+#visual-editor .vditor-reset table tbody tr + tr > td {
+  border-top: 1px solid var(--confluence-to-md-table-border);
+}
+
+body {
+  --confluence-to-md-table-head-border: rgba(0, 0, 0, 0.69);
+  --confluence-to-md-table-border: rgba(0, 0, 0, 0.18);
+}
+
+body.vscode-dark,
+body.vscode-high-contrast:not(.vscode-high-contrast-light) {
+  --confluence-to-md-table-head-border: rgba(255, 255, 255, 0.69);
+  --confluence-to-md-table-border: rgba(255, 255, 255, 0.18);
 }

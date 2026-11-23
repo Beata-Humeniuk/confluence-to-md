@@ -5,6 +5,17 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- The visual editor shows the page as the Markdown preview does, with only
+  the toolbar added: the text uses the whole width instead of a narrow
+  column, with the preview's font, size and line height (the
+  `markdown.preview.fontFamily`, `fontSize` and `lineHeight` settings), and
+  inline code, code blocks, quotes and tables look as in the preview. Code
+  blocks are highlighted and their lines no longer wrap; a click on a code
+  block edits the code where it is shown, with the cursor where the click
+  was.
+
 ## [1.13.0] - 2026-11-15
 
 ### Added
