@@ -730,6 +730,28 @@
     if (keptView.area.scrollTop !== keptView.top) keptView.area.scrollTop = keptView.top;
   }, true);
 
+  // A code block shows its highlighted copy, as in the Markdown preview,
+  // until it is clicked. The editable code then takes the copy's place, with
+  // the cursor where the click was.
+  root.addEventListener('mousedown', (e) => {
+    if (e.button !== 0 || !e.target.closest) return;
+    const copy = e.target.closest('.vditor-wysiwyg__block[data-type="code-block"] > pre.vditor-wysiwyg__preview');
+    const code = copy && copy.previousElementSibling;
+    if (!code || !code.classList.contains('vditor-wysiwyg__pre') || copy.querySelector('code.language-mermaid')) return;
+    e.preventDefault();
+    code.style.display = 'block';
+    const text = code.firstElementChild || code;
+    let range = document.caretRangeFromPoint ? document.caretRangeFromPoint(e.clientX, e.clientY) : null;
+    if (!range || !text.contains(range.startContainer)) {
+      range = document.createRange();
+      range.selectNodeContents(text);
+      range.collapse(false);
+    }
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+  });
+
   window.addEventListener('message', (event) => {
     const message = event.data;
     if (message.type === 'init') {

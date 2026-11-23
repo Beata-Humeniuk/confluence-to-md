@@ -13,6 +13,20 @@ function escapeAttribute(value) {
   return String(value).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;');
 }
 
+// The text looks as in the Markdown preview, which takes its font from these
+// settings.
+function previewFontStyle(document) {
+  const preview = vscode.workspace.getConfiguration('markdown.preview', document.uri);
+  const rules = [];
+  const family = preview.get('fontFamily');
+  const size = Number(preview.get('fontSize'));
+  const lineHeight = Number(preview.get('lineHeight'));
+  if (typeof family === 'string' && family.trim()) rules.push('--markdown-font-family: ' + family.replace(/[;{}<>]/g, ''));
+  if (size > 0) rules.push('--markdown-font-size: ' + size + 'px');
+  if (lineHeight > 0) rules.push('--markdown-line-height: ' + lineHeight);
+  return rules.join('; ');
+}
+
 function webviewHtml(webview, extensionUri, document) {
   const media = vscode.Uri.joinPath(extensionUri, 'media');
   const cdn = webview.asWebviewUri(vscode.Uri.joinPath(extensionUri, 'out', 'vditor')).toString();
@@ -31,7 +45,7 @@ function webviewHtml(webview, extensionUri, document) {
     '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n' +
     '<link rel="stylesheet" href="' + cdn + '/dist/index.css">\n' +
     '<link rel="stylesheet" href="' + webview.asWebviewUri(vscode.Uri.joinPath(media, 'visualEditor.css')) + '">\n' +
-    '</head>\n<body>\n' +
+    '</head>\n<body style="' + escapeAttribute(previewFontStyle(document)) + '">\n' +
     '<div id="visual-editor" data-cdn="' + escapeAttribute(cdn) + '" data-link-base="' + escapeAttribute(linkBase) + '"></div>\n' +
     // Vditor would load the icons with a synchronous request, which the
     // webview cannot serve, so the toolbar would show no icons.

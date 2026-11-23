@@ -88,6 +88,10 @@ const vscodeStub = {
       return true;
     },
     getWorkspaceFolder: () => ({ uri: uri('/w') }),
+    getConfiguration: (section) => ({
+      get: (key) => section === 'markdown.preview'
+        ? { fontFamily: 'Fira Sans', fontSize: 15, lineHeight: 1.6 }[key] : undefined
+    }),
     onDidChangeTextDocument: event(listeners.change),
     onWillSaveTextDocument: event(listeners.willSave),
     onDidSaveTextDocument: event(listeners.didSave)
@@ -146,6 +150,8 @@ const tick = () => new Promise((done) => setTimeout(done, 0));
     'the toolbar icons are loaded by the page, not by a synchronous request');
   assert(!/unsafe-eval|script-src[^;]*unsafe-inline/.test(html), 'no inline or eval scripts are allowed');
   assert(html.includes('data-link-base="webview:/w/"'), 'relative images resolve against the file folder');
+  assert(html.includes('<body style="--markdown-font-family: Fira Sans; --markdown-font-size: 15px; --markdown-line-height: 1.6">'),
+    'the text uses the font of the Markdown preview');
 
   await receive({ type: 'loaded' });
   same(posted.length, 1, 'the webview gets the document once it has loaded');

@@ -12,6 +12,12 @@ and never have to read Markdown syntax. The file on disk stays plain Markdown.
 
 The visual editor takes the place of the text editor in the same tab.
 
+The page looks as in the Markdown preview (**Open Preview**): the same width,
+font and code blocks, with the toolbar on top. The font follows the
+`markdown.preview.fontFamily`, `markdown.preview.fontSize` and
+`markdown.preview.lineHeight` settings. A code block is shown highlighted;
+click it to edit the code in place.
+
 To leave the visual editor, click **</> Text editor** in the toolbar or the
 **Open in Text Editor** icon in the editor title. The tab then shows the file
 as text, with the commands and buttons other Markdown extensions add, for
