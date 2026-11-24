@@ -5,6 +5,12 @@ follows [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Pulling a page no longer turns headings into plain text when a table above
+  them has an empty cell. Confluence saves an empty cell as `<td />`, and the
+  text from that cell up to the next table lost its heading marks.
+
 ## [1.13.1] - 2026-11-23
 
 ### Changed
