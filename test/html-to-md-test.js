@@ -234,3 +234,17 @@ assert(angle.includes('a \\<b> c < d \\</div> `<x>`') && angle.includes('```\n<t
   'only a "<" that would start a tag is escaped, and code is left as it is');
 
 console.log('PASS: html->md converter (storage + export_view) ok');
+
+// Confluence saves an empty cell as <td />, which must not hide the headings
+// between this table and the next one.
+{
+  const { markdown } = convertHtmlToMd([
+    '<table><tbody><tr><th><p>A</p></th><th><p>B</p></th></tr>',
+    '<tr><td><p>x</p></td><td /></tr></tbody></table>',
+    '<p>Tekst</p><h3>Walidacja warunku</h3><p>y</p>',
+    '<table><tbody><tr><th><p>C</p></th><th><p>D</p></th></tr>',
+    '<tr><td><p>z</p></td><td><p>w</p></td></tr></tbody></table>'
+  ].join(''));
+  assert(markdown.includes('\n### Walidacja warunku\n'), 'heading after a table with an empty <td /> cell');
+  assert(/\| x\s*\|\s*\|/.test(markdown) && /\| C\s*\| D\s*\|/.test(markdown), 'both tables kept');
+}

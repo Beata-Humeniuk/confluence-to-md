@@ -109,8 +109,16 @@ function flattenIssueTable(body) {
   return rows.length ? '<span>' + rows.join('; ') + '</span>' : '';
 }
 
+const VOID_ELEMENTS = /^(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$/i;
+
 function cleanupConfluenceHtml(input) {
   let s = String(input);
+
+  // Confluence saves an empty cell or paragraph as <td />. In HTML that only
+  // opens the element, so the cell below would run on to the next </td>,
+  // possibly in a later table, and take the headings between with it.
+  s = s.replace(/<([a-zA-Z][\w-]*)\b([^<>]*?)\s*\/>/g, (m, tag, attrs) =>
+    VOID_ELEMENTS.test(tag) ? m : '<' + tag + attrs + '></' + tag + '>');
 
   s = s.replace(/<style\b[^>]*>[\s\S]*?<\/style>/gi, '');
   s = s.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi, '');
